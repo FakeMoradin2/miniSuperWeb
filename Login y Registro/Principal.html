@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minisuper Market</title>
+    <link rel="stylesheet" href="styles_Principal.css">
+</head>
+<body>
+    <nav class="navbar">   
+        <div class="main-nav">
+            <!-- Logo a la IZQUIERDA -->
+            <a href="/" class="corner-image">
+                <img src="iconmini.png" alt="Logo Minisuper Market">
+                <span>Minisuper Market</span>
+            </a>  
+            
+            <!-- Barra de búsqueda CENTRADA -->
+            <div class="search-container">
+                <form class="search-form" action="#" method="get">
+                    <input type="search" class="search-input" placeholder="Buscar productos...">
+                    <button type="submit" class="search-button">🔍</button>
+                </form>
+            </div>
+
+            <!-- Enlaces de navegación a la DERECHA -->
+            <div class="nav-links">
+                <a href="#" class="nav-link">My Account</a>
+                <a href="#" class="nav-link">My Orders</a>
+                <a href="Carrito.html" class="nav-link">
+                    <span class="cart-icon">🛒</span>
+                    Cart
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="categories">
+        <div class="categories-container">
+            <a href="#" class="category-link active">All Products</a>
+            <a href="#" class="category-link">Daily Deals</a>
+            <a href="#" class="category-link">Groceries</a>
+            <a href="#" class="category-link">Dairy and Eggs</a>
+            <a href="#" class="category-link">Fruits and Vegetables</a>
+            <a href="#" class="category-link">Meats and Fish</a>
+            <a href="#" class="category-link">Home Cleaning</a>
+            <a href="#" class="category-link">Personal Care</a>
+        </div>
+    </div>
+
+<section class="featured-products">
+    <div class="container">
+        <h2 class="section-title">Featured Products</h2>
+        <div class="products-grid" id="productsGrid">
+        </div>
+    </div>
+</section>
+
+<section class="special-offers">
+    <div class="container">
+        <h2 class="section-title">Special Offers</h2>
+        <div class="offers-grid" id="offersGrid">
+        </div>
+    </div>
+</section>
+
+<script src="script_Productos.js"></script>
+
+    <script>
+        // Categorías activas
+        document.querySelectorAll('.category-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Funcionalidad de añadir al carrito
+        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const productName = this.closest('.product-card').querySelector('.product-name').textContent;
+                alert(`¡${productName} añadido al carrito!`);
+            });
+        });
+    </script>
+</body>
+</html>

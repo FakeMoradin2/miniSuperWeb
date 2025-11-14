@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="styles_login.css">
+</head>
+<body>
+    <div class="container">
+        <div class="corner-image" aria-hidden="true">
+            <a href="Principal.html">
+                <img src="WhatsApp Image 2025-10-12 at 12.46.25_976f73b5.jpg" alt="Imagen de esquina">
+            </a> 
+        </div>
+
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Sign in to your account to continue shopping</p>
+
+        <form id="loginForm" novalidate>
+            <div class="form-group">
+                <label for="Nombre">Name</label>
+                <input type="text" id="name" name="Nombre" placeholder="Enter your name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+                <div class="show-password">
+                    <input type="checkbox" id="showPassword">
+                    <label for="showPassword">Show Password</label>
+                </div>
+            </div>
+            <button type="submit" class="signin-btn">Login</button>
+                    <div class="forgot-password">
+                    <a href="#" id="forgotPassword">Forgot your password?</a>
+                </div>
+            <div class="signup">Don't have an account? <a href="Registro.html">Sign up</a>
+            </div>
+            
+        </form>
+    </div>
+
+    <script>
+    
+        (function() {
+            const form = document.getElementById('loginForm');
+            const toggle = document.getElementById('showPassword');
+            const pwd = document.getElementById('password');
+
+            if (toggle && pwd) {
+                toggle.addEventListener('change', function() {
+                    pwd.type = this.checked ? 'text' : 'password';
+                });
+            }
+
+            if (!form) return;
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const email = form.email.value.trim();
+                const pwdVal = form.password.value;
+                if (!email || !pwdVal) {
+                    alert('Please complete all fields.');
+                    return;
+                }
+                // Lógica de autenticación
+                alert('Form submitted (simulated)');
+            });
+        })();
+    </script>
+</body>
+</html>

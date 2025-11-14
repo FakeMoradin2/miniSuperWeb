@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carrito - Minisuper Market</title>
+  <link rel="stylesheet" href="styles_Principal.css" />
+  <link rel="stylesheet" href="styles_Carrito.css" />
+</head>
+
+<body>
+  <header>
+    <nav class="navbar">   
+      <div class="main-nav">
+        <!-- El acomodo del logo -->
+        <a href="/" class="corner-image">
+          <img src="iconmini.png" alt="Logo Minisuper Market">
+          <span>Minisuper Market</span>
+        </a>  
+        
+        <!-- Barra de busqueda -->
+        <div class="search-container">
+          <form class="search-form" action="#" method="get">
+            <input type="search" class="search-input" placeholder="Buscar productos...">
+            <button type="submit" class="search-button">🔍</button>
+          </form>
+        </div>
+
+        <!-- Enlaces de navegacion -->
+        <div class="nav-links">
+          <a href="#" class="nav-link">My Account</a>
+          <a href="#" class="nav-link">My Orders</a>
+          <a href="Carrito.html" class="nav-link">
+            <span class="cart-icon">🛒</span>
+            Cart (<span id="cartCount">0</span>)
+          </a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Your Shopping Cart</h1>
+    
+    <div class="cart-layout">
+      <div class="cart-items-section">
+        <!-- Productos -->
+        <div class="cart-section">
+          <div class="section-header">Products</div>
+          <div id="cartContainer"></div>
+        </div>
+        
+        <!-- Cupones -->
+        <div class="coupon-section">
+          <div class="section-header">Coupons and Promotions</div>
+          <div class="coupon-form">
+            <input type="text" class="coupon-input" placeholder="Enter coupon code">
+            <button class="coupon-btn">Apply</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="cart-summary-section">
+        <div class="summary-section">
+          <div class="section-header">Purchase Summary</div>
+          <div class="summary-content">
+            <div class="summary-row">
+              <span>Products</span>
+              <span class="summary-value">$<span id="productsTotal">0.00</span></span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span class="free-shipping">Free</span>
+            </div>
+            <div class="summary-row summary-total">
+              <span>Total</span>
+              <span>$<span id="cartTotal">0.00</span></span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Acciones del carrito -->
+        <div class="cart-actions">
+          <button id="payBtn" class="btn">Continue Purchase</button>
+          <a href="Principal.html" class="btn">← Continue Shopping</a>
+          <button id="clearCartBtn" class="btn btn-danger">Empty Cart</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 Minisuper Market - All rights reserved</p>
+  </footer>
+
+  <!-- === PANEL DE PRUEBAS - AGREGAR ESTO === -->
+  <div style="position: fixed; bottom: 10px; right: 10px; z-index: 1000;">
+    <button onclick="ejecutarPruebas()" style="background: #ff6b6b; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+      🧪 Ejecutar Pruebas
+    </button>
+    <button onclick="mostrarEstructura()" style="background: #4ecdc4; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-left: 5px; font-size: 12px;">
+      🔍 Ver Estructura
+    </button>
+    <button onclick="agregarProductosPrueba()" style="background: #45b7d1; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-left: 5px; font-size: 12px;">
+      📦 Agregar Pruebas
+    </button>
+    <button onclick="activarModoDebug()" style="background: #96ceb4; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; margin-left: 5px; font-size: 12px;">
+      🐛 Modo Debug
+    </button>
+  </div>
+
+  <div id="panelPruebas" style="position: fixed; bottom: 60px; right: 10px; background: white; border: 2px solid #ccc; padding: 15px; border-radius: 8px; max-width: 400px; max-height: 500px; overflow-y: auto; display: none; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <h4 style="margin: 0; color: #2c3e50;">🔬 Panel de Pruebas</h4>
+      <button onclick="document.getElementById('panelPruebas').style.display = 'none'" style="background: #6c757d; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer;">×</button>
+    </div>
+    <div id="resultadoPruebas" style="font-family: monospace; font-size: 12px;"></div>
+  </div>
+  <!-- === FIN DEL PANEL DE PRUEBAS === -->
+
+  <script src="script_Carrito.js"></script>
+</body>
+</html>
