@@ -12,15 +12,15 @@
             <a href="Principal.html">
                 <img src="WhatsApp Image 2025-10-12 at 12.46.25_976f73b5.jpg" alt="Imagen de esquina">
             </a> 
-        </div>
+        </div>  
 
         <h1>Welcome Back</h1>
         <p class="subtitle">Sign in to your account to continue shopping</p>
 
         <form id="loginForm" novalidate>
             <div class="form-group">
-                <label for="Nombre">Name</label>
-                <input type="text" id="name" name="Nombre" placeholder="Enter your name" required>
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" placeholder="Enter your name" required>
             </div>
 
             <div class="form-group">
@@ -32,10 +32,13 @@
                     <label for="showPassword">Show Password</label>
                 </div>
             </div>
+            
+            <div class="forgot-password">
+                <a href="#" id="forgotPassword">Forgot your password?</a>
+            </div>
+            
             <button type="submit" class="signin-btn">Login</button>
-                    <div class="forgot-password">
-                    <a href="#" id="forgotPassword">Forgot your password?</a>
-                </div>
+            
             <div class="signup">Don't have an account? <a href="Registro.html">Sign up</a>
             </div>
             
@@ -43,7 +46,6 @@
     </div>
 
     <script>
-    
         (function() {
             const form = document.getElementById('loginForm');
             const toggle = document.getElementById('showPassword');
@@ -58,9 +60,9 @@
             if (!form) return;
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                const email = form.email.value.trim();
+                const name = form.name.value.trim();
                 const pwdVal = form.password.value;
-                if (!email || !pwdVal) {
+                if (!name || !pwdVal) {
                     alert('Please complete all fields.');
                     return;
                 }
