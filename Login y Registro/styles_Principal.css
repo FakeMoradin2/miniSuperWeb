@@ -28,12 +28,13 @@ body {
     text-decoration: none;
     align-items: center;
     width: auto;
-    min-width: 200px;
+    min-width: auto;
     height: auto;
     min-height: 56px;
     white-space: nowrap;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    padding: 0 10px;
 }
 
 .corner-image:hover {
@@ -404,6 +405,31 @@ body {
 .offer-btn:hover {
     background-color: #dc2626;
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Footer styles */
+footer {
+    background-color: #333;
+    color: white;
+    padding: 40px 0;
+    text-align: center;
+    margin-top: 60px;
+    width: 100%;
+}
+
+footer p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* Red button for Daily Deals / Special Offers */
+.special-offers .add-to-cart-btn {
+    background-color: #ef4444;
+}
+
+.special-offers .add-to-cart-btn:hover {
+    background-color: #dc2626;
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 

@@ -11,6 +11,26 @@ h1 {
   margin-bottom: 30px;
 }
 
+.corner-image {
+    display: flex;
+    gap: 12px;
+    border-radius: 12px;
+    background: transparent;
+    color: #3B82F6;
+    font-size: 1.5rem;
+    font-weight: 700;
+    overflow: visible;
+    text-decoration: none;
+    align-items: center;
+    width: auto;
+    min-width: auto;
+    height: auto;
+    min-height: 56px;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    padding: 0 10px;
+}
 /* Layout principal */
 .cart-layout {
   display: flex;
@@ -289,6 +309,21 @@ h1 {
 .btn-danger:hover {
   background-color: #B91C1C;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Footer styles */
+footer {
+  background-color: #333;
+  color: white;
+  padding: 40px 0;
+  text-align: center;
+  margin-top: 60px;
+  width: 100%;
+}
+
+footer p {
+  margin: 0;
+  font-size: 1rem;
 }
 
 .empty-cart {

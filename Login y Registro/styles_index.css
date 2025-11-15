@@ -18,18 +18,23 @@ header {
 
 .corner-image {
     display: flex;
-    align-items: center;
     gap: 12px;
-    padding: 8px 12px;
     border-radius: 12px;
     background: transparent;
     color: #3B82F6;
     font-size: 1.5rem;
     font-weight: 700;
-    overflow: hidden;
+    overflow: visible;
+    text-decoration: none;
+    align-items: center;
     width: auto;
+    min-width: auto;
     height: auto;
     min-height: 56px;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    padding: 0 10px;
 }
 
 .corner-image img {
