@@ -401,6 +401,103 @@ const productosOferta = [
 let categoriaActual = 'All Products';
 let busquedaActual = '';
 
+// ========== SISTEMA DE ORDENAMIENTO ==========
+
+// Método de ordenamiento: QuickSort para ordenamiento alfabético
+function quickSortProductos(productosArray, izquierda = 0, derecha = productosArray.length - 1) {
+    if (izquierda < derecha) {
+        const indicePivote = particionarProductos(productosArray, izquierda, derecha);
+        quickSortProductos(productosArray, izquierda, indicePivote - 1);
+        quickSortProductos(productosArray, indicePivote + 1, derecha);
+    }
+    return productosArray;
+}
+
+function particionarProductos(productosArray, izquierda, derecha) {
+    const pivote = productosArray[derecha].nombre.toLowerCase();
+    let i = izquierda - 1;
+    
+    for (let j = izquierda; j < derecha; j++) {
+        if (productosArray[j].nombre.toLowerCase() <= pivote) {
+            i++;
+            [productosArray[i], productosArray[j]] = [productosArray[j], productosArray[i]];
+        }
+    }
+    
+    [productosArray[i + 1], productosArray[derecha]] = [productosArray[derecha], productosArray[i + 1]];
+    return i + 1;
+}
+
+// Método alternativo: BubbleSort (más simple pero menos eficiente)
+function bubbleSortProductos(productosArray) {
+    const n = productosArray.length;
+    let intercambiado;
+    
+    do {
+        intercambiado = false;
+        for (let i = 0; i < n - 1; i++) {
+            if (productosArray[i].nombre.toLowerCase() > productosArray[i + 1].nombre.toLowerCase()) {
+                // Intercambiar elementos
+                [productosArray[i], productosArray[i + 1]] = [productosArray[i + 1], productosArray[i]];
+                intercambiado = true;
+            }
+        }
+    } while (intercambiado);
+    
+    return productosArray;
+}
+
+// Función para ordenar productos (usa QuickSort por defecto)
+function ordenarProductos(productosArray, metodo = 'quicksort') {
+    const productosCopia = [...productosArray]; // Crear copia para no modificar el original
+    
+    switch (metodo.toLowerCase()) {
+        case 'quicksort':
+            return quickSortProductos(productosCopia);
+        case 'bubblesort':
+            return bubbleSortProductos(productosCopia);
+        case 'nativo':
+            // Usar el método sort nativo de JavaScript
+            return productosCopia.sort((a, b) => a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase()));
+        default:
+            return quickSortProductos(productosCopia);
+    }
+}
+
+// Función para manejar el ordenamiento desde la interfaz
+function ordenarProductosAlfabeticamente(orden = 'asc') {
+    if (!paginacionActual) return;
+    
+    // Obtener todos los productos de la categoría actual
+    let productosParaOrdenar;
+    
+    if (categoriaActual === 'All Products') {
+        productosParaOrdenar = [...productos];
+    } else if (categoriaActual === 'Daily Deals') {
+        productosParaOrdenar = [...productosOferta];
+    } else {
+        productosParaOrdenar = productos.filter(producto => producto.categoria === categoriaActual);
+    }
+    
+    // Ordenar los productos usando QuickSort
+    const productosOrdenados = ordenarProductos(productosParaOrdenar, 'quicksort');
+    
+    // Si es orden descendente, invertir el array
+    if (orden === 'desc') {
+        productosOrdenados.reverse();
+    }
+    
+    // Actualizar la paginación con los productos ordenados
+    inicializarPaginacion(productosOrdenados, 8);
+    cambiarPagina(1);
+    
+    // Mostrar notificación del ordenamiento aplicado
+    const ordenTexto = orden === 'asc' ? 'ascendente (A-Z)' : 'descendente (Z-A)';
+    mostrarNotificacion(`Productos ordenados alfabéticamente en orden ${ordenTexto}`);
+}
+
+// ========== FUNCIONES PRINCIPALES ==========
+
 // Función para renderizar productos en una sección
 function renderizarProductos(containerId, productosArray) {
     const container = document.getElementById(containerId);
@@ -447,15 +544,15 @@ function renderizarOfertas(containerId, productosArray) {
 }
 
 // Función para manejar cambios de categoría con paginación
-function cambiarCategoriaConPaginacion(categoria, productosArray) {
+function cambiarCategoriaConPaginacion(categoria) {
     let productosFiltrados;
     
     if (categoria === 'All Products') {
-        productosFiltrados = productosArray;
+        productosFiltrados = productos;
     } else if (categoria === 'Daily Deals') {
         productosFiltrados = productosOferta;
     } else {
-        productosFiltrados = productosArray.filter(producto => producto.categoria === categoria);
+        productosFiltrados = productos.filter(producto => producto.categoria === categoria);
     }
     
     // Actualizar categoría actual para el renderizado
@@ -479,14 +576,14 @@ function cambiarCategoriaConPaginacion(categoria, productosArray) {
 }
 
 // Función para manejar búsqueda con paginación
-function buscarProductosConPaginacion(termino, productosArray) {
+function buscarProductosConPaginacion(termino) {
     if (!termino) {
-        cambiarCategoriaConPaginacion('All Products', productosArray);
+        cambiarCategoriaConPaginacion('All Products');
         return;
     }
 
     const terminoLower = termino.toLowerCase();
-    const productosFiltrados = productosArray.filter(producto => 
+    const productosFiltrados = productos.filter(producto => 
         producto.nombre.toLowerCase().includes(terminoLower) ||
         producto.descripcion.toLowerCase().includes(terminoLower) ||
         producto.categoria.toLowerCase().includes(terminoLower)
@@ -517,39 +614,33 @@ function agregarAlCarritoDesdePrincipal(productoId) {
     }
     
     if (producto) {
-        // Verificar si el carrito está disponible (en la página del carrito)
-        if (typeof agregarAlCarrito === 'function') {
-            agregarAlCarrito(producto);
+        const carritoActual = JSON.parse(localStorage.getItem('carrito') || '{"items": []}');
+        const itemExistente = carritoActual.items.find(item => item.producto.id === productoId);
+        
+        if (itemExistente) {
+            itemExistente.cantidad += 1;
+            itemExistente.subtotal = itemExistente.producto.precio * itemExistente.cantidad;
         } else {
-            // Si estamos en la página principal, usar localStorage temporal
-            const carritoActual = JSON.parse(localStorage.getItem('carrito') || '{"items": []}');
-            const itemExistente = carritoActual.items.find(item => item.producto.id === productoId);
-            
-            if (itemExistente) {
-                itemExistente.cantidad += 1;
-                itemExistente.subtotal = itemExistente.producto.precio * itemExistente.cantidad;
-            } else {
-                carritoActual.items.push({
-                    producto: producto,
-                    cantidad: 1,
-                    subtotal: producto.precio
-                });
-            }
-            
-            // Recalcular totales
-            carritoActual.total = carritoActual.items.reduce((sum, item) => sum + item.subtotal, 0);
-            carritoActual.contadorItems = carritoActual.items.reduce((sum, item) => sum + item.cantidad, 0);
-            
-            localStorage.setItem('carrito', JSON.stringify(carritoActual));
-            
-            // Show notification
-            mostrarNotificacion(`${producto.nombre} added to cart!`);
-            
-            // Actualizar contador en el navbar si existe
-            const cartCountElement = document.getElementById('cartCount');
-            if (cartCountElement) {
-                cartCountElement.textContent = carritoActual.contadorItems;
-            }
+            carritoActual.items.push({
+                producto: producto,
+                cantidad: 1,
+                subtotal: producto.precio
+            });
+        }
+        
+        // Recalcular totales
+        carritoActual.total = carritoActual.items.reduce((sum, item) => sum + item.subtotal, 0);
+        carritoActual.contadorItems = carritoActual.items.reduce((sum, item) => sum + item.cantidad, 0);
+        
+        localStorage.setItem('carrito', JSON.stringify(carritoActual));
+        
+        // Show notification
+        mostrarNotificacion(`${producto.nombre} added to cart!`);
+        
+        // Actualizar contador en el navbar si existe
+        const cartCountElement = document.getElementById('cartCount');
+        if (cartCountElement) {
+            cartCountElement.textContent = carritoActual.contadorItems;
         }
     }
 }
@@ -610,7 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
             
             // Cambiar categoría con paginación
-            cambiarCategoriaConPaginacion(categoria, productos);
+            cambiarCategoriaConPaginacion(categoria);
         });
     });
     
@@ -627,7 +718,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active'));
                 document.querySelector('.category-link').classList.add('active'); // Primera categoría (All Products)
                 
-                buscarProductosConPaginacion(termino, productos);
+                buscarProductosConPaginacion(termino);
             }
         });
         
@@ -637,10 +728,32 @@ document.addEventListener('DOMContentLoaded', function() {
             if (termino.length >= 3 || termino.length === 0) {
                 if (termino.length === 0) {
                     // Si se borra la búsqueda, volver a todos los productos
-                    cambiarCategoriaConPaginacion('All Products', productos);
+                    cambiarCategoriaConPaginacion('All Products');
                 } else {
-                    buscarProductosConPaginacion(termino, productos);
+                    buscarProductosConPaginacion(termino);
                 }
+            }
+        });
+    }
+    
+    // Configurar event listener para el ordenamiento
+    const sortSelect = document.getElementById('sortOrder');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            const orden = this.value;
+            
+            if (orden === 'default') {
+                // Volver al orden original
+                if (categoriaActual === 'All Products') {
+                    cambiarCategoriaConPaginacion('All Products');
+                } else if (categoriaActual === 'Daily Deals') {
+                    cambiarCategoriaConPaginacion('Daily Deals');
+                } else {
+                    cambiarCategoriaConPaginacion(categoriaActual);
+                }
+            } else {
+                // Aplicar ordenamiento alfabético
+                ordenarProductosAlfabeticamente(orden);
             }
         });
     }

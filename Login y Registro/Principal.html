@@ -51,7 +51,17 @@
 
 <section class="featured-products">
     <div class="container">
-        <h2 class="section-title">Featured Products</h2>
+        <div class="section-header">
+            <h2 class="section-title">Featured Products</h2>
+            <div class="sorting-controls">
+                <label for="sortOrder">Ordenar por:</label>
+                <select id="sortOrder" class="sort-select">
+                    <option value="default">Por defecto</option>
+                    <option value="asc">Nombre A-Z</option>
+                    <option value="desc">Nombre Z-A</option>
+                </select>
+            </div>
+        </div>
         <div class="products-grid" id="productsGrid">
             <!-- Los productos se cargarán aquí con paginación -->
         </div>
