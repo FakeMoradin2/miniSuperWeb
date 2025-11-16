@@ -292,6 +292,7 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 2rem;
     margin-bottom: 3rem;
+    min-height: 400px; /* Altura mínima para mantener consistencia */
 }
 
 .product-card {
@@ -302,6 +303,9 @@ body {
     transition: all 0.3s ease;
     border: 1px solid #e2e8f0;
     position: relative;
+    height: 100%; /* Asegura que todas las tarjetas tengan la misma altura */
+    display: flex;
+    flex-direction: column;
 }
 
 .product-card:hover {
@@ -313,6 +317,7 @@ body {
     width: 100%;
     height: 200px;
     overflow: hidden;
+    flex-shrink: 0; /* Evita que la imagen se reduzca */
 }
 
 .product-image img {
@@ -328,6 +333,9 @@ body {
 
 .product-info {
     padding: 1.5rem;
+    flex-grow: 1; /* Permite que el contenido crezca uniformemente */
+    display: flex;
+    flex-direction: column;
 }
 
 .product-name {
@@ -335,6 +343,7 @@ body {
     font-weight: 600;
     color: #2c3e50;
     margin-bottom: 0.5rem;
+    line-height: 1.3;
 }
 
 .product-description {
@@ -342,6 +351,7 @@ body {
     font-size: 0.95rem;
     margin-bottom: 1rem;
     line-height: 1.5;
+    flex-grow: 1; /* Hace que la descripción ocupe el espacio disponible */
 }
 
 .product-price {
@@ -352,6 +362,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-shrink: 0; /* Evita que el precio se reduzca */
 }
 
 .add-to-cart-btn {
@@ -365,6 +376,8 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    flex-shrink: 0; /* Mantiene el botón en su tamaño */
+    margin-top: auto; /* Empuja el botón hacia abajo */
 }
 
 .add-to-cart-btn:hover {
@@ -531,6 +544,223 @@ footer p {
     font-weight: 700;
 }
 
+/* ========== ESTILOS PARA PAGINACIÓN ========== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.pagination button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    background-color: white;
+    color: #4b5563;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.pagination button:hover:not(:disabled) {
+    background-color: #3B82F6;
+    color: white;
+    border-color: #3B82F6;
+}
+
+.pagination button.active {
+    background-color: #3B82F6;
+    color: white;
+    border-color: #3B82F6;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    text-align: center;
+    color: #6b7280;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+/* ========== ESTILOS PARA EL SISTEMA DE BÚSQUEDA HÍBRIDA ========== */
+
+/* Información de resultados de búsqueda */
+.search-results-info {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #4b5563;
+    font-size: 1.1rem;
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #3B82F6;
+}
+
+/* Mensaje cuando no hay resultados */
+.no-results-message {
+    text-align: center;
+    padding: 3rem;
+    color: #6b7280;
+    font-size: 1.2rem;
+    grid-column: 1 / -1;
+}
+
+.no-results-message h3 {
+    margin-bottom: 1rem;
+    color: #374151;
+    font-size: 1.5rem;
+}
+
+.no-results-message p {
+    margin-bottom: 1.5rem;
+}
+
+/* Botón para limpiar búsqueda */
+.clear-search-btn {
+    background-color: #6b7280;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: 1rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.clear-search-btn:hover {
+    background-color: #4b5563;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenedor de búsqueda con posición relativa para sugerencias */
+.search-container {
+    position: relative;
+}
+
+/* Sugerencias de búsqueda */
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: -2px;
+}
+
+.suggestion-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    color: #4b5563;
+}
+
+.suggestion-item:hover {
+    background-color: #f1f5f9;
+    color: #3B82F6;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item strong {
+    color: #3B82F6;
+    font-weight: 600;
+}
+
+/* Indicador de búsqueda activa */
+.search-active .search-input {
+    border-color: #3B82F6;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Badge para mostrar filtros activos */
+.active-filters {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.filter-badge {
+    background-color: #3B82F6;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-badge .remove-filter {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.filter-badge .remove-filter:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Estados de carga para búsqueda */
+.search-loading {
+    position: relative;
+}
+
+.search-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 60px;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #3B82F6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translateY(-50%) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* ========== FIN ESTILOS BÚSQUEDA HÍBRIDA ========== */
+
 /* Responsive */
 @media (max-width: 1200px) {
     .main-nav {
@@ -674,6 +904,45 @@ footer p {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
+    
+    /* Responsive para el sistema de búsqueda */
+    .search-results-info {
+        font-size: 1rem;
+        padding: 0.75rem;
+    }
+    
+    .no-results-message {
+        padding: 2rem 1rem;
+        font-size: 1.1rem;
+    }
+    
+    .no-results-message h3 {
+        font-size: 1.3rem;
+    }
+    
+    .clear-search-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+        margin-left: 0.5rem;
+    }
+    
+    .active-filters {
+        gap: 0.5rem;
+    }
+    
+    .filter-badge {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .search-suggestions {
+        max-height: 150px;
+    }
+    
+    .suggestion-item {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
 }
 
 /* Small Mobile Breakpoint */
@@ -728,5 +997,28 @@ footer p {
     .product-info,
     .offer-info {
         padding: 1rem;
+    }
+    
+    .search-results-info {
+        font-size: 0.9rem;
+    }
+    
+    .no-results-message {
+        padding: 1.5rem 0.5rem;
+        font-size: 1rem;
+    }
+    
+    .no-results-message h3 {
+        font-size: 1.2rem;
+    }
+    
+    .clear-search-btn {
+        width: 100%;
+        margin: 0.5rem 0 0 0;
+    }
+    
+    .active-filters {
+        flex-direction: column;
+        align-items: center;
     }
 }

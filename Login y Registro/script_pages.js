@@ -1,198 +1,197 @@
-class Paginacion {
-    constructor(productos, productosPorPagina = 12) {
-        this.productos = productos;
-        this.productosPorPagina = productosPorPagina;
-        this.paginaActual = 1;
-        this.totalPaginas = Math.ceil(productos.length / productosPorPagina);
-    }
+// script_pages.js - Sistema de paginación corregido
 
-    getProductosPagina(pagina = this.paginaActual) {
-        const inicio = (pagina - 1) * this.productosPorPagina;
-        const fin = inicio + this.productosPorPagina;
-        return this.productos.slice(inicio, fin);
-    }
-
-    irAPagina(pagina) {
-        if (pagina >= 1 && pagina <= this.totalPaginas) {
-            this.paginaActual = pagina;
-            return true;
-        }
-        return false;
-    }
-
-    paginaSiguiente() {
-        return this.irAPagina(this.paginaActual + 1);
-    }
-
-    paginaAnterior() {
-        return this.irAPagina(this.paginaActual - 1);
-    }
-
-    getInfoPagina() {
-        const inicio = (this.paginaActual - 1) * this.productosPorPagina + 1;
-        const fin = Math.min(this.paginaActual * this.productosPorPagina, this.productos.length);
-        
-        return {
-            paginaActual: this.paginaActual,
-            totalPaginas: this.totalPaginas,
-            productosMostrados: fin - inicio + 1,
-            productoInicio: inicio,
-            productoFin: fin,
-            totalProductos: this.productos.length
-        };
-    }
-
-    generarNumerosPagina(maxBotones = 5) {
-        const numeros = [];
-        const mitad = Math.floor(maxBotones / 2);
-        let inicio = Math.max(1, this.paginaActual - mitad);
-        let fin = Math.min(this.totalPaginas, inicio + maxBotones - 1);
-
-        // Ajustar si estamos cerca del final
-        if (fin - inicio + 1 < maxBotones) {
-            inicio = Math.max(1, fin - maxBotones + 1);
-        }
-
-        // Agregar primera página y elipsis si es necesario
-        if (inicio > 1) {
-            numeros.push(1);
-            if (inicio > 2) {
-                numeros.push('...');
-            }
-        }
-
-        // Agregar números de página
-        for (let i = inicio; i <= fin; i++) {
-            numeros.push(i);
-        }
-
-        // Agregar última página y elipsis si es necesario
-        if (fin < this.totalPaginas) {
-            if (fin < this.totalPaginas - 1) {
-                numeros.push('...');
-            }
-            numeros.push(this.totalPaginas);
-        }
-
-        return numeros;
-    }
-}
-
-// Variables globales
 let paginacionActual = null;
+let productosActuales = [];
 
 // Función para inicializar la paginación
-function inicializarPaginacion(productos, productosPorPagina = 12) {
-    paginacionActual = new Paginacion(productos, productosPorPagina);
-    return paginacionActual;
-}
-
-// Función para renderizar la paginación
-function renderizarPaginacion(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container || !paginacionActual) return;
-
-    const info = paginacionActual.getInfoPagina();
-    const numerosPagina = paginacionActual.generarNumerosPagina();
-
-    container.innerHTML = `
-        <div class="pagination">
-            <button class="pagination-btn" onclick="cambiarPagina(${info.paginaActual - 1})" 
-                ${info.paginaActual === 1 ? 'disabled' : ''}>
-                ← Previous
-            </button>
-            
-            <div class="pagination-numbers">
-                ${numerosPagina.map(num => 
-                    typeof num === 'number' 
-                        ? `<button class="page-number ${num === info.paginaActual ? 'active' : ''}" 
-                             onclick="cambiarPagina(${num})">${num}</button>`
-                        : `<span class="page-number ellipsis">${num}</span>`
-                ).join('')}
-            </div>
-            
-            <button class="pagination-btn" onclick="cambiarPagina(${info.paginaActual + 1})" 
-                ${info.paginaActual === info.totalPaginas ? 'disabled' : ''}>
-                Next →
-            </button>
-            
-            <div class="pagination-info">
-                Showing ${info.productoInicio}-${info.productoFin} of ${info.totalProductos} products
-            </div>
-        </div>
-        
-        <div class="mobile-pagination-info" style="display: none;">
-            Page ${info.paginaActual} of ${info.totalPaginas}
-        </div>
-    `;
-
-    // Mostrar info móvil en pantallas pequeñas
-    const mobileInfo = container.querySelector('.mobile-pagination-info');
-    const paginationNumbers = container.querySelector('.pagination-numbers');
+function inicializarPaginacion(productos, productosPorPagina = 8) {
+    productosActuales = productos;
+    paginacionActual = {
+        productos: productos,
+        productosPorPagina: productosPorPagina,
+        paginaActual: 1,
+        totalPaginas: Math.ceil(productos.length / productosPorPagina)
+    };
     
-    if (window.innerWidth <= 480) {
-        if (mobileInfo) mobileInfo.style.display = 'block';
-        if (paginationNumbers) paginationNumbers.style.display = 'none';
-    }
+    cambiarPagina(1);
 }
 
 // Función para cambiar de página
-function cambiarPagina(pagina) {
-    if (!paginacionActual) return;
-
-    const exito = paginacionActual.irAPagina(pagina);
-    if (exito) {
-        // Obtener productos de la página actual
-        const productosPagina = paginacionActual.getProductosPagina();
-        
-        // Renderizar productos (esta función debe estar definida en tu script principal)
-        if (typeof renderizarProductos === 'function') {
-            renderizarProductos('productsGrid', productosPagina);
-        }
-        
-        // Actualizar la paginación
-        renderizarPaginacion('paginationContainer');
-        
-        // Scroll suave hacia arriba
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-}
-
-// Función para manejar cambios de categoría con paginación
-function cambiarCategoriaConPaginacion(categoria, productosArray) {
-    const productosFiltrados = categoria === 'All Products' 
-        ? productosArray 
-        : productosArray.filter(producto => producto.categoria === categoria);
-    
-    // Reinicializar paginación
-    inicializarPaginacion(productosFiltrados);
-    cambiarPagina(1);
-}
-
-// Función para manejar búsqueda con paginación
-function buscarProductosConPaginacion(termino, productosArray) {
-    if (!termino) {
-        cambiarCategoriaConPaginacion('All Products', productosArray);
+function cambiarPagina(numeroPagina) {
+    if (!paginacionActual || numeroPagina < 1 || numeroPagina > paginacionActual.totalPaginas) {
         return;
     }
-
-    const terminoLower = termino.toLowerCase();
-    const productosFiltrados = productosArray.filter(producto => 
-        producto.nombre.toLowerCase().includes(terminoLower) ||
-        producto.descripcion.toLowerCase().includes(terminoLower) ||
-        producto.categoria.toLowerCase().includes(terminoLower)
-    );
-
-    // Reinicializar paginación
-    inicializarPaginacion(productosFiltrados);
-    cambiarPagina(1);
+    
+    paginacionActual.paginaActual = numeroPagina;
+    
+    const inicio = (numeroPagina - 1) * paginacionActual.productosPorPagina;
+    const fin = inicio + paginacionActual.productosPorPagina;
+    const productosPagina = paginacionActual.productos.slice(inicio, fin);
+    
+    renderizarProductosPagina(productosPagina);
+    renderizarControlesPaginacion();
 }
 
-// Inicializar eventos responsive
-document.addEventListener('DOMContentLoaded', function() {
-    window.addEventListener('resize', function() {
-        if (document.getElementById('paginationContainer')) {
-            renderizarPaginacion('paginationContainer');
+// Función para renderizar productos en la página actual
+function renderizarProductosPagina(productosPagina) {
+    const productsGrid = document.getElementById('productsGrid');
+    if (!productsGrid) return;
+    
+    // Limpiar el grid
+    productsGrid.innerHTML = '';
+    
+    if (productosPagina.length === 0) {
+        mostrarMensajeSinProductos();
+        return;
+    }
+    
+    // Renderizar productos
+    productosPagina.forEach(producto => {
+        const productCard = crearProductCard(producto);
+        productsGrid.appendChild(productCard);
+    });
+}
+
+// Función para crear tarjeta de producto con tamaño consistente
+function crearProductCard(producto) {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    
+    // Determinar si estamos en Daily Deals
+    const isDailyDeals = categoriaActual === 'Daily Deals';
+    const buttonText = isDailyDeals ? 'Grab Offer' : (producto.oferta ? 'Grab Offer' : 'Add to Cart');
+    const buttonClass = isDailyDeals || producto.oferta ? 'add-to-cart-btn daily-deals-btn' : 'add-to-cart-btn';
+    
+    card.innerHTML = `
+        <div class="product-image">
+            ${producto.oferta ? '<div class="offer-badge">Special Offer</div>' : ''}
+            <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNkZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPsOXIEltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
+        </div>
+        <div class="product-info">
+            <h3 class="product-name">${producto.nombre}</h3>
+            <p class="product-description">${producto.descripcion}</p>
+            <div class="product-price">
+                ${producto.oferta ? 
+                    `<span class="original-price">$${producto.precioOriginal.toFixed(2)}</span>
+                     <span class="discount-price">$${producto.precio.toFixed(2)}</span>` 
+                    : `$${producto.precio.toFixed(2)}`
+                }
+            </div>
+            <button class="${buttonClass}" onclick="agregarAlCarritoDesdePrincipal('${producto.id}')">
+                ${buttonText}
+            </button>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Función para mostrar mensaje cuando no hay productos
+function mostrarMensajeSinProductos() {
+    const productsGrid = document.getElementById('productsGrid');
+    if (!productsGrid) return;
+    
+    productsGrid.innerHTML = `
+        <div class="no-results-message">
+            <h3>No products found</h3>
+            <p>Try adjusting your search or filter criteria</p>
+            <button class="clear-search-btn" onclick="limpiarBusqueda()">
+                Clear Search & Filters
+            </button>
+        </div>
+    `;
+}
+
+// Función para renderizar controles de paginación
+function renderizarControlesPaginacion() {
+    const paginationContainer = document.getElementById('paginationContainer');
+    if (!paginationContainer || !paginacionActual) return;
+    
+    const { paginaActual, totalPaginas } = paginacionActual;
+    
+    if (totalPaginas <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = `
+        <div class="pagination-info">
+            Page ${paginaActual} of ${totalPaginas}
+        </div>
+        <div class="pagination">
+    `;
+    
+    // Botón anterior
+    paginationHTML += `
+        <button onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}>
+            Previous
+        </button>
+    `;
+    
+    // Números de página
+    const paginasMostrar = generarNumerosPagina(paginaActual, totalPaginas);
+    paginasMostrar.forEach(numero => {
+        if (numero === '...') {
+            paginationHTML += `<span>...</span>`;
+        } else {
+            paginationHTML += `
+                <button 
+                    onclick="cambiarPagina(${numero})" 
+                    class="${numero === paginaActual ? 'active' : ''}"
+                >
+                    ${numero}
+                </button>
+            `;
         }
     });
-});
+    
+    // Botón siguiente
+    paginationHTML += `
+        <button onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>
+            Next
+        </button>
+    `;
+    
+    paginationHTML += '</div>';
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+// Función para generar números de página con elipsis
+function generarNumerosPagina(paginaActual, totalPaginas) {
+    const paginas = [];
+    const paginasALado = 2;
+    
+    // Siempre mostrar primera página
+    paginas.push(1);
+    
+    // Calcular rango de páginas a mostrar
+    let inicio = Math.max(2, paginaActual - paginasALado);
+    let fin = Math.min(totalPaginas - 1, paginaActual + paginasALado);
+    
+    // Agregar elipsis al inicio si es necesario
+    if (inicio > 2) {
+        paginas.push('...');
+    }
+    
+    // Agregar páginas del rango
+    for (let i = inicio; i <= fin; i++) {
+        paginas.push(i);
+    }
+    
+    // Agregar elipsis al final si es necesario
+    if (fin < totalPaginas - 1) {
+        paginas.push('...');
+    }
+    
+    // Siempre mostrar última página si hay más de una página
+    if (totalPaginas > 1) {
+        paginas.push(totalPaginas);
+    }
+    
+    return paginas;
+}
+
+// Función para obtener los productos actuales (para compatibilidad)
+function obtenerProductosActuales() {
+    return productosActuales;
+}

@@ -533,17 +533,7 @@ function renderizarProductos(containerId, productosArray) {
     `}).join('');
 }
 
-// Función para obtener productos destacados (para compatibilidad)
-function obtenerProductosDestacados() {
-    return productos;
-}
-
-// Función para renderizar ofertas (para compatibilidad)
-function renderizarOfertas(containerId, productosArray) {
-    renderizarProductos(containerId, productosArray);
-}
-
-// Función para manejar cambios de categoría con paginación
+// Función para cambiar categoría con paginación - VERSIÓN MEJORADA
 function cambiarCategoriaConPaginacion(categoria) {
     let productosFiltrados;
     
@@ -555,7 +545,7 @@ function cambiarCategoriaConPaginacion(categoria) {
         productosFiltrados = productos.filter(producto => producto.categoria === categoria);
     }
     
-    // Actualizar categoría actual para el renderizado
+    // Actualizar categoría actual
     categoriaActual = categoria;
     
     // Actualizar título de la sección
@@ -570,7 +560,22 @@ function cambiarCategoriaConPaginacion(categoria) {
         }
     }
     
-    // Reinicializar paginación con 8 productos por página
+    // Limpiar búsqueda visualmente cuando se cambia de categoría
+    if (!busquedaActual) {
+        // Ocultar información de búsqueda
+        const resultsInfo = document.getElementById('searchResultsInfo');
+        if (resultsInfo) {
+            resultsInfo.style.display = 'none';
+        }
+        
+        // Ocultar filtros activos
+        const activeFilters = document.getElementById('activeFilters');
+        if (activeFilters) {
+            activeFilters.style.display = 'none';
+        }
+    }
+    
+    // Reinicializar paginación
     inicializarPaginacion(productosFiltrados, 8);
     cambiarPagina(1);
 }
@@ -670,7 +675,409 @@ function mostrarNotificacion(mensaje) {
         }, 300);
     }, 3000);
 }
+// ========== SISTEMA DE BÚSQUEDA HÍBRIDA MEJORADO ==========
 
+// Función para configurar el sistema de búsqueda híbrida
+function configurarBusquedaHibrida() {
+    const searchForm = document.querySelector('.search-form');
+    const searchInput = document.querySelector('.search-input');
+    const categoryLinks = document.querySelectorAll('.category-link');
+    const searchContainer = document.querySelector('.search-container');
+    
+    if (searchForm && searchInput && searchContainer) {
+        // Configurar búsqueda por formulario
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const termino = searchInput.value.trim();
+            ocultarSugerencias();
+            if (termino) {
+                realizarBusquedaHibrida(termino, categoriaActual);
+            } else {
+                cambiarCategoriaConPaginacion(categoriaActual);
+            }
+        });
+        
+        // Búsqueda en tiempo real (con debounce) - VERSIÓN CORREGIDA
+let timeoutId;
+searchInput.addEventListener('input', function() {
+    clearTimeout(timeoutId);
+    const termino = this.value.trim();
+    busquedaActual = termino;
+    
+    // Mostrar/ocultar sugerencias
+    if (termino.length >= 2) {
+        mostrarSugerencias(termino);
+        searchContainer.classList.add('search-active');
+    } else {
+        ocultarSugerencias();
+        searchContainer.classList.remove('search-active');
+        
+        // Si se borra completamente la búsqueda, limpiar todo
+        if (termino.length === 0) {
+            limpiarBusqueda();
+        }
+    }
+    
+    timeoutId = setTimeout(() => {
+        if (termino.length >= 3 || termino.length === 0) {
+            if (termino.length === 0) {
+                // Si se borra la búsqueda, limpiar todo
+                limpiarBusqueda();
+            } else {
+                realizarBusquedaHibrida(termino, categoriaActual);
+            }
+        }
+    }, 300);
+});
+        
+        // Ocultar sugerencias al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!searchContainer.contains(e.target)) {
+                ocultarSugerencias();
+                searchContainer.classList.remove('search-active');
+            }
+        });
+    }
+    
+    // Configurar categorías para trabajar con búsqueda híbrida
+    categoryLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const categoria = this.getAttribute('data-category');
+            
+            // Actualizar clases activas
+            categoryLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Si hay un término de búsqueda activo, aplicar búsqueda híbrida
+            const searchTerm = document.querySelector('.search-input').value.trim();
+            if (searchTerm) {
+                realizarBusquedaHibrida(searchTerm, categoria);
+            } else {
+                // Si no hay búsqueda, simplemente cambiar categoría
+                cambiarCategoriaConPaginacion(categoria);
+            }
+        });
+    });
+}
+
+// Función principal de búsqueda híbrida - VERSIÓN ACTUALIZADA
+function realizarBusquedaHibrida(termino, categoria) {
+    let productosFiltrados;
+    
+    // Mostrar estado de carga
+    mostrarEstadoCarga();
+    
+    setTimeout(() => {
+        // Primero, filtrar por categoría
+        if (categoria === 'All Products') {
+            productosFiltrados = [...productos];
+        } else if (categoria === 'Daily Deals') {
+            productosFiltrados = [...productosOferta];
+        } else {
+            productosFiltrados = productos.filter(producto => producto.categoria === categoria);
+        }
+        
+        // Luego, aplicar búsqueda por texto si hay término
+        if (termino) {
+            const terminoLower = termino.toLowerCase();
+            productosFiltrados = productosFiltrados.filter(producto => 
+                producto.nombre.toLowerCase().includes(terminoLower) ||
+                producto.descripcion.toLowerCase().includes(terminoLower) ||
+                producto.categoria.toLowerCase().includes(terminoLower)
+            );
+        }
+        
+        // Actualizar título de la sección
+        const sectionTitle = document.querySelector('.featured-products .section-title');
+        if (sectionTitle) {
+            if (termino && categoria !== 'All Products') {
+                sectionTitle.textContent = `Results for "${termino}" in ${categoria}`;
+            } else if (termino) {
+                sectionTitle.textContent = `Results for "${termino}"`;
+            } else {
+                if (categoria === 'Daily Deals') {
+                    sectionTitle.textContent = 'Daily Deals';
+                } else if (categoria === 'All Products') {
+                    sectionTitle.textContent = 'All Products';
+                } else {
+                    sectionTitle.textContent = categoria;
+                }
+            }
+        }
+        
+        // Mostrar información de resultados SOLO si hay búsqueda activa
+        if (termino) {
+            mostrarInformacionResultados(termino, categoria, productosFiltrados.length);
+            mostrarFiltrosActivos(termino, categoria);
+        } else {
+            // Ocultar información si no hay búsqueda
+            const resultsInfo = document.getElementById('searchResultsInfo');
+            if (resultsInfo) {
+                resultsInfo.style.display = 'none';
+            }
+            const activeFilters = document.getElementById('activeFilters');
+            if (activeFilters) {
+                activeFilters.style.display = 'none';
+            }
+        }
+        
+        // Reinicializar paginación con los resultados
+        inicializarPaginacion(productosFiltrados, 8);
+        cambiarPagina(1);
+        
+        // Mostrar notificación de resultados solo si hay búsqueda
+        if (termino) {
+            const resultadosTexto = productosFiltrados.length === 1 ? 'result' : 'results';
+            mostrarNotificacion(`Found ${productosFiltrados.length} ${resultadosTexto} for "${termino}"`);
+        }
+        
+        // Ocultar estado de carga
+        ocultarEstadoCarga();
+    }, 500);
+}
+
+// Función para mostrar información de resultados - VERSIÓN MEJORADA
+function mostrarInformacionResultados(termino, categoria, cantidad) {
+    const resultsInfo = document.getElementById('searchResultsInfo');
+    if (!resultsInfo) return;
+    
+    // Solo mostrar si hay término de búsqueda
+    if (termino) {
+        let infoText = '';
+        
+        if (termino && categoria !== 'All Products') {
+            infoText = `Showing ${cantidad} results for "${termino}" in ${categoria}`;
+        } else if (termino) {
+            infoText = `Showing ${cantidad} results for "${termino}"`;
+        }
+        
+        resultsInfo.innerHTML = `
+            ${infoText}
+            <button class="clear-search-btn" onclick="limpiarBusqueda()">
+                Clear Search
+            </button>
+        `;
+        resultsInfo.style.display = 'block';
+    } else {
+        // Ocultar si no hay búsqueda
+        resultsInfo.style.display = 'none';
+    }
+}
+
+// Función para mostrar filtros activos - VERSIÓN MEJORADA
+function mostrarFiltrosActivos(termino, categoria) {
+    const activeFilters = document.getElementById('activeFilters');
+    if (!activeFilters) return;
+    
+    activeFilters.innerHTML = '';
+    
+    // Solo mostrar si hay búsqueda activa o categoría específica
+    if (termino || categoria !== 'All Products') {
+        if (termino) {
+        }
+        
+        if (categoria !== 'All Products') {
+            activeFilters.innerHTML += `
+                <div class="filter-badge">
+                    Category: ${categoria}
+                    <button class="remove-filter" onclick="removerFiltroCategoria()">×</button>
+                </div>
+            `;
+        }
+        
+        activeFilters.style.display = 'flex';
+    } else {
+        // Ocultar si no hay filtros activos
+        activeFilters.style.display = 'none';
+    }
+}
+
+// Función para remover filtro de búsqueda - VERSIÓN CORREGIDA
+function removerFiltroBusqueda() {
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput) {
+        searchInput.value = '';
+        busquedaActual = '';
+    }
+    
+    // Ocultar información de resultados
+    const resultsInfo = document.getElementById('searchResultsInfo');
+    if (resultsInfo) {
+        resultsInfo.style.display = 'none';
+    }
+    
+    // Actualizar filtros activos
+    mostrarFiltrosActivos('', categoriaActual);
+    
+    cambiarCategoriaConPaginacion(categoriaActual);
+}
+
+// Función para remover filtro de categoría - VERSIÓN CORREGIDA
+function removerFiltroCategoria() {
+    const allProductsLink = document.querySelector('.category-link[data-category="All Products"]');
+    if (allProductsLink) {
+        document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active'));
+        allProductsLink.classList.add('active');
+        categoriaActual = 'All Products';
+    }
+    
+    // Actualizar filtros activos
+    mostrarFiltrosActivos(busquedaActual, 'All Products');
+    
+    if (busquedaActual) {
+        realizarBusquedaHibrida(busquedaActual, 'All Products');
+    } else {
+        cambiarCategoriaConPaginacion('All Products');
+    }
+}
+// Función para limpiar búsqueda - VERSIÓN CORREGIDA
+function limpiarBusqueda() {
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput) {
+        searchInput.value = '';
+        busquedaActual = '';
+    }
+    
+    const allProductsLink = document.querySelector('.category-link[data-category="All Products"]');
+    if (allProductsLink) {
+        document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active'));
+        allProductsLink.classList.add('active');
+        categoriaActual = 'All Products';
+    }
+    
+    // Ocultar información de resultados de búsqueda
+    const resultsInfo = document.getElementById('searchResultsInfo');
+    if (resultsInfo) {
+        resultsInfo.style.display = 'none';
+    }
+    
+    // Ocultar filtros activos
+    const activeFilters = document.getElementById('activeFilters');
+    if (activeFilters) {
+        activeFilters.style.display = 'none';
+    }
+    
+    // Restablecer el título de la sección
+    const sectionTitle = document.querySelector('.featured-products .section-title');
+    if (sectionTitle) {
+        sectionTitle.textContent = 'All Products';
+    }
+    
+    // Restablecer el selector de ordenamiento
+    const sortSelect = document.getElementById('sortOrder');
+    if (sortSelect) {
+        sortSelect.value = 'default';
+    }
+    
+    // Ocultar sugerencias de búsqueda
+    ocultarSugerencias();
+    
+    // Restablecer la clase activa del contenedor de búsqueda
+    const searchContainer = document.querySelector('.search-container');
+    if (searchContainer) {
+        searchContainer.classList.remove('search-active');
+    }
+    
+    // Volver a mostrar todos los productos
+    cambiarCategoriaConPaginacion('All Products');
+}
+
+// Función para mostrar sugerencias de búsqueda
+function mostrarSugerencias(termino) {
+    const sugerencias = obtenerSugerenciasBusqueda(termino);
+    const searchContainer = document.querySelector('.search-container');
+    
+    // Remover sugerencias anteriores
+    ocultarSugerencias();
+    
+    if (sugerencias.length > 0) {
+        const suggestionsHTML = `
+            <div class="search-suggestions">
+                ${sugerencias.map(sug => `
+                    <div class="suggestion-item" onclick="seleccionarSugerencia('${sug.replace(/'/g, "\\'")}')">
+                        ${resaltarCoincidencia(sug, termino)}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        searchContainer.insertAdjacentHTML('beforeend', suggestionsHTML);
+    }
+}
+
+// Función para ocultar sugerencias
+function ocultarSugerencias() {
+    const existingSuggestions = document.querySelector('.search-suggestions');
+    if (existingSuggestions) {
+        existingSuggestions.remove();
+    }
+}
+
+// Función para seleccionar una sugerencia
+function seleccionarSugerencia(sugerencia) {
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput) {
+        searchInput.value = sugerencia;
+        realizarBusquedaHibrida(sugerencia, categoriaActual);
+        ocultarSugerencias();
+    }
+}
+
+// Función para resaltar coincidencias en sugerencias
+function resaltarCoincidencia(texto, termino) {
+    const regex = new RegExp(`(${termino})`, 'gi');
+    return texto.replace(regex, '<strong>$1</strong>');
+}
+
+// Función para obtener sugerencias de búsqueda
+function obtenerSugerenciasBusqueda(termino) {
+    const terminoLower = termino.toLowerCase();
+    const sugerencias = new Set();
+    
+    // Buscar en nombres de productos
+    productos.forEach(producto => {
+        if (producto.nombre.toLowerCase().includes(terminoLower)) {
+            sugerencias.add(producto.nombre);
+        }
+    });
+    
+    // Buscar en categorías
+    const categoriasUnicas = [...new Set(productos.map(p => p.categoria))];
+    categoriasUnicas.forEach(categoria => {
+        if (categoria.toLowerCase().includes(terminoLower)) {
+            sugerencias.add(categoria);
+        }
+    });
+    
+    // Convertir a array y limitar a 5 sugerencias
+    return Array.from(sugerencias).slice(0, 5);
+}
+
+// Funciones para estado de carga
+function mostrarEstadoCarga() {
+    const searchButton = document.querySelector('.search-button');
+    if (searchButton) {
+        searchButton.classList.add('search-loading');
+        searchButton.disabled = true;
+    }
+}
+
+function ocultarEstadoCarga() {
+    const searchButton = document.querySelector('.search-button');
+    if (searchButton) {
+        searchButton.classList.remove('search-loading');
+        searchButton.disabled = false;
+    }
+}
+
+// Agregar esta llamada al final del DOMContentLoaded existente en script_Productos.js
+document.addEventListener('DOMContentLoaded', function() {
+    // ... código existente ...
+    
+    // Configurar el sistema de búsqueda híbrida
+    configurarBusquedaHibrida();
+});
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
     // Ocultar sección de ofertas especiales

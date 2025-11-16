@@ -21,6 +21,7 @@
                     <input type="search" class="search-input" placeholder="Buscar productos...">
                     <button type="submit" class="search-button">🔍</button>
                 </form>
+                <!-- Las sugerencias se agregarán aquí dinámicamente -->
             </div>
 
             <!-- Enlaces de navegación -->
@@ -38,16 +39,19 @@
 
     <div class="categories">
         <div class="categories-container">
-            <a href="#" class="category-link active">All Products</a>
-            <a href="#" class="category-link">Daily Deals</a>
-            <a href="#" class="category-link">Groceries</a>
-            <a href="#" class="category-link">Dairy & Eggs</a>
-            <a href="#" class="category-link">Fruits & Vegetables</a>
-            <a href="#" class="category-link">Meat & Seafood</a>
-            <a href="#" class="category-link">Home Cleaning</a>
-            <a href="#" class="category-link">Personal Care</a>
+            <a href="#" class="category-link active" data-category="All Products">All Products</a>
+            <a href="#" class="category-link" data-category="Daily Deals">Daily Deals</a>
+            <a href="#" class="category-link" data-category="Groceries">Groceries</a>
+            <a href="#" class="category-link" data-category="Dairy & Eggs">Dairy & Eggs</a>
+            <a href="#" class="category-link" data-category="Fruits & Vegetables">Fruits & Vegetables</a>
+            <a href="#" class="category-link" data-category="Meat & Seafood">Meat & Seafood</a>
+            <a href="#" class="category-link" data-category="Home Cleaning">Home Cleaning</a>
+            <a href="#" class="category-link" data-category="Personal Care">Personal Care</a>
         </div>
     </div>
+
+    <!-- Filtros activos (se mostrará dinámicamente) -->
+    <div id="activeFilters" class="active-filters" style="display: none;"></div>
 
 <section class="featured-products">
     <div class="container">
@@ -62,6 +66,10 @@
                 </select>
             </div>
         </div>
+        
+        <!-- Información de resultados (se mostrará dinámicamente) -->
+        <div id="searchResultsInfo" class="search-results-info" style="display: none;"></div>
+        
         <div class="products-grid" id="productsGrid">
             <!-- Los productos se cargarán aquí con paginación -->
         </div>
@@ -103,6 +111,9 @@
         if (cartCountElement) {
             cartCountElement.textContent = carritoActual.contadorItems || 0;
         }
+        
+        // Configurar el sistema de búsqueda híbrida
+        configurarBusquedaHibrida();
     });
 </script>
 </body>
