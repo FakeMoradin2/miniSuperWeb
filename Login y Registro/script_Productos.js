@@ -398,7 +398,6 @@ const productosOferta = [
 ];
 
 // Variables globales para el estado del filtrado
-let productosFiltrados = [];
 let categoriaActual = 'All Products';
 let busquedaActual = '';
 
@@ -407,9 +406,16 @@ function renderizarProductos(containerId, productosArray) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    container.innerHTML = productosArray.map(producto => `
+    container.innerHTML = productosArray.map(producto => {
+        // Determinar si estamos en Daily Deals
+        const isDailyDeals = categoriaActual === 'Daily Deals';
+        const buttonText = isDailyDeals ? 'Grab Offer' : (producto.oferta ? 'Grab Offer' : 'Add to Cart');
+        const buttonClass = isDailyDeals || producto.oferta ? 'add-to-cart-btn daily-deals-btn' : 'add-to-cart-btn';
+        
+        return `
         <div class="product-card">
             <div class="product-image">
+                ${producto.oferta ? '<div class="offer-badge">Special Offer</div>' : ''}
                 <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNkZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPsOXIEltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
             </div>
             <div class="product-info">
@@ -422,148 +428,82 @@ function renderizarProductos(containerId, productosArray) {
                         : `$${producto.precio.toFixed(2)}`
                     }
                 </div>
-                <button class="add-to-cart-btn" onclick="agregarAlCarritoDesdePrincipal('${producto.id}')">
-                    Add to Cart
+                <button class="${buttonClass}" onclick="agregarAlCarritoDesdePrincipal('${producto.id}')">
+                    ${buttonText}
                 </button>
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
-// Función para renderizar ofertas especiales
-function renderizarOfertas(containerId, ofertasArray) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    container.innerHTML = ofertasArray.map(oferta => `
-        <div class="offer-card">
-            <div class="offer-badge">Offer</div>
-            <div class="offer-image">
-                <img src="${oferta.imagen}" alt="${oferta.nombre}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNkZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPsOXIEltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
-            </div>
-            <div class="offer-info">
-                <h3>${oferta.nombre}</h3>
-                <p class="offer-description">${oferta.descripcion}</p>
-                <div class="offer-price">
-                    <span class="original-price">$${oferta.precioOriginal.toFixed(2)}</span>
-                    <span class="discount-price">$${oferta.precio.toFixed(2)}</span>
-                </div>
-                <button class="offer-btn" onclick="agregarAlCarritoDesdePrincipal('${oferta.id}')">
-                    Grab Offer
-                </button>
-            </div>
-        </div>
-    `).join('');
+// Función para obtener productos destacados (para compatibilidad)
+function obtenerProductosDestacados() {
+    return productos;
 }
 
-// Función para filtrar productos por categoría
-function filtrarProductosPorCategoria(categoria) {
-    if (categoria === 'All Products') {
-        return productos;
-    }
-    if (categoria === 'Daily Deals') {
-        return productosOferta;
-    }
-    return productos.filter(producto => producto.categoria === categoria);
+// Función para renderizar ofertas (para compatibilidad)
+function renderizarOfertas(containerId, productosArray) {
+    renderizarProductos(containerId, productosArray);
 }
 
-// Función para filtrar productos por búsqueda
-function filtrarProductosPorBusqueda(termino) {
-    if (!termino) return productosFiltrados;
+// Función para manejar cambios de categoría con paginación
+function cambiarCategoriaConPaginacion(categoria, productosArray) {
+    let productosFiltrados;
     
+    if (categoria === 'All Products') {
+        productosFiltrados = productosArray;
+    } else if (categoria === 'Daily Deals') {
+        productosFiltrados = productosOferta;
+    } else {
+        productosFiltrados = productosArray.filter(producto => producto.categoria === categoria);
+    }
+    
+    // Actualizar categoría actual para el renderizado
+    categoriaActual = categoria;
+    
+    // Actualizar título de la sección
+    const sectionTitle = document.querySelector('.featured-products .section-title');
+    if (sectionTitle) {
+        if (categoria === 'Daily Deals') {
+            sectionTitle.textContent = 'Daily Deals';
+        } else if (categoria === 'All Products') {
+            sectionTitle.textContent = 'All Products';
+        } else {
+            sectionTitle.textContent = categoria;
+        }
+    }
+    
+    // Reinicializar paginación con 8 productos por página
+    inicializarPaginacion(productosFiltrados, 8);
+    cambiarPagina(1);
+}
+
+// Función para manejar búsqueda con paginación
+function buscarProductosConPaginacion(termino, productosArray) {
+    if (!termino) {
+        cambiarCategoriaConPaginacion('All Products', productosArray);
+        return;
+    }
+
     const terminoLower = termino.toLowerCase();
-    return productosFiltrados.filter(producto => 
+    const productosFiltrados = productosArray.filter(producto => 
         producto.nombre.toLowerCase().includes(terminoLower) ||
         producto.descripcion.toLowerCase().includes(terminoLower) ||
         producto.categoria.toLowerCase().includes(terminoLower)
     );
-}
 
-// Función principal para aplicar filtros
-function aplicarFiltros() {
-    let productosMostrar = filtrarProductosPorCategoria(categoriaActual);
+    // Actualizar categoría actual para el renderizado
+    categoriaActual = 'All Products';
     
-    if (busquedaActual) {
-        productosMostrar = filtrarProductosPorBusqueda(busquedaActual);
-    }
-    
-    // Actualizar el título de la sección según el filtro
+    // Actualizar título de la sección
     const sectionTitle = document.querySelector('.featured-products .section-title');
     if (sectionTitle) {
-        if (categoriaActual === 'All Products' && !busquedaActual) {
-            sectionTitle.textContent = 'Featured Products';
-        } else if (categoriaActual === 'Daily Deals') {
-            sectionTitle.textContent = 'Daily Deals';
-        } else if (busquedaActual) {
-            sectionTitle.textContent = `Results for "${busquedaActual}" (${productosMostrar.length})`;
-        } else {
-            sectionTitle.textContent = categoriaActual;
-        }
+        sectionTitle.textContent = `Search Results for "${termino}"`;
     }
     
-    renderizarProductos('productsGrid', productosMostrar);
-    
-    // Mostrar u ocultar sección de ofertas según el filtro
-    const specialOffersSection = document.querySelector('.special-offers');
-    if (specialOffersSection) {
-        if (categoriaActual === 'All Products' && !busquedaActual) {
-            specialOffersSection.style.display = 'block';
-        } else {
-            specialOffersSection.style.display = 'none';
-        }
-    }
-}
-
-// Función para cambiar categoría
-function cambiarCategoria(categoria) {
-    // Actualizar estado
-    categoriaActual = categoria;
-    productosFiltrados = filtrarProductosPorCategoria(categoria);
-    
-    // Actualizar clases activas en los enlaces
-    document.querySelectorAll('.category-link').forEach(link => {
-        link.classList.remove('active');
-    });
-    
-    // Encontrar y activar el enlace correspondiente
-    const activeLink = Array.from(document.querySelectorAll('.category-link'))
-        .find(link => link.textContent === categoria);
-    
-    if (activeLink) {
-        activeLink.classList.add('active');
-    }
-    
-    // Aplicar filtros
-    aplicarFiltros();
-    
-    // Scroll suave a la sección de productos
-    const productsSection = document.querySelector('.featured-products');
-    if (productsSection) {
-        productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-}
-
-// Función para buscar productos
-function buscarProductos(termino) {
-    busquedaActual = termino;
-    aplicarFiltros();
-}
-
-// Función para obtener productos destacados (mezcla de categorías)
-function obtenerProductosDestacados() {
-    // Seleccionar algunos productos de diferentes categorías
-    const destacados = [];
-    const categorias = ['Groceries', 'Dairy & Eggs', 'Fruits & Vegetables', 'Meat & Seafood'];
-    
-    categorias.forEach(categoria => {
-        const productosCategoria = productos.filter(p => p.categoria === categoria);
-        if (productosCategoria.length > 0) {
-            // Agregar 2 productos de cada categoría
-            destacados.push(...productosCategoria.slice(0, 2));
-        }
-    });
-    
-    return destacados;
+    // Reinicializar paginación con 8 productos por página
+    inicializarPaginacion(productosFiltrados, 8);
+    cambiarPagina(1);
 }
 
 // Función para agregar al carrito desde la página principal
@@ -642,14 +582,15 @@ function mostrarNotificacion(mensaje) {
 
 // Inicialización cuando se carga la página
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar estado
-    productosFiltrados = obtenerProductosDestacados();
+    // Ocultar sección de ofertas especiales
+    const specialOffersSection = document.querySelector('.special-offers');
+    if (specialOffersSection) {
+        specialOffersSection.style.display = 'none';
+    }
     
-    // Renderizar productos destacados inicialmente
-    renderizarProductos('productsGrid', productosFiltrados);
-    
-    // Renderizar ofertas especiales
-    renderizarOfertas('offersGrid', productosOferta);
+    // Inicializar con todos los productos y paginación de 8
+    inicializarPaginacion(productos, 8);
+    cambiarPagina(1);
     
     // Actualizar contador del carrito en el navbar
     const carritoActual = JSON.parse(localStorage.getItem('carrito') || '{"items": [], "contadorItems": 0}');
@@ -662,8 +603,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.category-link').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-                const categoria = this.textContent;
-            cambiarCategoria(categoria);
+            const categoria = this.textContent;
+            
+            // Actualizar clases activas
+            document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Cambiar categoría con paginación
+            cambiarCategoriaConPaginacion(categoria, productos);
         });
     });
     
@@ -676,8 +623,11 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const termino = searchInput.value.trim();
             if (termino) {
-                cambiarCategoria('All Products');
-                buscarProductos(termino);
+                // Cambiar a "All Products" y buscar
+                document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active'));
+                document.querySelector('.category-link').classList.add('active'); // Primera categoría (All Products)
+                
+                buscarProductosConPaginacion(termino, productos);
             }
         });
         
@@ -685,7 +635,12 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.addEventListener('input', function() {
             const termino = this.value.trim();
             if (termino.length >= 3 || termino.length === 0) {
-                buscarProductos(termino);
+                if (termino.length === 0) {
+                    // Si se borra la búsqueda, volver a todos los productos
+                    cambiarCategoriaConPaginacion('All Products', productos);
+                } else {
+                    buscarProductosConPaginacion(termino, productos);
+                }
             }
         });
     }
@@ -706,4 +661,4 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         document.head.appendChild(style);
     }
-}); 
+});

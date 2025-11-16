@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minisuper Market</title>
     <link rel="stylesheet" href="styles_Principal.css">
+    <link rel="stylesheet" href="styles_pages.css">
 </head>
 <body>
     <nav class="navbar">   
         <div class="main-nav">
-            <!-- Logo a la IZQUIERDA -->
+
             <a href="index.html" class="corner-image">
                 <img class="corner-image" src="iconmini.png" alt="Logo Minisuper Market">
                 <span>Minisuper Market</span>
             </a>  
             
-            <!-- Barra de búsqueda CENTRADA -->
             <div class="search-container">
                 <form class="search-form" action="#" method="get">
                     <input type="search" class="search-input" placeholder="Buscar productos...">
@@ -23,13 +23,14 @@
                 </form>
             </div>
 
-            <!-- Enlaces de navegación a la DERECHA -->
+            <!-- Enlaces de navegación -->
             <div class="nav-links">
                 <a href="#" class="nav-link">My Account</a>
                 <a href="#" class="nav-link">My Orders</a>
                 <a href="Carrito.html" class="nav-link">
                     <span class="cart-icon">🛒</span>
                     Cart
+                    <span id="cartCount" class="cart-count">0</span>
                 </a>
             </div>
         </div>
@@ -52,7 +53,11 @@
     <div class="container">
         <h2 class="section-title">Featured Products</h2>
         <div class="products-grid" id="productsGrid">
+            <!-- Los productos se cargarán aquí con paginación -->
         </div>
+        
+        <!-- Contenedor de las paginas -->
+        <div id="paginationContainer"></div>
     </div>
 </section>
 
@@ -60,6 +65,7 @@
     <div class="container">
         <h2 class="section-title">Special Offers</h2>
         <div class="offers-grid" id="offersGrid">
+            <!-- Las ofertas se cargarán aquí (sin paginación) -->
         </div>
     </div>
 </section>
@@ -69,24 +75,25 @@
 </footer>
 
 <script src="script_Productos.js"></script>
+<script src="script_pages.js"></script>
 
-    <script>
-        // Categorías activas
-        document.querySelectorAll('.category-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // Funcionalidad de añadir al carrito
-        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const productName = this.closest('.product-card').querySelector('.product-name').textContent;
-                alert(`¡${productName} añadido al carrito!`);
-            });
-        });
-    </script>
+<script>
+    // Inicialización cuando se carga la página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar paginación con productos destacados
+        inicializarPaginacion(productos, 8);
+        cambiarPagina(1);
+        
+        // Ocultar sección de ofertas especiales
+        document.querySelector('.special-offers').style.display = 'none';
+        
+        // Actualizar contador del carrito
+        const carritoActual = JSON.parse(localStorage.getItem('carrito') || '{"items": [], "contadorItems": 0}');
+        const cartCountElement = document.getElementById('cartCount');
+        if (cartCountElement) {
+            cartCountElement.textContent = carritoActual.contadorItems || 0;
+        }
+    });
+</script>
 </body>
 </html>

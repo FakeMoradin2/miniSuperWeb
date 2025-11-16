@@ -1,0 +1,126 @@
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin: 3rem 0;
+    padding: 1rem;
+}
+
+.pagination-btn {
+    padding: 0.75rem 1.5rem;
+    background-color: #3B82F6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #2563EB;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.pagination-btn:disabled {
+    background-color: #9CA3AF;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.pagination-info {
+    font-size: 1rem;
+    color: #6B7280;
+    font-weight: 500;
+    min-width: 150px;
+    text-align: center;
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.page-number {
+    padding: 0.5rem 1rem;
+    border: 2px solid #E5E7EB;
+    border-radius: 6px;
+    background-color: white;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.page-number:hover {
+    border-color: #3B82F6;
+    color: #3B82F6;
+}
+
+.page-number.active {
+    background-color: #3B82F6;
+    border-color: #3B82F6;
+    color: white;
+}
+
+.page-number.ellipsis {
+    border: none;
+    background: none;
+    cursor: default;
+}
+
+.page-number.ellipsis:hover {
+    color: #374151;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pagination {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    
+    .pagination-btn {
+        padding: 0.6rem 1.2rem;
+        min-width: 80px;
+        font-size: 0.9rem;
+    }
+    
+    .pagination-info {
+        order: -1;
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .pagination-numbers {
+        gap: 0.25rem;
+    }
+    
+    .page-number {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination {
+        gap: 0.5rem;
+    }
+    
+    .pagination-numbers {
+        display: none;
+    }
+    
+    .mobile-pagination-info {
+        display: block;
+        text-align: center;
+        font-size: 0.9rem;
+        color: #6B7280;
+        margin-top: 0.5rem;
+    }
+}

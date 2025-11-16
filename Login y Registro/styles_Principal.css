@@ -154,6 +154,7 @@ body {
     transition: all 0.2s ease;
     border-radius: 8px;
     white-space: nowrap;
+    position: relative;
 }
 
 .nav-link:hover {
@@ -164,6 +165,23 @@ body {
 
 .cart-icon {
     font-size: 1.2rem;
+}
+
+.cart-count {
+    background-color: #ef4444;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .categories {
@@ -234,6 +252,7 @@ body {
     overflow: hidden;
     transition: all 0.3s ease;
     border: 1px solid #e2e8f0;
+    position: relative;
 }
 
 .product-card:hover {
@@ -281,6 +300,9 @@ body {
     font-weight: 700;
     color: #3B82F6;
     margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .add-to-cart-btn {
@@ -300,6 +322,16 @@ body {
     background-color: #2563EB;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Botones rojos para Daily Deals */
+.daily-deals-btn {
+    background-color: #ef4444 !important;
+}
+
+.daily-deals-btn:hover {
+    background-color: #dc2626 !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
 }
 
 /* Sección de ofertas especiales */
@@ -423,14 +455,31 @@ footer p {
     font-size: 1rem;
 }
 
-/* Red button for Daily Deals / Special Offers */
-.special-offers .add-to-cart-btn {
+/* Estilos para ofertas en productos */
+.offer-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
     background-color: #ef4444;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    z-index: 2;
 }
 
-.special-offers .add-to-cart-btn:hover {
-    background-color: #dc2626;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+.original-price {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 1.1rem;
+    margin-right: 8px;
+}
+
+.discount-price {
+    color: #ef4444;
+    font-size: 1.3rem;
+    font-weight: 700;
 }
 
 /* Responsive */
