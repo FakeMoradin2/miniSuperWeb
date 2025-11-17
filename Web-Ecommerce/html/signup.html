@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create account</title>
-    <link rel="stylesheet" href="styles_Registro.css">
+    <link rel="stylesheet" href="../css/styles_signup.css">
 </head>
 <body>
     <div class="container">
-        <!-- recuadro de imagen en la esquina -->
         <div class="corner-image" aria-hidden="true">
-            <a href="Principal.html">
-                <img src="WhatsApp Image 2025-10-12 at 12.46.25_976f73b5.jpg" alt="Imagen de esquina">
+            <a href="principal.html">
+                <img src="../WhatsApp Image 2025-10-12 at 12.46.25_976f73b5.jpg" alt="Imagen de esquina">
             </a>
         </div>
 
@@ -37,7 +36,6 @@
                     <span>✔ At least 8 characters</span>
                 </div>
 
-                <!-- Recuadro para mostrar contraseña -->
                 <div class="show-password">
                     <input type="checkbox" id="showPassword">
                     <label for="showPassword">Show Password</label>
@@ -57,12 +55,11 @@
             <button type="submit" class="create-account-btn">Create account</button>
             
             <div class="signin-link">
-                Already have an account? <a href="Login.html">Login</a>
+                Already have an account? <a href="login.html">Login</a>
             </div>
         </form>
     </div>
     
-    <!--visibilidad de la contraseña -->
     <script>
         (function() {
             const toggle = document.getElementById('showPassword');

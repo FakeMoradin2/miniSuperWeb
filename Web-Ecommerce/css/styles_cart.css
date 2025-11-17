@@ -1,4 +1,4 @@
-/* styles_Carrito.css */
+/* Cart Layout */
 main {
   max-width: 1200px;
   margin: 40px auto;
@@ -11,27 +11,6 @@ h1 {
   margin-bottom: 30px;
 }
 
-.corner-image {
-    display: flex;
-    gap: 12px;
-    border-radius: 12px;
-    background: transparent;
-    color: #3B82F6;
-    font-size: 1.5rem;
-    font-weight: 700;
-    overflow: visible;
-    text-decoration: none;
-    align-items: center;
-    width: auto;
-    min-width: auto;
-    height: auto;
-    min-height: 56px;
-    white-space: nowrap;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-    padding: 0 10px;
-}
-/* Layout principal */
 .cart-layout {
   display: flex;
   gap: 30px;
@@ -47,7 +26,7 @@ h1 {
   width: 350px;
 }
 
-/* Sección de productos */
+/* Cart Sections */
 .cart-section {
   background: white;
   border-radius: 12px;
@@ -64,6 +43,7 @@ h1 {
   color: #2c3e50;
 }
 
+/* Cart Items */
 .cart-item {
   display: flex;
   justify-content: space-between;
@@ -184,7 +164,7 @@ h1 {
   color: #dc3545;
 }
 
-/* Sección de cupones */
+/* Coupon Section */
 .coupon-section {
   background: white;
   border-radius: 12px;
@@ -231,7 +211,7 @@ h1 {
   transform: translateY(-1px);
 }
 
-/* Sección de resumen */
+/* Summary Section */
 .summary-section {
   background: white;
   border-radius: 12px;
@@ -273,6 +253,7 @@ h1 {
   font-weight: 600;
 }
 
+/* Cart Actions */
 .cart-actions {
   text-align: center;
   margin-top: 20px;
@@ -302,30 +283,7 @@ h1 {
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
-.btn-danger {
-  background-color: #EF4444;
-}
-
-.btn-danger:hover {
-  background-color: #B91C1C;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-/* Footer styles */
-footer {
-  background-color: #333;
-  color: white;
-  padding: 40px 0;
-  text-align: center;
-  margin-top: 60px;
-  width: 100%;
-}
-
-footer p {
-  margin: 0;
-  font-size: 1rem;
-}
-
+/* Empty Cart */
 .empty-cart {
   text-align: center;
   padding: 40px;
@@ -343,7 +301,8 @@ footer p {
 .empty-cart .btn {
   margin-top: 10px;
 }
-/* Estilos adicionales para productos y ofertas */
+
+/* Product Offers */
 .original-price {
     text-decoration: line-through;
     color: #999;
@@ -357,41 +316,7 @@ footer p {
     font-weight: 700;
 }
 
-/* Mejoras responsive para productos */
-@media (max-width: 768px) {
-    .product-info, .offer-info {
-        padding: 1rem;
-    }
-    
-    .product-name, .offer-info h3 {
-        font-size: 1.1rem;
-    }
-    
-    .product-description, .offer-description {
-        font-size: 0.9rem;
-    }
-    
-    .product-price, .offer-price {
-        font-size: 1.3rem;
-    }
-    
-    .original-price {
-        font-size: 1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .products-grid, .offers-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .product-card, .offer-card {
-        margin-bottom: 1rem;
-    }
-}
-
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
   .cart-layout {
     flex-direction: column;
@@ -418,6 +343,26 @@ footer p {
   
   .btn {
     width: 100%;
+  }
+  
+  .product-info, .offer-info {
+    padding: 1rem;
+  }
+  
+  .product-name, .offer-info h3 {
+    font-size: 1.1rem;
+  }
+  
+  .product-description, .offer-description {
+    font-size: 0.9rem;
+  }
+  
+  .product-price, .offer-price {
+    font-size: 1.3rem;
+  }
+  
+  .original-price {
+    font-size: 1rem;
   }
 }
 
@@ -469,5 +414,14 @@ footer p {
   
   .coupon-btn {
     width: 100%;
+  }
+  
+  .products-grid, .offers-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .product-card, .offer-card {
+    margin-bottom: 1rem;
   }
 }

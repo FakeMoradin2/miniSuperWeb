@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carrito - Minisuper Market</title>
+  <link rel="stylesheet" href="../css/styles_principal.css" />
+  <link rel="stylesheet" href="../css/styles_cart.css" />
+</head>
+
+<body>
+  <header>
+    <nav class="navbar">   
+      <div class="main-nav">
+        <a href="index.html" class="corner-image">
+            <img class="corner-image" src="../iconmini.png" alt="Logo Minisuper Market">
+            <span>Minisuper Market</span>
+        </a>  
+        
+        <div class="search-container">
+          <form class="search-form" action="#" method="get">
+            <input type="search" class="search-input" placeholder="Buscar productos...">
+            <button type="submit" class="search-button">🔍</button>
+          </form>
+        </div>
+
+        <div class="nav-links">
+          <a href="#" class="nav-link">My Account</a>
+          <a href="#" class="nav-link">My Orders</a>
+          <a href="cart.html" class="nav-link">
+            <span class="cart-icon">🛒</span>
+            Cart (<span id="cartCount">0</span>)
+          </a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Your Shopping Cart</h1>
+    
+    <div class="cart-layout">
+      <div class="cart-items-section">
+        <div class="cart-section">
+          <div class="section-header">Products</div>
+          <div id="cartContainer"></div>
+        </div>
+        
+        <div class="coupon-section">
+          <div class="section-header">Coupons and Promotions</div>
+          <div class="coupon-form">
+            <input type="text" class="coupon-input" placeholder="Enter coupon code">
+            <button class="coupon-btn">Apply</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="cart-summary-section">
+        <div class="summary-section">
+          <div class="section-header">Purchase Summary</div>
+          <div class="summary-content">
+            <div class="summary-row">
+              <span>Products</span>
+              <span class="summary-value">$<span id="productsTotal">0.00</span></span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span class="free-shipping">Free</span>
+            </div>
+            <div class="summary-row summary-total">
+              <span>Total</span>
+              <span>$<span id="cartTotal">0.00</span></span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="cart-actions">
+          <button id="payBtn" class="btn">Continue Purchase</button>
+          <a href="principal.html" class="btn">← Continue Shopping</a>
+          <button id="clearCartBtn" class="btn btn-danger">Empty Cart</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2025 Minisuper Market - All rights reserved</p>
+  </footer>
+
+  <script src="../jss/script_cart.js"></script>
+</body>
+</html>

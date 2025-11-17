@@ -4,15 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minisuper Market</title>
-    <link rel="stylesheet" href="styles_Principal.css">
-    <link rel="stylesheet" href="styles_pages.css">
+    <link rel="stylesheet" href="../css/styles_principal.css">
+    <link rel="stylesheet" href="../css/styles_pages.css">
 </head>
 <body>
     <nav class="navbar">   
         <div class="main-nav">
-
             <a href="index.html" class="corner-image">
-                <img class="corner-image" src="iconmini.png" alt="Logo Minisuper Market">
+                <img class="corner-image" src="../iconmini.png" alt="Logo Minisuper Market">
                 <span>Minisuper Market</span>
             </a>  
             
@@ -21,14 +20,12 @@
                     <input type="search" class="search-input" placeholder="Buscar productos...">
                     <button type="submit" class="search-button">🔍</button>
                 </form>
-                <!-- Las sugerencias se agregarán aquí dinámicamente -->
             </div>
 
-            <!-- Enlaces de navegación -->
             <div class="nav-links">
                 <a href="#" class="nav-link">My Account</a>
                 <a href="#" class="nav-link">My Orders</a>
-                <a href="Carrito.html" class="nav-link">
+                <a href="cart.html" class="nav-link">
                     <span class="cart-icon">🛒</span>
                     Cart
                     <span id="cartCount" class="cart-count">0</span>
@@ -50,7 +47,6 @@
         </div>
     </div>
 
-    <!-- Filtros activos (se mostrará dinámicamente) -->
     <div id="activeFilters" class="active-filters" style="display: none;"></div>
 
 <section class="featured-products">
@@ -67,14 +63,12 @@
             </div>
         </div>
         
-        <!-- Información de resultados (se mostrará dinámicamente) -->
         <div id="searchResultsInfo" class="search-results-info" style="display: none;"></div>
         
         <div class="products-grid" id="productsGrid">
-            <!-- Los productos se cargarán aquí con paginación -->
+            <!-- Products will be loaded here with pagination -->
         </div>
         
-        <!-- Contenedor de las paginas -->
         <div id="paginationContainer"></div>
     </div>
 </section>
@@ -83,7 +77,7 @@
     <div class="container">
         <h2 class="section-title">Special Offers</h2>
         <div class="offers-grid" id="offersGrid">
-            <!-- Las ofertas se cargarán aquí (sin paginación) -->
+            <!-- Offers will be loaded here -->
         </div>
     </div>
 </section>
@@ -92,27 +86,22 @@
     <p>&copy; 2025 Minisuper Market - All rights reserved</p>
 </footer>
 
-<script src="script_Productos.js"></script>
-<script src="script_pages.js"></script>
+<script src="../jss/script_products.js"></script>
+<script src="../jss/script_pages.js"></script>
 
 <script>
-    // Inicialización cuando se carga la página
     document.addEventListener('DOMContentLoaded', function() {
-        // Inicializar paginación con productos destacados
         inicializarPaginacion(productos, 8);
         cambiarPagina(1);
         
-        // Ocultar sección de ofertas especiales
         document.querySelector('.special-offers').style.display = 'none';
         
-        // Actualizar contador del carrito
         const carritoActual = JSON.parse(localStorage.getItem('carrito') || '{"items": [], "contadorItems": 0}');
         const cartCountElement = document.getElementById('cartCount');
         if (cartCountElement) {
             cartCountElement.textContent = carritoActual.contadorItems || 0;
         }
         
-        // Configurar el sistema de búsqueda híbrida
         configurarBusquedaHibrida();
     });
 </script>

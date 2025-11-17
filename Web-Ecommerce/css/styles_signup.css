@@ -17,7 +17,7 @@ body {
 }
 
 .container {
-    margin-top: 8%; /* IGUAL QUE EL LOGIN */
+    margin-top: 8%;
     width: 100%;
     max-width: 500px;
     background-color: #FFFFFF;
@@ -36,7 +36,7 @@ h1 {
     font-weight: 700;
 }
 
-/* Logo mas grande */
+/* Logo Styles */
 .corner-image {
     position: absolute;
     top: -50px;
@@ -138,7 +138,7 @@ input[type="password"]:focus {
     color: #22c55e;
 }
 
-/* Recuadro de mostrar contraseña */
+/* Show Password */
 .show-password {
     display: flex;
     align-items: center;
@@ -233,8 +233,8 @@ input[type="password"]:focus {
 /* Responsive */
 @media (max-width: 768px) {
     .container {
-        padding: 70px 25px 30px; /* Ajustado padding-top */
-        margin-top: 10%; /* Ajuste responsive igual que login */
+        padding: 70px 25px 30px;
+        margin-top: 10%;
     }
     
     h1 {
@@ -265,7 +265,7 @@ input[type="password"]:focus {
     .container {
         padding: 65px 20px 20px;
         border-radius: 8px;
-        margin-top: 8%; /* Mantener separación en móviles */
+        margin-top: 8%;
     }
 
     .corner-image {
@@ -298,7 +298,7 @@ input[type="password"]:focus {
 @media (max-width: 400px) {
     .container {
         padding: 60px 15px 18px;
-        margin-top: 5%; /* Menos separación en pantallas muy pequeñas */
+        margin-top: 5%;
     }
     
     .corner-image {

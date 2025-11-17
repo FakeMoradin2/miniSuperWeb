@@ -16,6 +16,7 @@ body {
     padding: 0 20px;
 }
 
+/* Logo Styles */
 .corner-image {
     display: flex;
     gap: 12px;
@@ -62,7 +63,7 @@ body {
     box-shadow: 0 14px 40px rgba(0,0,0,0.18);
 }
 
-/* Navbar Styles - ESTRUCTURA CORREGIDA */
+/* Navbar Styles */
 .navbar {
     background-color: #fff;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
@@ -81,16 +82,12 @@ body {
     gap: 2rem;
 }
 
-/* Logo a la izquierda */
-.corner-image {
-    flex-shrink: 0;
-}
-
-/* Barra de búsqueda CENTRADA */
+/* Search Bar */
 .search-container {
     flex: 0 1 600px;
     max-width: 600px;
     margin: 0 auto;
+    position: relative;
 }
 
 .search-form {
@@ -135,7 +132,7 @@ body {
     transform: scale(1.05);
 }
 
-/* Enlaces de navegación a la DERECHA */
+/* Navigation Links */
 .nav-links {
     display: flex;
     align-items: center;
@@ -184,6 +181,7 @@ body {
     justify-content: center;
 }
 
+/* Categories */
 .categories {
     background-color: #3B82F6;
     padding: 0.75rem 0;
@@ -224,7 +222,7 @@ body {
     font-weight: 600;
 }
 
-/* Sección de productos destacados */
+/* Featured Products */
 .featured-products {
     padding: 60px 0;
     background-color: white;
@@ -292,7 +290,7 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 2rem;
     margin-bottom: 3rem;
-    min-height: 400px; /* Altura mínima para mantener consistencia */
+    min-height: 400px;
 }
 
 .product-card {
@@ -303,7 +301,7 @@ body {
     transition: all 0.3s ease;
     border: 1px solid #e2e8f0;
     position: relative;
-    height: 100%; /* Asegura que todas las tarjetas tengan la misma altura */
+    height: 100%;
     display: flex;
     flex-direction: column;
 }
@@ -317,7 +315,7 @@ body {
     width: 100%;
     height: 200px;
     overflow: hidden;
-    flex-shrink: 0; /* Evita que la imagen se reduzca */
+    flex-shrink: 0;
 }
 
 .product-image img {
@@ -333,7 +331,7 @@ body {
 
 .product-info {
     padding: 1.5rem;
-    flex-grow: 1; /* Permite que el contenido crezca uniformemente */
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
 }
@@ -351,7 +349,7 @@ body {
     font-size: 0.95rem;
     margin-bottom: 1rem;
     line-height: 1.5;
-    flex-grow: 1; /* Hace que la descripción ocupe el espacio disponible */
+    flex-grow: 1;
 }
 
 .product-price {
@@ -362,7 +360,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-shrink: 0; /* Evita que el precio se reduzca */
+    flex-shrink: 0;
 }
 
 .add-to-cart-btn {
@@ -376,8 +374,8 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    flex-shrink: 0; /* Mantiene el botón en su tamaño */
-    margin-top: auto; /* Empuja el botón hacia abajo */
+    flex-shrink: 0;
+    margin-top: auto;
 }
 
 .add-to-cart-btn:hover {
@@ -386,17 +384,7 @@ body {
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* Botones rojos para Daily Deals */
-.daily-deals-btn {
-    background-color: #ef4444 !important;
-}
-
-.daily-deals-btn:hover {
-    background-color: #dc2626 !important;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-}
-
-/* Sección de ofertas especiales */
+/* Special Offers */
 .special-offers {
     padding: 60px 0;
     background-color: #f8fafc;
@@ -502,7 +490,7 @@ body {
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
-/* Footer styles */
+/* Footer */
 footer {
     background-color: #333;
     color: white;
@@ -517,81 +505,26 @@ footer p {
     font-size: 1rem;
 }
 
-/* Estilos para ofertas en productos */
-.offer-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: #ef4444;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 0.8rem;
-    z-index: 2;
+/* Button Variants */
+.daily-deals-btn {
+    background-color: #ef4444 !important;
 }
 
-.original-price {
-    text-decoration: line-through;
-    color: #999;
-    font-size: 1.1rem;
-    margin-right: 8px;
+.daily-deals-btn:hover {
+    background-color: #dc2626 !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
 }
 
-.discount-price {
-    color: #ef4444;
-    font-size: 1.3rem;
-    font-weight: 700;
+.btn-danger {
+    background-color: #EF4444;
 }
 
-/* ========== ESTILOS PARA PAGINACIÓN ========== */
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 2rem;
-    flex-wrap: wrap;
+.btn-danger:hover {
+    background-color: #B91C1C;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
-.pagination button {
-    padding: 0.5rem 1rem;
-    border: 1px solid #e2e8f0;
-    background-color: white;
-    color: #4b5563;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    font-weight: 500;
-}
-
-.pagination button:hover:not(:disabled) {
-    background-color: #3B82F6;
-    color: white;
-    border-color: #3B82F6;
-}
-
-.pagination button.active {
-    background-color: #3B82F6;
-    color: white;
-    border-color: #3B82F6;
-}
-
-.pagination button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.pagination-info {
-    text-align: center;
-    color: #6b7280;
-    margin: 1rem 0;
-    font-size: 0.9rem;
-}
-
-/* ========== ESTILOS PARA EL SISTEMA DE BÚSQUEDA HÍBRIDA ========== */
-
-/* Información de resultados de búsqueda */
+/* Search System */
 .search-results-info {
     text-align: center;
     margin-bottom: 2rem;
@@ -603,7 +536,6 @@ footer p {
     border-left: 4px solid #3B82F6;
 }
 
-/* Mensaje cuando no hay resultados */
 .no-results-message {
     text-align: center;
     padding: 3rem;
@@ -622,7 +554,6 @@ footer p {
     margin-bottom: 1.5rem;
 }
 
-/* Botón para limpiar búsqueda */
 .clear-search-btn {
     background-color: #6b7280;
     color: white;
@@ -642,12 +573,6 @@ footer p {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Contenedor de búsqueda con posición relativa para sugerencias */
-.search-container {
-    position: relative;
-}
-
-/* Sugerencias de búsqueda */
 .search-suggestions {
     position: absolute;
     top: 100%;
@@ -687,14 +612,12 @@ footer p {
     font-weight: 600;
 }
 
-/* Indicador de búsqueda activa */
 .search-active .search-input {
     border-color: #3B82F6;
     background-color: #ffffff;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Badge para mostrar filtros activos */
 .active-filters {
     display: flex;
     justify-content: center;
@@ -735,7 +658,6 @@ footer p {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Estados de carga para búsqueda */
 .search-loading {
     position: relative;
 }
@@ -759,9 +681,7 @@ footer p {
     100% { transform: translateY(-50%) rotate(360deg); }
 }
 
-/* ========== FIN ESTILOS BÚSQUEDA HÍBRIDA ========== */
-
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 1200px) {
     .main-nav {
         padding: 0.8rem 1.5rem;
@@ -796,7 +716,6 @@ footer p {
     }
 }
 
-/* Mobile Breakpoint */
 @media (max-width: 768px) {
     .navbar {
         position: fixed;
@@ -905,7 +824,6 @@ footer p {
         gap: 1.5rem;
     }
     
-    /* Responsive para el sistema de búsqueda */
     .search-results-info {
         font-size: 1rem;
         padding: 0.75rem;
@@ -945,7 +863,6 @@ footer p {
     }
 }
 
-/* Small Mobile Breakpoint */
 @media (max-width: 480px) {
     .main-nav {
         padding: 0.5rem;

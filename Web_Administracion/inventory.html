@@ -1,0 +1,63 @@
+<!-- frontend/inventario.html -->
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Inventario - Minisúper</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="header"><i class="fas fa-store"></i><h2 style="margin-left:6px">Minisuper System</h2></div>
+    <ul>
+      <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+      <li><a href="pos.html"><i class="fas fa-cash-register"></i><span>Punto de Venta</span></a></li>
+      <li class="active"><a href="inventory.html"><i class="fas fa-boxes"></i><span>Inventario</span></a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header-top">
+      <h1>Inventario</h1>
+      <div class="user"><div class="avatar">JD</div></div>
+    </div>
+
+    <div style="display:flex;gap:18px;flex-wrap:wrap">
+      <div style="flex:1;min-width:320px">
+        <div class="form-card">
+          <h3>Agregar / Editar Producto</h3>
+          <input type="hidden" id="prodId">
+          <div class="form-group"><label>Nombre</label><input id="prodNombre"></div>
+          <div class="form-group"><label>Precio</label><input id="prodPrecio" type="number" step="0.01"></div>
+          <div class="form-group"><label>Stock</label><input id="prodStock" type="number"></div>
+          <div class="form-group"><label>Categoría</label><select id="prodCategoria"><option value="">--</option></select></div>
+          <div class="form-group"><label>Proveedor</label><select id="prodProveedor"><option value="">--</option></select></div>
+          <div class="form-group"><label>URL de Imagen</label><input id="prodImagen" placeholder="https://ejemplo.com/imagen.jpg"></div>
+          <div style="display:flex;gap:8px">
+            <button id="btnSaveProd" class="btn primary">Guardar</button>
+            <button id="btnReset" class="btn">Limpiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:2;min-width:320px">
+        <div class="table-card">
+          <h3>Lista de Productos</h3>
+          <div style="margin-bottom:15px">
+            <input type="text" id="searchInput" placeholder="Buscar por nombre..." style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:14px">
+          </div>
+          <table id="productosTable">
+            <thead><tr><th>Producto</th><th>Precio</th><th>Stock</th><th>Cat</th><th>Acciones</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/inventory.js"></script>
+</body>
+</html>

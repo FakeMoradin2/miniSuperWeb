@@ -35,7 +35,8 @@ h1 {
     font-size: 28px;
     font-weight: 700;
 }
-/* Logo mas grande */
+
+/* Logo Styles */
 .corner-image {
     position: absolute;
     top: -50px;
@@ -117,7 +118,7 @@ input[type="password"]:focus {
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
-/* Mostrar contraseña */
+/* Show Password */
 .show-password {
     display: flex;
     align-items: center;
@@ -203,7 +204,7 @@ input[type="password"]:focus {
     text-decoration: underline;
 }
 
-/* Estilos para el enlace "Forgot your password?" */
+/* Forgot Password */
 .forgot-password {
     text-align: right;
     margin-top: 8px;
@@ -224,7 +225,7 @@ input[type="password"]:focus {
 /* Responsive */
 @media (max-width: 768px) {
     .container {
-        padding: 70px 25px 30px; /* Ajustado padding-top */
+        padding: 70px 25px 30px;
     }
 
     h1 {
@@ -236,7 +237,7 @@ input[type="password"]:focus {
     }
     
     .corner-image {
-        width: 100px; /* Tamaño responsive */
+        width: 100px;
         height: 100px;
         top: -45px;
     }
@@ -244,13 +245,13 @@ input[type="password"]:focus {
 
 @media (max-width: 576px) {
     .container {
-        padding: 65px 20px 20px; /* Ajustado padding-top */
+        padding: 65px 20px 20px;
         border-radius: 8px;
     }
 
     .corner-image {
         top: -40px;
-        width: 90px; /* Tamaño responsive */
+        width: 90px;
         height: 90px;
     }
 
@@ -276,12 +277,12 @@ input[type="password"]:focus {
 
 @media (max-width: 400px) {
     .container {
-        padding: 60px 15px 18px; /* Ajustado padding-top */
+        padding: 60px 15px 18px;
     }
 
     .corner-image {
         top: -35px;
-        width: 80px; /* Tamaño responsive */
+        width: 80px;
         height: 80px;
     }
 

@@ -1,6 +1,6 @@
-// script_Productos.js
+// script_products.js
 
-// Clase para representar un producto
+// Product Class
 class Producto {
     constructor(id, nombre, descripcion, precio, categoria, imagen, oferta = false, precioOriginal = null) {
         this.id = id;
@@ -14,396 +14,34 @@ class Producto {
     }
 }
 
-// Base de datos de productos
+// Sample Products Data
 const productos = [
-    // Productos Abarrotes
-    new Producto(
-        'abarrotes-1',
-        'Brown Rice',
-        'Long-grain brown rice, 1kg. High in fiber and essential nutrients.',
-        28.50,
-        'Groceries',
-        'https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'abarrotes-2',
-        'Black Beans',
-        'High-quality black beans, 500g. Perfect for traditional dishes.',
-        22.00,
-        'Groceries',
-        'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'abarrotes-3',
-        'Extra Virgin Olive Oil',
-        'Extra virgin olive oil, 500ml. Perfect for salads and cooking.',
-        85.00,
-        'Groceries',
-        'https://images.unsplash.com/photo-1531386450457-90dd0c7d99c1?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'abarrotes-4',
-        'Whole Wheat Pasta',
-        'Whole wheat pasta, 400g. Good source of fiber and protein.',
-        18.50,
-        'Groceries',
-        'https://images.unsplash.com/photo-1551462147-37885a3ac0c9?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'abarrotes-5',
-        'Tuna in Water',
-        'Tuna in water, 140g. High in protein and low in fat.',
-        15.75,
-        'Groceries',
-        'https://images.unsplash.com/photo-1589923186741-b013b447c3c3?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'abarrotes-6',
-        'Ground Coffee',
-        '100% Arabica ground coffee, 250g. Rich aroma and flavor.',
-        65.00,
-        'Groceries',
-        'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?w=400&h=300&fit=crop',
-        false
-    ),
-
-    // Lácteos y Huevos
-    new Producto(
-        'lacteos-1',
-        'Whole Milk',
-        'Pasteurized whole milk, 1L. Source of calcium and vitamins.',
-        25.50,
-        'Dairy & Eggs',
-        'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'lacteos-2',
-        'Panela Cheese',
-        'Fresh panela cheese, 400g. Great for quesadillas and snacks.',
-        48.00,
-        'Dairy & Eggs',
-        'https://images.unsplash.com/photo-1566305977571-5666677c6e98?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'lacteos-3',
-        'Natural Yogurt',
-        'Unsweetened natural yogurt, 1kg. Rich in probiotics.',
-        32.00,
-        'Dairy & Eggs',
-        'https://images.unsplash.com/photo-1570194065650-d99fb4bed8fd?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'lacteos-4',
-        'White Eggs',
-        'Grade A white eggs, 18pcs. Fresh and nutritious.',
-        45.00,
-        'Dairy & Eggs',
-        'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'lacteos-5',
-        'Unsalted Butter',
-        'Unsalted butter, 200g. Ideal for cooking and baking.',
-        28.50,
-        'Dairy & Eggs',
-        'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'lacteos-6',
-        'Heavy Cream',
-        'Heavy cream, 250ml. Perfect for desserts and coffee.',
-        35.00,
-        'Dairy & Eggs',
-        'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&h=300&fit=crop',
-        false
-    ),
-
-    // Frutas y Verduras
-    new Producto(
-        'frutas-1',
-        'Red Apples',
-        'Fresh red apples, 1kg. Sweet and crisp.',
-        32.00,
-        'Fruits & Vegetables',
-        'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'frutas-2',
-        'Ripe Bananas',
-        'Ripe bananas, 1kg. Perfect for smoothies or eating as is.',
-        18.50,
-        'Fruits & Vegetables',
-        'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'frutas-3',
-        'Fresh Carrots',
-        'Fresh carrots, 1kg. Ideal for salads and stews.',
-        15.00,
-        'Fruits & Vegetables',
-        'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'frutas-4',
-        'Salad Tomatoes',
-        'Fresh salad tomatoes, 1kg. Perfect for sauces and salads.',
-        22.00,
-        'Fruits & Vegetables',
-        'https://images.unsplash.com/photo-1546470427-e212b7d3106a?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'frutas-5',
-        'Hass Avocados',
-        'Ripe Hass avocados, 1kg. Creamy and delicious.',
-        65.00,
-        'Fruits & Vegetables',
-        'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'frutas-6',
-        'Limes',
-        'Juicy green limes, 1kg. Great for drinks and dressings.',
-        20.00,
-        'Fruits & Vegetables',
-        'https://images.unsplash.com/photo-1587496679742-bad502958f4f?w=400&h=300&fit=crop',
-        false
-    ),
-
-    // Carnes y Pescados
-    new Producto(
-        'carnes-1',
-        'Chicken Breast',
-        'Boneless chicken breast, 1kg. Fresh and high quality.',
-        120.00,
-        'Meat & Seafood',
-        'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'carnes-2',
-        'Ground Beef',
-        'Ground beef, 1kg. Great for burgers and tacos.',
-        150.00,
-        'Meat & Seafood',
-        'https://images.unsplash.com/photo-1602472918622-3910b0c94d13?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'carnes-3',
-        'Fresh Salmon',
-        'Fresh salmon fillet, 500g. Rich in omega-3.',
-        180.00,
-        'Meat & Seafood',
-        'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'carnes-4',
-        'Pork Chops',
-        'Pork chops, 1kg. Juicy and perfect for grilling.',
-        95.00,
-        'Meat & Seafood',
-        'https://images.unsplash.com/photo-1604503468406-b3c7d37c708d?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'carnes-5',
-        'Large Shrimp',
-        'Large peeled shrimp, 500g. Fresh and delicious.',
-        220.00,
-        'Meat & Seafood',
-        'https://images.unsplash.com/photo-1587334941619-24f6ce7e8030?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'carnes-6',
-        'Beef Steak',
-        'Premium beef steak, 500g. Tender and juicy.',
-        250.00,
-        'Meat & Seafood',
-        'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=400&h=300&fit=crop',
-        false
-    ),
-
-    // Limpieza del Hogar
-    new Producto(
-        'limpieza-1',
-        'Liquid Detergent',
-        'Liquid laundry detergent, 3L. Removes tough stains.',
-        85.00,
-        'Home Cleaning',
-        'https://images.unsplash.com/photo-1583947581924-860bda6a26df?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'limpieza-2',
-        'Dish Soap',
-        'Liquid dish soap, 1L. Effectively removes grease.',
-        32.50,
-        'Home Cleaning',
-        'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'limpieza-3',
-        'Multi-purpose Disinfectant',
-        'Multi-purpose disinfectant, 1L. Kills 99.9% of bacteria.',
-        45.00,
-        'Home Cleaning',
-        'https://images.unsplash.com/photo-1585435557343-3b092031d5ad?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'limpieza-4',
-        'Toilet Paper',
-        'Soft toilet paper, 12 rolls. Double-ply for extra comfort.',
-        65.00,
-        'Home Cleaning',
-        'https://images.unsplash.com/photo-1584555130103-b8d0084d8d8f?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'limpieza-5',
-        'Paper Towels',
-        'Absorbent paper towels, 2 rolls. Ideal for kitchen use.',
-        42.00,
-        'Home Cleaning',
-        'https://images.unsplash.com/photo-1628088062854-d1877bd35821?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'limpieza-6',
-        'Glass Cleaner',
-        'Glass cleaner, 500ml. Leaves surfaces streak-free.',
-        28.00,
-        'Home Cleaning',
-        'https://images.unsplash.com/photo-1611251432626-1c17f1d7d6c6?w=400&h=300&fit=crop',
-        false
-    ),
-
-    // Cuidado Personal
-    new Producto(
-        'cuidado-1',
-        'Moisturizing Shampoo',
-        'Moisturizing shampoo for all hair types, 400ml.',
-        75.00,
-        'Personal Care',
-        'https://images.unsplash.com/photo-1526947425960-945c6e72858f?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'cuidado-2',
-        'Oat Soap',
-        'Oat soap for sensitive skin, 3 bars. Gentle and nourishing.',
-        35.00,
-        'Personal Care',
-        'https://images.unsplash.com/photo-1600857062244-5c0071b61b8a?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'cuidado-3',
-        'Toothpaste',
-        'Fluoride toothpaste, 100ml. Protects against cavities.',
-        28.50,
-        'Personal Care',
-        'https://images.unsplash.com/photo-1626497764746-6dc36546b388?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'cuidado-4',
-        'Stick Deodorant',
-        '48h protection stick deodorant, 50g.',
-        45.00,
-        'Personal Care',
-        'https://images.unsplash.com/photo-1617991677377-4fd0f81741c2?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'cuidado-5',
-        'Body Lotion',
-        'Moisturizing body lotion, 400ml. Keeps skin soft all day.',
-        65.00,
-        'Personal Care',
-        'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&h=300&fit=crop',
-        false
-    ),
-    new Producto(
-        'cuidado-6',
-        'Toothbrush',
-        'Soft-bristle toothbrush, 2 pack.',
-        25.00,
-        'Personal Care',
-        'https://images.unsplash.com/photo-162179148c5-2a5ec2b39e72?w=400&h=300&fit=crop',
-        false
-    )
+    new Producto('1', 'Fresh Apples', 'Crisp and sweet red apples', 2.99, 'Fruits & Vegetables', 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('2', 'Organic Milk', 'Fresh organic whole milk', 3.49, 'Dairy & Eggs', 'https://images.unsplash.com/photo-1563636619-e9143da7973b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('3', 'Whole Wheat Bread', 'Freshly baked whole wheat bread', 2.29, 'Groceries', 'https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('4', 'Chicken Breast', 'Boneless skinless chicken breast', 8.99, 'Meat & Seafood', 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('5', 'Laundry Detergent', 'Concentrated laundry detergent', 5.99, 'Home Cleaning', 'https://images.unsplash.com/photo-1584305574647-469b2283f6d2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('6', 'Toothpaste', 'Fluoride toothpaste for cavity protection', 3.79, 'Personal Care', 'https://images.unsplash.com/photo-1559599076-9c61d8ed1f89?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('7', 'Orange Juice', '100% pure orange juice', 4.49, 'Groceries', 'https://images.unsplash.com/photo-1613478223719-2ab802602423?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('8', 'Greek Yogurt', 'Creamy Greek yogurt', 1.99, 'Dairy & Eggs', 'https://images.unsplash.com/photo-1488477181946-6428a0291777?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('9', 'Bananas', 'Fresh yellow bananas', 1.49, 'Fruits & Vegetables', 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('10', 'Salmon Fillet', 'Fresh Atlantic salmon fillet', 12.99, 'Meat & Seafood', 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('11', 'Dish Soap', 'Lemon scented dish soap', 2.49, 'Home Cleaning', 'https://images.unsplash.com/photo-1584305574647-469b2283f6d2?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'),
+    new Producto('12', 'Shampoo', 'Moisturizing shampoo for all hair types', 6.99, 'Personal Care', 'https://images.unsplash.com/photo-1556228578-8c89e6d6a6dd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60')
 ];
 
-// Productos en oferta (para la sección de ofertas especiales)
+// Special Offers
 const productosOferta = [
-    new Producto(
-        'oferta-1',
-        'Extra Virgin Olive Oil',
-        'Extra virgin olive oil, 500ml. Special offer of the day.',
-        68.00,
-        'Groceries',
-        'https://images.unsplash.com/photo-1531386450457-90dd0c7d99c1?w=400&h=300&fit=crop',
-        true,
-        85.00
-    ),
-    new Producto(
-        'oferta-2',
-        'Natural Yogurt',
-        'Unsweetened natural yogurt, 1kg. Limited time promotion.',
-        25.60,
-        'Dairy & Eggs',
-        'https://images.unsplash.com/photo-1570194065650-d99fb4bed8fd?w=400&h=300&fit=crop',
-        true,
-        32.00
-    ),
-    new Producto(
-        'oferta-3',
-        'Red Apples',
-        'Fresh red apples, 1kg. Seasonal offer.',
-        25.60,
-        'Fruits & Vegetables',
-        'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&h=300&fit=crop',
-        true,
-        32.00
-    ),
-    new Producto(
-        'oferta-4',
-        'Chicken Breast',
-        'Boneless chicken breast, 1kg. Special offer.',
-        96.00,
-        'Meat & Seafood',
-        'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=400&h=300&fit=crop',
-        true,
-        120.00
-    )
+    new Producto('13', 'Premium Coffee', 'Dark roast whole bean coffee', 9.99, 'Groceries', 'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', true, 12.99),
+    new Producto('14', 'Organic Eggs', 'Farm fresh organic eggs', 4.99, 'Dairy & Eggs', 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', true, 6.49),
+    new Producto('15', 'Avocados', 'Fresh Hass avocados', 3.99, 'Fruits & Vegetables', 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', true, 5.49)
 ];
 
-// Variables globales para el estado del filtrado
+// Global State
 let categoriaActual = 'All Products';
 let busquedaActual = '';
 
-// ========== SISTEMA DE ORDENAMIENTO ==========
-
-// Método de ordenamiento: QuickSort para ordenamiento alfabético
+// Sorting Algorithms
 function quickSortProductos(productosArray, izquierda = 0, derecha = productosArray.length - 1) {
     if (izquierda < derecha) {
         const indicePivote = particionarProductos(productosArray, izquierda, derecha);
@@ -428,7 +66,6 @@ function particionarProductos(productosArray, izquierda, derecha) {
     return i + 1;
 }
 
-// Método alternativo: BubbleSort (más simple pero menos eficiente)
 function bubbleSortProductos(productosArray) {
     const n = productosArray.length;
     let intercambiado;
@@ -437,7 +74,6 @@ function bubbleSortProductos(productosArray) {
         intercambiado = false;
         for (let i = 0; i < n - 1; i++) {
             if (productosArray[i].nombre.toLowerCase() > productosArray[i + 1].nombre.toLowerCase()) {
-                // Intercambiar elementos
                 [productosArray[i], productosArray[i + 1]] = [productosArray[i + 1], productosArray[i]];
                 intercambiado = true;
             }
@@ -447,9 +83,8 @@ function bubbleSortProductos(productosArray) {
     return productosArray;
 }
 
-// Función para ordenar productos (usa QuickSort por defecto)
 function ordenarProductos(productosArray, metodo = 'quicksort') {
-    const productosCopia = [...productosArray]; // Crear copia para no modificar el original
+    const productosCopia = [...productosArray];
     
     switch (metodo.toLowerCase()) {
         case 'quicksort':
@@ -457,18 +92,15 @@ function ordenarProductos(productosArray, metodo = 'quicksort') {
         case 'bubblesort':
             return bubbleSortProductos(productosCopia);
         case 'nativo':
-            // Usar el método sort nativo de JavaScript
             return productosCopia.sort((a, b) => a.nombre.toLowerCase().localeCompare(b.nombre.toLowerCase()));
         default:
             return quickSortProductos(productosCopia);
     }
 }
 
-// Función para manejar el ordenamiento desde la interfaz
 function ordenarProductosAlfabeticamente(orden = 'asc') {
     if (!paginacionActual) return;
     
-    // Obtener todos los productos de la categoría actual
     let productosParaOrdenar;
     
     if (categoriaActual === 'All Products') {
@@ -479,32 +111,25 @@ function ordenarProductosAlfabeticamente(orden = 'asc') {
         productosParaOrdenar = productos.filter(producto => producto.categoria === categoriaActual);
     }
     
-    // Ordenar los productos usando QuickSort
     const productosOrdenados = ordenarProductos(productosParaOrdenar, 'quicksort');
     
-    // Si es orden descendente, invertir el array
     if (orden === 'desc') {
         productosOrdenados.reverse();
     }
     
-    // Actualizar la paginación con los productos ordenados
     inicializarPaginacion(productosOrdenados, 8);
     cambiarPagina(1);
     
-    // Mostrar notificación del ordenamiento aplicado
     const ordenTexto = orden === 'asc' ? 'ascendente (A-Z)' : 'descendente (Z-A)';
     mostrarNotificacion(`Productos ordenados alfabéticamente en orden ${ordenTexto}`);
 }
 
-// ========== FUNCIONES PRINCIPALES ==========
-
-// Función para renderizar productos en una sección
+// Product Rendering
 function renderizarProductos(containerId, productosArray) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
     container.innerHTML = productosArray.map(producto => {
-        // Determinar si estamos en Daily Deals
         const isDailyDeals = categoriaActual === 'Daily Deals';
         const buttonText = isDailyDeals ? 'Grab Offer' : (producto.oferta ? 'Grab Offer' : 'Add to Cart');
         const buttonClass = isDailyDeals || producto.oferta ? 'add-to-cart-btn daily-deals-btn' : 'add-to-cart-btn';
@@ -533,7 +158,7 @@ function renderizarProductos(containerId, productosArray) {
     `}).join('');
 }
 
-// Función para cambiar categoría con paginación - VERSIÓN MEJORADA
+// Category Management
 function cambiarCategoriaConPaginacion(categoria) {
     let productosFiltrados;
     
@@ -545,10 +170,8 @@ function cambiarCategoriaConPaginacion(categoria) {
         productosFiltrados = productos.filter(producto => producto.categoria === categoria);
     }
     
-    // Actualizar categoría actual
     categoriaActual = categoria;
     
-    // Actualizar título de la sección
     const sectionTitle = document.querySelector('.featured-products .section-title');
     if (sectionTitle) {
         if (categoria === 'Daily Deals') {
@@ -560,27 +183,23 @@ function cambiarCategoriaConPaginacion(categoria) {
         }
     }
     
-    // Limpiar búsqueda visualmente cuando se cambia de categoría
     if (!busquedaActual) {
-        // Ocultar información de búsqueda
         const resultsInfo = document.getElementById('searchResultsInfo');
         if (resultsInfo) {
             resultsInfo.style.display = 'none';
         }
         
-        // Ocultar filtros activos
         const activeFilters = document.getElementById('activeFilters');
         if (activeFilters) {
             activeFilters.style.display = 'none';
         }
     }
     
-    // Reinicializar paginación
     inicializarPaginacion(productosFiltrados, 8);
     cambiarPagina(1);
 }
 
-// Función para manejar búsqueda con paginación
+// Search Functionality
 function buscarProductosConPaginacion(termino) {
     if (!termino) {
         cambiarCategoriaConPaginacion('All Products');
@@ -594,26 +213,21 @@ function buscarProductosConPaginacion(termino) {
         producto.categoria.toLowerCase().includes(terminoLower)
     );
 
-    // Actualizar categoría actual para el renderizado
     categoriaActual = 'All Products';
     
-    // Actualizar título de la sección
     const sectionTitle = document.querySelector('.featured-products .section-title');
     if (sectionTitle) {
         sectionTitle.textContent = `Search Results for "${termino}"`;
     }
     
-    // Reinicializar paginación con 8 productos por página
     inicializarPaginacion(productosFiltrados, 8);
     cambiarPagina(1);
 }
 
-// Función para agregar al carrito desde la página principal
+// Cart Integration
 function agregarAlCarritoDesdePrincipal(productoId) {
-    // Buscar el producto en productos normales
     let producto = productos.find(p => p.id === productoId);
     
-    // Si no se encuentra, buscar en productos de oferta
     if (!producto) {
         producto = productosOferta.find(p => p.id === productoId);
     }
@@ -633,16 +247,13 @@ function agregarAlCarritoDesdePrincipal(productoId) {
             });
         }
         
-        // Recalcular totales
         carritoActual.total = carritoActual.items.reduce((sum, item) => sum + item.subtotal, 0);
         carritoActual.contadorItems = carritoActual.items.reduce((sum, item) => sum + item.cantidad, 0);
         
         localStorage.setItem('carrito', JSON.stringify(carritoActual));
         
-        // Show notification
         mostrarNotificacion(`${producto.nombre} added to cart!`);
         
-        // Actualizar contador en el navbar si existe
         const cartCountElement = document.getElementById('cartCount');
         if (cartCountElement) {
             cartCountElement.textContent = carritoActual.contadorItems;
@@ -650,7 +261,7 @@ function agregarAlCarritoDesdePrincipal(productoId) {
     }
 }
 
-// Función para mostrar notificaciones
+// Notification System
 function mostrarNotificacion(mensaje) {
     const notification = document.createElement('div');
     notification.style.cssText = `
@@ -675,9 +286,8 @@ function mostrarNotificacion(mensaje) {
         }, 300);
     }, 3000);
 }
-// ========== SISTEMA DE BÚSQUEDA HÍBRIDA MEJORADO ==========
 
-// Función para configurar el sistema de búsqueda híbrida
+// Hybrid Search System
 function configurarBusquedaHibrida() {
     const searchForm = document.querySelector('.search-form');
     const searchInput = document.querySelector('.search-input');
@@ -685,7 +295,6 @@ function configurarBusquedaHibrida() {
     const searchContainer = document.querySelector('.search-container');
     
     if (searchForm && searchInput && searchContainer) {
-        // Configurar búsqueda por formulario
         searchForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const termino = searchInput.value.trim();
@@ -697,40 +306,35 @@ function configurarBusquedaHibrida() {
             }
         });
         
-        // Búsqueda en tiempo real (con debounce) - VERSIÓN CORREGIDA
-let timeoutId;
-searchInput.addEventListener('input', function() {
-    clearTimeout(timeoutId);
-    const termino = this.value.trim();
-    busquedaActual = termino;
-    
-    // Mostrar/ocultar sugerencias
-    if (termino.length >= 2) {
-        mostrarSugerencias(termino);
-        searchContainer.classList.add('search-active');
-    } else {
-        ocultarSugerencias();
-        searchContainer.classList.remove('search-active');
-        
-        // Si se borra completamente la búsqueda, limpiar todo
-        if (termino.length === 0) {
-            limpiarBusqueda();
-        }
-    }
-    
-    timeoutId = setTimeout(() => {
-        if (termino.length >= 3 || termino.length === 0) {
-            if (termino.length === 0) {
-                // Si se borra la búsqueda, limpiar todo
-                limpiarBusqueda();
+        let timeoutId;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(timeoutId);
+            const termino = this.value.trim();
+            busquedaActual = termino;
+            
+            if (termino.length >= 2) {
+                mostrarSugerencias(termino);
+                searchContainer.classList.add('search-active');
             } else {
-                realizarBusquedaHibrida(termino, categoriaActual);
+                ocultarSugerencias();
+                searchContainer.classList.remove('search-active');
+                
+                if (termino.length === 0) {
+                    limpiarBusqueda();
+                }
             }
-        }
-    }, 300);
-});
+            
+            timeoutId = setTimeout(() => {
+                if (termino.length >= 3 || termino.length === 0) {
+                    if (termino.length === 0) {
+                        limpiarBusqueda();
+                    } else {
+                        realizarBusquedaHibrida(termino, categoriaActual);
+                    }
+                }
+            }, 300);
+        });
         
-        // Ocultar sugerencias al hacer clic fuera
         document.addEventListener('click', function(e) {
             if (!searchContainer.contains(e.target)) {
                 ocultarSugerencias();
@@ -739,37 +343,30 @@ searchInput.addEventListener('input', function() {
         });
     }
     
-    // Configurar categorías para trabajar con búsqueda híbrida
     categoryLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const categoria = this.getAttribute('data-category');
             
-            // Actualizar clases activas
             categoryLinks.forEach(l => l.classList.remove('active'));
             this.classList.add('active');
             
-            // Si hay un término de búsqueda activo, aplicar búsqueda híbrida
             const searchTerm = document.querySelector('.search-input').value.trim();
             if (searchTerm) {
                 realizarBusquedaHibrida(searchTerm, categoria);
             } else {
-                // Si no hay búsqueda, simplemente cambiar categoría
                 cambiarCategoriaConPaginacion(categoria);
             }
         });
     });
 }
 
-// Función principal de búsqueda híbrida - VERSIÓN ACTUALIZADA
 function realizarBusquedaHibrida(termino, categoria) {
     let productosFiltrados;
     
-    // Mostrar estado de carga
     mostrarEstadoCarga();
     
     setTimeout(() => {
-        // Primero, filtrar por categoría
         if (categoria === 'All Products') {
             productosFiltrados = [...productos];
         } else if (categoria === 'Daily Deals') {
@@ -778,7 +375,6 @@ function realizarBusquedaHibrida(termino, categoria) {
             productosFiltrados = productos.filter(producto => producto.categoria === categoria);
         }
         
-        // Luego, aplicar búsqueda por texto si hay término
         if (termino) {
             const terminoLower = termino.toLowerCase();
             productosFiltrados = productosFiltrados.filter(producto => 
@@ -788,7 +384,6 @@ function realizarBusquedaHibrida(termino, categoria) {
             );
         }
         
-        // Actualizar título de la sección
         const sectionTitle = document.querySelector('.featured-products .section-title');
         if (sectionTitle) {
             if (termino && categoria !== 'All Products') {
@@ -806,12 +401,10 @@ function realizarBusquedaHibrida(termino, categoria) {
             }
         }
         
-        // Mostrar información de resultados SOLO si hay búsqueda activa
         if (termino) {
             mostrarInformacionResultados(termino, categoria, productosFiltrados.length);
             mostrarFiltrosActivos(termino, categoria);
         } else {
-            // Ocultar información si no hay búsqueda
             const resultsInfo = document.getElementById('searchResultsInfo');
             if (resultsInfo) {
                 resultsInfo.style.display = 'none';
@@ -822,27 +415,22 @@ function realizarBusquedaHibrida(termino, categoria) {
             }
         }
         
-        // Reinicializar paginación con los resultados
         inicializarPaginacion(productosFiltrados, 8);
         cambiarPagina(1);
         
-        // Mostrar notificación de resultados solo si hay búsqueda
         if (termino) {
             const resultadosTexto = productosFiltrados.length === 1 ? 'result' : 'results';
             mostrarNotificacion(`Found ${productosFiltrados.length} ${resultadosTexto} for "${termino}"`);
         }
         
-        // Ocultar estado de carga
         ocultarEstadoCarga();
     }, 500);
 }
 
-// Función para mostrar información de resultados - VERSIÓN MEJORADA
 function mostrarInformacionResultados(termino, categoria, cantidad) {
     const resultsInfo = document.getElementById('searchResultsInfo');
     if (!resultsInfo) return;
     
-    // Solo mostrar si hay término de búsqueda
     if (termino) {
         let infoText = '';
         
@@ -860,21 +448,24 @@ function mostrarInformacionResultados(termino, categoria, cantidad) {
         `;
         resultsInfo.style.display = 'block';
     } else {
-        // Ocultar si no hay búsqueda
         resultsInfo.style.display = 'none';
     }
 }
 
-// Función para mostrar filtros activos - VERSIÓN MEJORADA
 function mostrarFiltrosActivos(termino, categoria) {
     const activeFilters = document.getElementById('activeFilters');
     if (!activeFilters) return;
     
     activeFilters.innerHTML = '';
     
-    // Solo mostrar si hay búsqueda activa o categoría específica
     if (termino || categoria !== 'All Products') {
         if (termino) {
+            activeFilters.innerHTML += `
+                <div class="filter-badge">
+                    Search: "${termino}"
+                    <button class="remove-filter" onclick="removerFiltroBusqueda()">×</button>
+                </div>
+            `;
         }
         
         if (categoria !== 'All Products') {
@@ -888,12 +479,10 @@ function mostrarFiltrosActivos(termino, categoria) {
         
         activeFilters.style.display = 'flex';
     } else {
-        // Ocultar si no hay filtros activos
         activeFilters.style.display = 'none';
     }
 }
 
-// Función para remover filtro de búsqueda - VERSIÓN CORREGIDA
 function removerFiltroBusqueda() {
     const searchInput = document.querySelector('.search-input');
     if (searchInput) {
@@ -901,19 +490,15 @@ function removerFiltroBusqueda() {
         busquedaActual = '';
     }
     
-    // Ocultar información de resultados
     const resultsInfo = document.getElementById('searchResultsInfo');
     if (resultsInfo) {
         resultsInfo.style.display = 'none';
     }
     
-    // Actualizar filtros activos
     mostrarFiltrosActivos('', categoriaActual);
-    
     cambiarCategoriaConPaginacion(categoriaActual);
 }
 
-// Función para remover filtro de categoría - VERSIÓN CORREGIDA
 function removerFiltroCategoria() {
     const allProductsLink = document.querySelector('.category-link[data-category="All Products"]');
     if (allProductsLink) {
@@ -922,7 +507,6 @@ function removerFiltroCategoria() {
         categoriaActual = 'All Products';
     }
     
-    // Actualizar filtros activos
     mostrarFiltrosActivos(busquedaActual, 'All Products');
     
     if (busquedaActual) {
@@ -931,7 +515,7 @@ function removerFiltroCategoria() {
         cambiarCategoriaConPaginacion('All Products');
     }
 }
-// Función para limpiar búsqueda - VERSIÓN CORREGIDA
+
 function limpiarBusqueda() {
     const searchInput = document.querySelector('.search-input');
     if (searchInput) {
@@ -946,49 +530,40 @@ function limpiarBusqueda() {
         categoriaActual = 'All Products';
     }
     
-    // Ocultar información de resultados de búsqueda
     const resultsInfo = document.getElementById('searchResultsInfo');
     if (resultsInfo) {
         resultsInfo.style.display = 'none';
     }
     
-    // Ocultar filtros activos
     const activeFilters = document.getElementById('activeFilters');
     if (activeFilters) {
         activeFilters.style.display = 'none';
     }
     
-    // Restablecer el título de la sección
     const sectionTitle = document.querySelector('.featured-products .section-title');
     if (sectionTitle) {
         sectionTitle.textContent = 'All Products';
     }
     
-    // Restablecer el selector de ordenamiento
     const sortSelect = document.getElementById('sortOrder');
     if (sortSelect) {
         sortSelect.value = 'default';
     }
     
-    // Ocultar sugerencias de búsqueda
     ocultarSugerencias();
     
-    // Restablecer la clase activa del contenedor de búsqueda
     const searchContainer = document.querySelector('.search-container');
     if (searchContainer) {
         searchContainer.classList.remove('search-active');
     }
     
-    // Volver a mostrar todos los productos
     cambiarCategoriaConPaginacion('All Products');
 }
 
-// Función para mostrar sugerencias de búsqueda
 function mostrarSugerencias(termino) {
     const sugerencias = obtenerSugerenciasBusqueda(termino);
     const searchContainer = document.querySelector('.search-container');
     
-    // Remover sugerencias anteriores
     ocultarSugerencias();
     
     if (sugerencias.length > 0) {
@@ -1006,7 +581,6 @@ function mostrarSugerencias(termino) {
     }
 }
 
-// Función para ocultar sugerencias
 function ocultarSugerencias() {
     const existingSuggestions = document.querySelector('.search-suggestions');
     if (existingSuggestions) {
@@ -1014,7 +588,6 @@ function ocultarSugerencias() {
     }
 }
 
-// Función para seleccionar una sugerencia
 function seleccionarSugerencia(sugerencia) {
     const searchInput = document.querySelector('.search-input');
     if (searchInput) {
@@ -1024,25 +597,21 @@ function seleccionarSugerencia(sugerencia) {
     }
 }
 
-// Función para resaltar coincidencias en sugerencias
 function resaltarCoincidencia(texto, termino) {
     const regex = new RegExp(`(${termino})`, 'gi');
     return texto.replace(regex, '<strong>$1</strong>');
 }
 
-// Función para obtener sugerencias de búsqueda
 function obtenerSugerenciasBusqueda(termino) {
     const terminoLower = termino.toLowerCase();
     const sugerencias = new Set();
     
-    // Buscar en nombres de productos
     productos.forEach(producto => {
         if (producto.nombre.toLowerCase().includes(terminoLower)) {
             sugerencias.add(producto.nombre);
         }
     });
     
-    // Buscar en categorías
     const categoriasUnicas = [...new Set(productos.map(p => p.categoria))];
     categoriasUnicas.forEach(categoria => {
         if (categoria.toLowerCase().includes(terminoLower)) {
@@ -1050,11 +619,9 @@ function obtenerSugerenciasBusqueda(termino) {
         }
     });
     
-    // Convertir a array y limitar a 5 sugerencias
     return Array.from(sugerencias).slice(0, 5);
 }
 
-// Funciones para estado de carga
 function mostrarEstadoCarga() {
     const searchButton = document.querySelector('.search-button');
     if (searchButton) {
@@ -1071,48 +638,34 @@ function ocultarEstadoCarga() {
     }
 }
 
-// Agregar esta llamada al final del DOMContentLoaded existente en script_Productos.js
+// Initialization
 document.addEventListener('DOMContentLoaded', function() {
-    // ... código existente ...
-    
-    // Configurar el sistema de búsqueda híbrida
-    configurarBusquedaHibrida();
-});
-// Inicialización cuando se carga la página
-document.addEventListener('DOMContentLoaded', function() {
-    // Ocultar sección de ofertas especiales
     const specialOffersSection = document.querySelector('.special-offers');
     if (specialOffersSection) {
         specialOffersSection.style.display = 'none';
     }
     
-    // Inicializar con todos los productos y paginación de 8
     inicializarPaginacion(productos, 8);
     cambiarPagina(1);
     
-    // Actualizar contador del carrito en el navbar
     const carritoActual = JSON.parse(localStorage.getItem('carrito') || '{"items": [], "contadorItems": 0}');
     const cartCountElement = document.getElementById('cartCount');
     if (cartCountElement) {
         cartCountElement.textContent = carritoActual.contadorItems || 0;
     }
     
-    // Configurar event listeners para las categorías
     document.querySelectorAll('.category-link').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const categoria = this.textContent;
             
-            // Actualizar clases activas
             document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active'));
             this.classList.add('active');
             
-            // Cambiar categoría con paginación
             cambiarCategoriaConPaginacion(categoria);
         });
     });
     
-    // Configurar event listener para la búsqueda
     const searchForm = document.querySelector('.search-form');
     const searchInput = document.querySelector('.search-input');
     
@@ -1121,20 +674,17 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const termino = searchInput.value.trim();
             if (termino) {
-                // Cambiar a "All Products" y buscar
                 document.querySelectorAll('.category-link').forEach(l => l.classList.remove('active'));
-                document.querySelector('.category-link').classList.add('active'); // Primera categoría (All Products)
+                document.querySelector('.category-link').classList.add('active');
                 
                 buscarProductosConPaginacion(termino);
             }
         });
         
-        // Búsqueda en tiempo real (opcional)
         searchInput.addEventListener('input', function() {
             const termino = this.value.trim();
             if (termino.length >= 3 || termino.length === 0) {
                 if (termino.length === 0) {
-                    // Si se borra la búsqueda, volver a todos los productos
                     cambiarCategoriaConPaginacion('All Products');
                 } else {
                     buscarProductosConPaginacion(termino);
@@ -1143,14 +693,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Configurar event listener para el ordenamiento
     const sortSelect = document.getElementById('sortOrder');
     if (sortSelect) {
         sortSelect.addEventListener('change', function() {
             const orden = this.value;
             
             if (orden === 'default') {
-                // Volver al orden original
                 if (categoriaActual === 'All Products') {
                     cambiarCategoriaConPaginacion('All Products');
                 } else if (categoriaActual === 'Daily Deals') {
@@ -1159,13 +707,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     cambiarCategoriaConPaginacion(categoriaActual);
                 }
             } else {
-                // Aplicar ordenamiento alfabético
                 ordenarProductosAlfabeticamente(orden);
             }
         });
     }
     
-    // Agregar estilos para las animaciones de notificación
     if (!document.querySelector('#notification-styles')) {
         const style = document.createElement('style');
         style.id = 'notification-styles';
@@ -1181,4 +727,6 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         document.head.appendChild(style);
     }
+    
+    configurarBusquedaHibrida();
 });

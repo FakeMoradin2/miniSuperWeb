@@ -1,9 +1,9 @@
-// script_pages.js - Sistema de paginación corregido
+// script_pages.js - Pagination System
 
 let paginacionActual = null;
 let productosActuales = [];
 
-// Función para inicializar la paginación
+// Pagination Initialization
 function inicializarPaginacion(productos, productosPorPagina = 8) {
     productosActuales = productos;
     paginacionActual = {
@@ -16,7 +16,7 @@ function inicializarPaginacion(productos, productosPorPagina = 8) {
     cambiarPagina(1);
 }
 
-// Función para cambiar de página
+// Page Navigation
 function cambiarPagina(numeroPagina) {
     if (!paginacionActual || numeroPagina < 1 || numeroPagina > paginacionActual.totalPaginas) {
         return;
@@ -32,12 +32,11 @@ function cambiarPagina(numeroPagina) {
     renderizarControlesPaginacion();
 }
 
-// Función para renderizar productos en la página actual
+// Product Rendering for Pagination
 function renderizarProductosPagina(productosPagina) {
     const productsGrid = document.getElementById('productsGrid');
     if (!productsGrid) return;
     
-    // Limpiar el grid
     productsGrid.innerHTML = '';
     
     if (productosPagina.length === 0) {
@@ -45,19 +44,17 @@ function renderizarProductosPagina(productosPagina) {
         return;
     }
     
-    // Renderizar productos
     productosPagina.forEach(producto => {
         const productCard = crearProductCard(producto);
         productsGrid.appendChild(productCard);
     });
 }
 
-// Función para crear tarjeta de producto con tamaño consistente
+// Product Card Creation
 function crearProductCard(producto) {
     const card = document.createElement('div');
     card.className = 'product-card';
     
-    // Determinar si estamos en Daily Deals
     const isDailyDeals = categoriaActual === 'Daily Deals';
     const buttonText = isDailyDeals ? 'Grab Offer' : (producto.oferta ? 'Grab Offer' : 'Add to Cart');
     const buttonClass = isDailyDeals || producto.oferta ? 'add-to-cart-btn daily-deals-btn' : 'add-to-cart-btn';
@@ -86,7 +83,7 @@ function crearProductCard(producto) {
     return card;
 }
 
-// Función para mostrar mensaje cuando no hay productos
+// No Products Message
 function mostrarMensajeSinProductos() {
     const productsGrid = document.getElementById('productsGrid');
     if (!productsGrid) return;
@@ -102,7 +99,7 @@ function mostrarMensajeSinProductos() {
     `;
 }
 
-// Función para renderizar controles de paginación
+// Pagination Controls
 function renderizarControlesPaginacion() {
     const paginationContainer = document.getElementById('paginationContainer');
     if (!paginationContainer || !paginacionActual) return;
@@ -121,14 +118,14 @@ function renderizarControlesPaginacion() {
         <div class="pagination">
     `;
     
-    // Botón anterior
+    // Previous Button
     paginationHTML += `
         <button onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}>
             Previous
         </button>
     `;
     
-    // Números de página
+    // Page Numbers
     const paginasMostrar = generarNumerosPagina(paginaActual, totalPaginas);
     paginasMostrar.forEach(numero => {
         if (numero === '...') {
@@ -145,7 +142,7 @@ function renderizarControlesPaginacion() {
         }
     });
     
-    // Botón siguiente
+    // Next Button
     paginationHTML += `
         <button onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>
             Next
@@ -156,34 +153,28 @@ function renderizarControlesPaginacion() {
     paginationContainer.innerHTML = paginationHTML;
 }
 
-// Función para generar números de página con elipsis
+// Page Number Generation
 function generarNumerosPagina(paginaActual, totalPaginas) {
     const paginas = [];
     const paginasALado = 2;
     
-    // Siempre mostrar primera página
     paginas.push(1);
     
-    // Calcular rango de páginas a mostrar
     let inicio = Math.max(2, paginaActual - paginasALado);
     let fin = Math.min(totalPaginas - 1, paginaActual + paginasALado);
     
-    // Agregar elipsis al inicio si es necesario
     if (inicio > 2) {
         paginas.push('...');
     }
     
-    // Agregar páginas del rango
     for (let i = inicio; i <= fin; i++) {
         paginas.push(i);
     }
     
-    // Agregar elipsis al final si es necesario
     if (fin < totalPaginas - 1) {
         paginas.push('...');
     }
     
-    // Siempre mostrar última página si hay más de una página
     if (totalPaginas > 1) {
         paginas.push(totalPaginas);
     }
@@ -191,7 +182,7 @@ function generarNumerosPagina(paginaActual, totalPaginas) {
     return paginas;
 }
 
-// Función para obtener los productos actuales (para compatibilidad)
+// Utility Function
 function obtenerProductosActuales() {
     return productosActuales;
 }
