@@ -51,7 +51,17 @@ function buscarProductosInventario(termino) {
 // ========== FUNCIÓN PARA RENDERIZAR TABLA ==========
 
 function renderizarProductosTabla(prods) {
+    if (!Array.isArray(prods)) {
+      console.error('renderizarProductosTabla: prods no es un array:', prods);
+      prods = [];
+    }
+    
     const tbody = document.querySelector('#productosTable tbody');
+    if (!tbody) {
+      console.error('No se encontró el elemento #productosTable tbody');
+      return;
+    }
+    
     tbody.innerHTML = '';
     prods.forEach(p=>{
       const tr = document.createElement('tr');
@@ -94,29 +104,73 @@ function renderizarProductosTabla(prods) {
 
 async function loadCategorias() {
   try {
-    const cats = await api.categorias.listar();
+    const response = await api.categorias.listar();
+    console.log('Respuesta de categorías:', response);
+    // Manejar diferentes estructuras de respuesta
+    let cats = Array.isArray(response) ? response : 
+               (response.data || response.categorias || response.categoria || []);
+    
+    if (!Array.isArray(cats)) {
+      console.error('La respuesta de categorías no es un array:', response);
+      cats = [];
+    }
+    
     const sel = document.getElementById('prodCategoria');
+    if (!sel) {
+      console.error('No se encontró el elemento prodCategoria');
+      return;
+    }
+    
     sel.innerHTML = '<option value="">--</option>';
     cats.forEach(c=> sel.innerHTML += `<option value="${c.Id_categoria ?? c.id ?? c.id_categoria}">${c.Nombre_Categoria ?? c.nombre ?? c.nombre_categoria}</option>`);
-  } catch (err) { console.warn(err); }
+  } catch (err) { 
+    console.error('Error cargando categorías:', err); 
+  }
 }
 
 async function loadProveedores() {
   try {
-    const prov = await api.proveedores.listar();
+    const response = await api.proveedores.listar();
+    console.log('Respuesta de proveedores:', response);
+    // Manejar diferentes estructuras de respuesta
+    let prov = Array.isArray(response) ? response : 
+               (response.data || response.proveedores || response.proveedor || []);
+    
+    if (!Array.isArray(prov)) {
+      console.error('La respuesta de proveedores no es un array:', response);
+      prov = [];
+    }
+    
     const sel = document.getElementById('prodProveedor');
+    if (!sel) {
+      console.error('No se encontró el elemento prodProveedor');
+      return;
+    }
+    
     sel.innerHTML = '<option value="">--</option>';
     prov.forEach(p=> sel.innerHTML += `<option value="${p.Id_proveedor ?? p.id}">${p.nombre_proveedor ?? p.nombre}</option>`);
-  } catch (err) { console.warn(err); }
+  } catch (err) { 
+    console.error('Error cargando proveedores:', err); 
+  }
 }
 
 async function loadProductos(){
   try{
-    const prods = await api.productos.listar();
+    const response = await api.productos.listar();
+    console.log('Respuesta de productos:', response);
+    // Manejar diferentes estructuras de respuesta
+    let prods = Array.isArray(response) ? response : 
+                (response.data || response.productos || response.producto || []);
+    
+    if (!Array.isArray(prods)) {
+      console.error('La respuesta de productos no es un array:', response);
+      prods = [];
+    }
+    
     productosOriginales = prods;
     renderizarProductosTabla(prods);
   }catch(err){
-    console.error(err);
+    console.error('Error cargando productos:', err);
   }
 }
 
