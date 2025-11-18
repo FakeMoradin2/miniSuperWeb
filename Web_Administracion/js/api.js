@@ -1,5 +1,5 @@
 // frontend/js/api.js
-const API_BASE = "http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com"; 
+const API_BASE = "http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com";
 
 async function fetchJSON(url, opts = {}) {
   const res = await fetch(url, opts);
