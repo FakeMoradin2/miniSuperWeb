@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test API - MiniSuper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+        .result {
+            background: #f9f9f9;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error { border-left-color: #f44336; background: #ffebee; }
+        .loading { color: #2196F3; }
+        h2 { color: #333; margin-top: 0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Pruebas de API - MiniSuper</h1>
+    <p>Base URL: <strong>http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com</strong></p>
+
+    <div class="test-section">
+        <h2>GET - Endpoints de Lectura</h2>
+        <button onclick="testGet('categoria/listar.php', 'categorias')">Categorías - Listar</button>
+        <button onclick="testGet('proveedores/listar.php', 'proveedores')">Proveedores - Listar</button>
+        <button onclick="testGet('productos/listar.php', 'productos')">Productos - Listar</button>
+        <div id="result-get" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>POST - Autenticación</h2>
+        <button onclick="testRegister()">Registrar Cliente (POST)</button>
+        <div id="result-auth" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Reportes</h2>
+        <button onclick="testReporteDia()">Reporte Día (Hoy)</button>
+        <div id="result-reportes" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = "http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com";
+
+        async function testGet(endpoint, resultId) {
+            const resultDiv = document.getElementById(`result-get`);
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Cargando...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/${endpoint}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await response.json();
+                
+                resultDiv.className = 'result';
+                resultDiv.textContent = `✅ Status: ${response.status} ${response.statusText}\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testRegister() {
+            const resultDiv = document.getElementById('result-auth');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Enviando...';
+
+            try {
+                const testBody = {
+                    nombre_usuario: `test_${Date.now()}`,
+                    password: 'test123',
+                    telefono: '1234567890',
+                    rol: 'cliente'
+                };
+
+                const response = await fetch(`${API_BASE}/api/auth/register.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testBody)
+                });
+
+                const data = await response.json();
+                resultDiv.className = 'result';
+                resultDiv.textContent = `✅ Status: ${response.status}\n\nRequest:\n${JSON.stringify(testBody, null, 2)}\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testReporteDia() {
+            const resultDiv = document.getElementById('result-reportes');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Cargando...';
+
+            try {
+                const today = new Date().toISOString().slice(0, 10);
+                const url = `${API_BASE}/api/reportes/reporteDia.php?inicio=${today}&fin=${today}`;
+                
+                const response = await fetch(url, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await response.json();
+                
+                resultDiv.className = 'result';
+                resultDiv.textContent = `✅ Status: ${response.status}\n\nURL: ${url}\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
+
