@@ -60,6 +60,14 @@
                     <option value="asc">Nombre A-Z</option>
                     <option value="desc">Nombre Z-A</option>
                 </select>
+                <label for="itemsPerPage">Productos por página:</label>
+                <select id="itemsPerPage" class="sort-select">
+                    <option value="4">4</option>
+                    <option value="8" selected>8</option>
+                    <option value="12">12</option>
+                    <option value="16">16</option>
+                    <option value="24">24</option>
+                </select>
             </div>
         </div>
         
@@ -86,24 +94,12 @@
     <p>&copy; 2025 Minisuper Market - All rights reserved</p>
 </footer>
 
-<script src="../jss/script_products.js"></script>
 <script src="../jss/script_pages.js"></script>
+<script src="../jss/script_products.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        inicializarPaginacion(productos, 8);
-        cambiarPagina(1);
-        
-        document.querySelector('.special-offers').style.display = 'none';
-        
-        const carritoActual = JSON.parse(localStorage.getItem('carrito') || '{"items": [], "contadorItems": 0}');
-        const cartCountElement = document.getElementById('cartCount');
-        if (cartCountElement) {
-            cartCountElement.textContent = carritoActual.contadorItems || 0;
-        }
-        
-        configurarBusquedaHibrida();
-    });
+    // Este script se ejecuta después de que script_products.js ya inicializó todo
+    // Solo configura funciones adicionales si es necesario
 </script>
 </body>
 </html>

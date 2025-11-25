@@ -1,16 +1,52 @@
 // script_pages.js - Pagination System
 
+// Arreglo de opciones para productos por página
+const opcionesProductosPorPagina = [4, 8, 12, 16, 24];
+
+// Variable para almacenar el valor seleccionado (por defecto 8)
+let productosPorPaginaSeleccionado = 8;
+
 let paginacionActual = null;
 let productosActuales = [];
 
+// Función para obtener el valor seleccionado del arreglo
+function obtenerProductosPorPagina() {
+    return productosPorPaginaSeleccionado;
+}
+
+// Función para actualizar el valor seleccionado
+function actualizarProductosPorPagina(nuevoValor) {
+    // Validar que el valor esté en el arreglo
+    if (opcionesProductosPorPagina.includes(nuevoValor)) {
+        productosPorPaginaSeleccionado = nuevoValor;
+        // Guardar en localStorage para persistencia
+        localStorage.setItem('productosPorPagina', nuevoValor.toString());
+        
+        // Si hay paginación activa, reinicializar con el nuevo valor
+        if (paginacionActual && productosActuales.length > 0) {
+            inicializarPaginacion(productosActuales, nuevoValor);
+        }
+    }
+}
+
+// Función para cargar el valor guardado desde localStorage
+function cargarProductosPorPaginaDesdeStorage() {
+    const valorGuardado = localStorage.getItem('productosPorPagina');
+    if (valorGuardado && opcionesProductosPorPagina.includes(parseInt(valorGuardado))) {
+        productosPorPaginaSeleccionado = parseInt(valorGuardado);
+    }
+}
+
 // Pagination Initialization
-function inicializarPaginacion(productos, productosPorPagina = 8) {
+function inicializarPaginacion(productos, productosPorPagina = null) {
+    // Si no se proporciona productosPorPagina, usar el valor del arreglo
+    const productosPorPaginaFinal = productosPorPagina || productosPorPaginaSeleccionado;
     productosActuales = productos;
     paginacionActual = {
         productos: productos,
-        productosPorPagina: productosPorPagina,
+        productosPorPagina: productosPorPaginaFinal,
         paginaActual: 1,
-        totalPaginas: Math.ceil(productos.length / productosPorPagina)
+        totalPaginas: Math.ceil(productos.length / productosPorPaginaFinal)
     };
     
     cambiarPagina(1);

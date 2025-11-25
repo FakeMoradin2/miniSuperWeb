@@ -105,17 +105,33 @@ class ListaCarrito {
         return this;
     }
 
-    // Calculate Totals
+    // Calculate Totals - Función recursiva
     actualizarTotales() {
-        this.total = 0;
-        this.contadorItems = 0;
-
-        let actual = this.cabeza;
-        while (actual) {
-            this.total += actual.producto.precio * actual.cantidad;
-            this.contadorItems += actual.cantidad;
-            actual = actual.siguiente;
-        }
+        // Función recursiva auxiliar para calcular el total
+        const calcularTotalRecursivo = (nodo) => {
+            // Caso base: si el nodo es null, retornar 0
+            if (!nodo) {
+                return { total: 0, contadorItems: 0 };
+            }
+            
+            // Calcular el subtotal del nodo actual
+            const subtotalNodo = nodo.producto.precio * nodo.cantidad;
+            const cantidadNodo = nodo.cantidad;
+            
+            // Llamada recursiva para el siguiente nodo
+            const resultadoSiguiente = calcularTotalRecursivo(nodo.siguiente);
+            
+            // Retornar la suma del nodo actual con el resultado recursivo
+            return {
+                total: subtotalNodo + resultadoSiguiente.total,
+                contadorItems: cantidadNodo + resultadoSiguiente.contadorItems
+            };
+        };
+        
+        // Iniciar la recursión desde la cabeza de la lista
+        const resultado = calcularTotalRecursivo(this.cabeza);
+        this.total = resultado.total;
+        this.contadorItems = resultado.contadorItems;
     }
 
     // Get All Items

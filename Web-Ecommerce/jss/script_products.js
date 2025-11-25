@@ -117,7 +117,7 @@ function ordenarProductosAlfabeticamente(orden = 'asc') {
         productosOrdenados.reverse();
     }
     
-    inicializarPaginacion(productosOrdenados, 8);
+    inicializarPaginacion(productosOrdenados);
     cambiarPagina(1);
     
     const ordenTexto = orden === 'asc' ? 'ascendente (A-Z)' : 'descendente (Z-A)';
@@ -195,7 +195,7 @@ function cambiarCategoriaConPaginacion(categoria) {
         }
     }
     
-    inicializarPaginacion(productosFiltrados, 8);
+    inicializarPaginacion(productosFiltrados);
     cambiarPagina(1);
 }
 
@@ -220,7 +220,7 @@ function buscarProductosConPaginacion(termino) {
         sectionTitle.textContent = `Search Results for "${termino}"`;
     }
     
-    inicializarPaginacion(productosFiltrados, 8);
+    inicializarPaginacion(productosFiltrados);
     cambiarPagina(1);
 }
 
@@ -415,7 +415,7 @@ function realizarBusquedaHibrida(termino, categoria) {
             }
         }
         
-        inicializarPaginacion(productosFiltrados, 8);
+        inicializarPaginacion(productosFiltrados);
         cambiarPagina(1);
         
         if (termino) {
@@ -645,7 +645,24 @@ document.addEventListener('DOMContentLoaded', function() {
         specialOffersSection.style.display = 'none';
     }
     
-    inicializarPaginacion(productos, 8);
+    // Cargar el valor guardado de productos por página
+    cargarProductosPorPaginaDesdeStorage();
+    
+    // Configurar el selector de productos por página
+    const itemsPerPageSelect = document.getElementById('itemsPerPage');
+    if (itemsPerPageSelect) {
+        // Establecer el valor seleccionado
+        itemsPerPageSelect.value = productosPorPaginaSeleccionado;
+        
+        // Agregar event listener para cambios
+        itemsPerPageSelect.addEventListener('change', function(e) {
+            const nuevoValor = parseInt(e.target.value);
+            actualizarProductosPorPagina(nuevoValor);
+            cambiarPagina(1); // Volver a la primera página
+        });
+    }
+    
+    inicializarPaginacion(productos);
     cambiarPagina(1);
     
     const carritoActual = JSON.parse(localStorage.getItem('carrito') || '{"items": [], "contadorItems": 0}');
