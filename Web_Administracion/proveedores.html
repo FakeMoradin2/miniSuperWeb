@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Proveedores - Minisúper</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="sidebar">
+  <div class="header">
+    <i class="fas fa-store"></i>
+    <h2 style="margin-left:6px">Minisuper System</h2>
+  </div>
+  <ul>
+    <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+    <li><a href="pos.html"><i class="fas fa-cash-register"></i><span>Punto de Venta</span></a></li>
+    <li><a href="inventory.html"><i class="fas fa-boxes"></i><span>Inventario</span></a></li>
+    <li><a href="reports.html"><i class="fas fa-chart-bar"></i><span>Reportes</span></a></li>
+    <li><a href="customers.html"><i class="fas fa-users"></i><span>Clientes</span></a></li>
+    <li><a href="proveedores.html"><i class="fas fa-truck"></i><span>Proveedores</span></a></li>
+    <li><a href="categoria.html"><i class="fas fa-tags"></i><span>Categorías</span></a></li>
+  </ul>
+</div>
+
+  <div class="main">
+    <div class="header-top">
+      <h1>Proveedores</h1>
+      <div class="user">
+        <div class="avatar">JD</div>
+      </div>
+    </div>
+
+    <!-- Formulario para agregar proveedor -->
+    <div class="form-card">
+      <h3>Agregar Proveedor</h3>
+      <div class="form-group">
+        <label>Nombre del Proveedor</label>
+        <input id="nombreProveedor" type="text">
+      </div>
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input id="telefonoProveedor" type="tel">
+      </div>
+      <div class="form-group">
+        <label>Correo Electrónico</label>
+        <input id="correoProveedor" type="email">
+      </div>
+      <div>
+        <button id="btnAddProveedor" class="btn primary">Registrar Proveedor</button>
+      </div>
+    </div>
+
+    <!-- Tabla de proveedores -->
+    <div class="table-card">
+      <h3>Proveedores Registrados</h3>
+      <table id="proveedoresTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Modal para editar proveedor -->
+    <div id="editProveedorModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Editar Proveedor</h3>
+        <div class="form-group">
+          <label>Nombre del Proveedor</label>
+          <input id="editNombreProveedor" type="text">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input id="editTelefonoProveedor" type="tel">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input id="editCorreoProveedor" type="email">
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="editEstadoProveedor">
+            <option value="true">Activo</option>
+            <option value="false">Inactivo</option>
+          </select>
+        </div>
+        <div>
+          <button id="btnUpdateProveedor" class="btn primary">Actualizar Proveedor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/proveedores.js"></script>
+</body>
+</html>
