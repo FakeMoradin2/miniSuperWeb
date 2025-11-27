@@ -1,7 +1,35 @@
 // frontend/js/pos.js
-// Usa window.api
+// Usa window.api para conectar con la base de datos
+//
+// FUNCIONES DISPONIBLES EN API:
+// - window.api.productos.listar()                         // Obtener todos los productos
+// - window.api.productos.buscar(termino)                  // Buscar productos por nombre/código
+// - window.api.ventasAPI.crear({vendedor_id, comprador_id})    // Crear nueva venta
+// - window.api.ventasAPI.agregarProducto({venta_id, producto_id, cantidad})
+// - window.api.ventasAPI.actualizarProducto({venta_id, producto_id, cantidad})
+// - window.api.ventasAPI.eliminarProducto({venta_id, producto_id})
+// - window.api.ventasAPI.confirmar({venta_id, metodo_pago, cliente})
+// - window.api.ventasAPI.cancelar({venta_id})
+// - window.api.clientes.listar()                          // Obtener todos los clientes
+// - window.api.clientes.agregar({nombre, email, telefono})
+// - window.api.stock.obtenerBajoStock()                   // Productos con bajo stock
+
 let cart = [];
 let currentVentaId = null;
+let allProducts = []; // cache de productos
+let usuarioActual = {id: 1, nombre: 'Juan Delgado', rol: 'Cajero'}; // obtener del sistema de login
+
+// Cargar productos al iniciar
+async function cargarProductos(){
+  try{
+    console.log('Cargando productos...');
+    allProducts = await window.api.productos.listar();
+    console.log('Productos cargados:', allProducts.length, allProducts);
+  }catch(err){
+    console.error('Error cargando productos:', err);
+    allProducts = [];
+  }
+}
 
 function renderCart(){
   const tbody = document.querySelector('#cartTable tbody');
@@ -15,35 +43,45 @@ function renderCart(){
                     <td>$${item.precio.toFixed(2)}</td>
                     <td><input type="number" min="1" value="${item.cantidad}" data-idx="${idx}" class="qinput" style="width:70px"></td>
                     <td>$${subtotal.toFixed(2)}</td>
-                    <td><button data-idx="${idx}" class="btn danger btn-remove">X</button></td>`;
+                    <td><button data-idx="${idx}" class="btn danger btn-remove" style="padding: 4px 8px;">X</button></td>`;
     tbody.appendChild(tr);
   });
   document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
 
-  // add listeners
+  // add listeners para cantidad
   document.querySelectorAll('.qinput').forEach(inp => {
     inp.addEventListener('change', (e)=>{
       const i = +e.target.dataset.idx;
       const val = Math.max(1, Number(e.target.value));
       cart[i].cantidad = val;
-      // update in server if venta exists
+      // update en server si venta existe
       if(currentVentaId){
-        api.ventasAPI.actualizarProducto({venta_id: currentVentaId, producto_id: cart[i].producto_id, cantidad: val})
-          .catch(err => console.error('update producto', err));
+        window.api.ventasAPI.actualizarProducto({
+          venta_id: currentVentaId, 
+          producto_id: cart[i].producto_id, 
+          cantidad: val
+        }).catch(err => console.error('Error actualizando producto:', err));
       }
       renderCart();
     });
   });
 
+  // listeners para remover items
   document.querySelectorAll('.btn-remove').forEach(btn=>{
     btn.addEventListener('click', async (e)=>{
+      e.preventDefault();
       const i = +e.target.dataset.idx;
       if(currentVentaId){
         try{
-          await api.ventasAPI.eliminarProducto({venta_id: currentVentaId, producto_id: cart[i].producto_id});
-        }catch(err){ console.error(err); }
+          await window.api.ventasAPI.eliminarProducto({
+            venta_id: currentVentaId, 
+            producto_id: cart[i].producto_id
+          });
+        }catch(err){ 
+          console.error('Error eliminando producto:', err); 
+        }
       }
-      cart.splice(i,1);
+      cart.splice(i, 1);
       renderCart();
     });
   });
@@ -51,75 +89,156 @@ function renderCart(){
 
 async function searchProducts(query){
   try{
-    const prods = await api.productos.listar();
-    // búsqueda cliente-side simple:
-    return prods.filter(p => (p.nombre_producto || p.nombre || '').toLowerCase().includes(query.toLowerCase()) || (String(p.producto_id || p.id || '').includes(query)));
+    if(!query.trim()) return [];
+    
+    // Buscar en servidor
+    const results = await window.api.productos.buscar(query);
+    console.log('Búsqueda de:', query, 'Resultados:', results);
+    
+    return Array.isArray(results) ? results : [];
   }catch(err){
-    console.error(err);
+    console.error('Error buscando productos:', err);
     return [];
   }
 }
 
 document.getElementById('btnSearch').addEventListener('click', async ()=>{
   const q = document.getElementById('searchInput').value.trim();
-  if(!q) return;
+  if(!q) {
+    document.getElementById('searchResults').innerHTML = '<p style="color: var(--gray);">Ingresa un término de búsqueda</p>';
+    return;
+  }
+  
   const results = await searchProducts(q);
   const container = document.getElementById('searchResults');
   container.innerHTML = '';
-  if(results.length===0){ container.textContent = 'No se encontraron productos'; return; }
+  
+  if(results.length === 0){ 
+    container.innerHTML = '<p style="color: var(--gray); padding: 10px 0;">No se encontraron productos</p>'; 
+    return; 
+  }
+  
   results.forEach(p=>{
     const div = document.createElement('div');
-    div.style.padding='8px 0';
-    div.innerHTML = `<strong>${p.nombre_producto ?? p.nombre}</strong> — $${(p.precio ?? p.price ?? 0).toFixed(2)} — stock: ${p.stock ?? 0} <button class="btn primary btn-add" data-id="${p.producto_id ?? p.id}">Agregar</button>`;
+    div.style.cssText = 'padding:12px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;background:#f8f9fa';
+    
+    const stock = p.stock || 0;
+    const disponible = stock > 0;
+    const precio = parseFloat(p.precio) || 0;
+    const nombre = p.nombre_producto || p.nombre || 'Producto';
+    
+    div.innerHTML = `
+      <div>
+        <div style="font-weight:600;color:var(--text-dark)">${nombre}</div>
+        <div style="font-size:0.9rem;color:var(--gray)">
+          Precio: <strong>$${precio.toFixed(2)}</strong> — Stock: <strong>${stock}</strong>
+        </div>
+      </div>
+      <button class="btn ${disponible ? 'primary' : 'secondary'} btn-add" 
+              data-id="${p.producto_id}" 
+              ${disponible ? '' : 'disabled'}
+              style="margin-left: 10px;">
+        ${disponible ? 'Agregar' : 'Sin stock'}
+      </button>
+    `;
     container.appendChild(div);
   });
-  // listeners
-  container.querySelectorAll('.btn-add').forEach(b=>{
+  
+  // listeners para agregar productos
+  container.querySelectorAll('.btn-add:not(:disabled)').forEach(b=>{
     b.addEventListener('click', async (e)=>{
+      e.preventDefault();
       const id = e.target.dataset.id;
       const prod = results.find(r => String(r.producto_id ?? r.id) === String(id));
       if(!prod) return;
-      // si no existe venta temporal, crearla
-      if(!currentVentaId){
-        try{
-          const resp = await api.ventasAPI.crear({comprador_id: 0, vendedor_id: 1}); // ajustar vendedor_id según tu sistema
-          currentVentaId = resp.id_venta ?? resp.id ?? resp.venta_id ?? resp.idVenta;
-        }catch(err){
-          console.error('Error creando venta', err);
-        }
-      }
-      // agregar al carrito en el servidor
-      try{
-        await api.ventasAPI.agregarProducto({venta_id: currentVentaId, producto_id: prod.producto_id ?? prod.id, cantidad: 1});
-      }catch(err){
-        console.warn('no se pudo agregar al backend', err);
-      }
-      // agregar localmente
-      const exists = cart.find(c=>String(c.producto_id)===String(prod.producto_id ?? prod.id));
-      if(exists) exists.cantidad += 1;
-      else cart.push({
-        producto_id: prod.producto_id ?? prod.id,
-        nombre_producto: prod.nombre_producto ?? prod.nombre,
-        precio: Number(prod.precio ?? prod.price ?? 0),
-        cantidad: 1
-      });
-      renderCart();
+      
+      await agregarProductoAlCarrito(prod);
     });
   });
 });
 
+async function agregarProductoAlCarrito(prod){
+  try{
+    // Si no existe venta temporal, crearla
+    if(!currentVentaId){
+      const vendedor_id = usuarioActual.id || 1;
+      const resp = await window.api.ventasAPI.crear({
+        comprador_id: 0, 
+        vendedor_id: vendedor_id,
+        estado: 'pendiente'
+      });
+      currentVentaId = resp.id_venta ?? resp.id ?? resp.venta_id ?? resp.idVenta;
+      console.log('Venta creada:', currentVentaId);
+    }
+    
+    // Agregar al carrito en el servidor
+    const productoId = prod.producto_id;
+    const nombre = prod.nombre_producto || prod.nombre || 'Producto';
+    const precio = parseFloat(prod.precio) || 0;
+    
+    await window.api.ventasAPI.agregarProducto({
+      venta_id: currentVentaId, 
+      producto_id: productoId, 
+      cantidad: 1
+    });
+    
+    // Agregar localmente
+    const exists = cart.find(c => String(c.producto_id) === String(productoId));
+    if(exists){
+      exists.cantidad += 1;
+    } else {
+      cart.push({
+        producto_id: productoId,
+        nombre_producto: nombre,
+        precio: precio,
+        cantidad: 1
+      });
+    }
+    
+    renderCart();
+    
+    // Limpiar input
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchResults').innerHTML = '';
+    
+  }catch(err){
+    console.error('Error agregando producto al carrito:', err);
+    alert('Error: No se pudo agregar el producto. ' + err.message);
+  }
+}
+
 document.getElementById('btnConfirm').addEventListener('click', async ()=>{
   if(!currentVentaId){
-    alert('No hay venta creada.');
+    alert('No hay venta creada. Agrega productos primero.');
     return;
   }
+  
+  if(cart.length === 0){
+    alert('El carrito está vacío.');
+    return;
+  }
+  
   const metodo = document.getElementById('metodoPago').value;
+  const cliente = document.getElementById('clienteInput').value || 'Cliente General';
+  
   try{
-    await api.ventasAPI.confirmar({venta_id: currentVentaId});
-    alert('Venta confirmada');
-    // limpiar
+    // Confirmar venta en servidor
+    await window.api.ventasAPI.confirmar({
+      venta_id: currentVentaId,
+      metodo_pago: metodo,
+      cliente: cliente
+    });
+    
+    alert('✓ Venta confirmada exitosamente');
+    
+    // Limpiar formulario
     cart = [];
     currentVentaId = null;
+    document.getElementById('clienteInput').value = '';
+    document.getElementById('metodoPago').value = 'Efectivo';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchResults').innerHTML = '';
+    
     renderCart();
   }catch(err){
     alert('Error al confirmar venta: ' + err.message);
@@ -128,18 +247,42 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
 });
 
 document.getElementById('btnCancel').addEventListener('click', async ()=>{
-  if(!currentVentaId){
-    cart = []; renderCart(); return;
+  if(!currentVentaId && cart.length === 0){
+    alert('No hay venta activa.');
+    return;
   }
+  
+  if(!confirm('¿Deseas cancelar esta venta?')) return;
+  
   try{
-    await api.ventasAPI.cancelar({venta_id: currentVentaId});
-    cart = []; currentVentaId = null; renderCart();
-    alert('Venta cancelada');
+    if(currentVentaId){
+      await window.api.ventasAPI.cancelar({venta_id: currentVentaId});
+    }
+    
+    cart = [];
+    currentVentaId = null;
+    document.getElementById('clienteInput').value = '';
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchResults').innerHTML = '';
+    
+    renderCart();
+    alert('✓ Venta cancelada');
   }catch(err){
-    console.error(err);
+    console.error('Error cancelando venta:', err);
     alert('Error al cancelar: ' + err.message);
   }
 });
 
-// init
-renderCart();
+// Permitir buscar con Enter
+document.getElementById('searchInput').addEventListener('keypress', (e)=>{
+  if(e.key === 'Enter'){
+    document.getElementById('btnSearch').click();
+  }
+});
+
+// Inicializar
+async function init(){
+  console.log('Inicializando POS...');
+  await cargarProductos();
+  renderCart();
+}

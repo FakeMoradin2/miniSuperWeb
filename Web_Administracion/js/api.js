@@ -26,19 +26,34 @@ const auth = {
 
 /* Categorías */
 const categorias = {
-  listar: () => fetchJSON(`${API_BASE}/api/categoria/listar.php`)
+  listar: () => fetchJSON(`${API_BASE}/api/categoria/listar.php`).then(res => {
+    // Manejar respuestas envueltas en {data: []}
+    if (res.data && Array.isArray(res.data)) return res.data;
+    if (Array.isArray(res)) return res;
+    return [];
+  })
 };
 
 /* Proveedores */
 const proveedores = {
-  listar: () => fetchJSON(`${API_BASE}/api/proveedores/listar.php`)
+  listar: () => fetchJSON(`${API_BASE}/api/proveedores/listar.php`).then(res => {
+    // Manejar respuestas envueltas en {data: []}
+    if (res.data && Array.isArray(res.data)) return res.data;
+    if (Array.isArray(res)) return res;
+    return [];
+  })
 };
 
 /* Productos */
 const productos = {
   listar: (categoriaId = '') => {
     const q = categoriaId ? `?categoria=${categoriaId}` : '';
-    return fetchJSON(`${API_BASE}/api/productos/listar.php${q}`);
+    return fetchJSON(`${API_BASE}/api/productos/listar.php${q}`).then(res => {
+      // Manejar respuestas envueltas en {data: []}
+      if (res.data && Array.isArray(res.data)) return res.data;
+      if (Array.isArray(res)) return res;
+      return [];
+    });
   },
   agregar: (body) => fetchJSON(`${API_BASE}/api/productos/agregar.php`, {
     method: 'POST',
@@ -57,7 +72,12 @@ const productos = {
   }),
   buscar: (termino = '') => {
     const q = termino ? `?busca=${encodeURIComponent(termino)}` : '';
-    return fetchJSON(`${API_BASE}/api/productos/buscar.php${q}`);
+    return fetchJSON(`${API_BASE}/api/productos/buscar.php${q}`).then(res => {
+      // Manejar respuestas envueltas en {data: []}
+      if (res.data && Array.isArray(res.data)) return res.data;
+      if (Array.isArray(res)) return res;
+      return [];
+    });
   }
 };
 
@@ -68,6 +88,8 @@ const ventasAPI = {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(body)
   }),
+  listar: (params = '') => fetchJSON(`${API_BASE}/api/ventas/listar.php${params}`),
+  obtenerPorId: (id) => fetchJSON(`${API_BASE}/api/ventas/obtener.php?id=${id}`),
   agregarProducto: (body) => fetchJSON(`${API_BASE}/api/ventas/agregarProducto.php`, {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
@@ -102,5 +124,44 @@ const reportes = {
   productosTop: (params = '') => fetchJSON(`${API_BASE}/api/reportes/productosTop.php${params}`)
 };
 
+/* Clientes */
+const clientes = {
+  listar: () => fetchJSON(`${API_BASE}/api/clientes/listar.php`),
+  agregar: (body) => fetchJSON(`${API_BASE}/api/clientes/agregar.php`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }),
+  editar: (body) => fetchJSON(`${API_BASE}/api/clientes/editar.php`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }),
+  eliminar: (body) => fetchJSON(`${API_BASE}/api/clientes/eliminar.php`, {
+    method: 'DELETE',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }),
+  obtenerPorId: (id) => fetchJSON(`${API_BASE}/api/clientes/obtener.php?id=${id}`)
+};
+
+/* Stock */
+const stock = {
+  actualizar: (body) => fetchJSON(`${API_BASE}/api/stock/actualizar.php`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }),
+  obtenerBajoStock: () => fetchJSON(`${API_BASE}/api/stock/bajoStock.php`),
+  historial: (params = '') => fetchJSON(`${API_BASE}/api/stock/historial.php${params}`)
+};
+
+/* Dashboard */
+const dashboard = {
+  estadisticas: (params = '') => fetchJSON(`${API_BASE}/api/dashboard/estadisticas.php${params}`),
+  ventasRecientes: (limit = 10) => fetchJSON(`${API_BASE}/api/dashboard/ventasRecientes.php?limit=${limit}`),
+  productosMasVendidos: (limit = 5) => fetchJSON(`${API_BASE}/api/dashboard/productosMasVendidos.php?limit=${limit}`)
+};
+
 /* Export objetos para uso global */
-window.api = { auth, categorias, proveedores, productos, ventasAPI, reportes };
+window.api = { auth, categorias, proveedores, productos, ventasAPI, reportes, clientes, stock, dashboard };
