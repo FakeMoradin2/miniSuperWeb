@@ -72,7 +72,8 @@ const productos = {
   }),
   buscar: (termino = '') => {
     const q = termino ? `?busca=${encodeURIComponent(termino)}` : '';
-    return fetchJSON(`${API_BASE}/api/productos/buscar.php${q}`).then(res => {
+    // Algunos backends manejan la búsqueda a través de listar.php?busca=... en vez de buscar.php
+    return fetchJSON(`${API_BASE}/api/productos/listar.php${q}`).then(res => {
       // Manejar respuestas envueltas en {data: []}
       if (res.data && Array.isArray(res.data)) return res.data;
       if (Array.isArray(res)) return res;

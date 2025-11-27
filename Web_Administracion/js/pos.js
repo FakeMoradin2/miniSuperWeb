@@ -112,13 +112,23 @@ document.getElementById('btnSearch').addEventListener('click', async ()=>{
   const results = await searchProducts(q);
   const container = document.getElementById('searchResults');
   container.innerHTML = '';
-  
-  if(results.length === 0){ 
+
+  // Filtrar resultados en cliente por seguridad (algunos endpoints devuelven todo)
+  const queryLower = q.toLowerCase();
+  const filtered = results.filter(p => {
+    const nombre = (p.nombre_producto || p.nombre || '').toString().toLowerCase();
+    const categoria = (p.categoria || '').toString().toLowerCase();
+    const proveedor = (p.proveedor || '').toString().toLowerCase();
+    const id = String(p.producto_id || p.id || '');
+    return nombre.includes(queryLower) || categoria.includes(queryLower) || proveedor.includes(queryLower) || id === q;
+  });
+
+  if(filtered.length === 0){ 
     container.innerHTML = '<p style="color: var(--gray); padding: 10px 0;">No se encontraron productos</p>'; 
     return; 
   }
-  
-  results.forEach(p=>{
+
+  filtered.forEach(p=>{
     const div = document.createElement('div');
     div.style.cssText = 'padding:12px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;background:#f8f9fa';
     
@@ -149,12 +159,20 @@ document.getElementById('btnSearch').addEventListener('click', async ()=>{
     b.addEventListener('click', async (e)=>{
       e.preventDefault();
       const id = e.target.dataset.id;
-      const prod = results.find(r => String(r.producto_id ?? r.id) === String(id));
+      // buscar en filtered primero
+      const prod = (filtered.find(r => String(r.producto_id ?? r.id) === String(id)) || results.find(r => String(r.producto_id ?? r.id) === String(id)));
       if(!prod) return;
       
       await agregarProductoAlCarrito(prod);
     });
   });
+});
+
+// Botón para limpiar la búsqueda
+document.getElementById('btnClearSearch').addEventListener('click', ()=>{
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '<p style="color: var(--gray);">Ingresa un término de búsqueda</p>';
+  document.getElementById('searchInput').focus();
 });
 
 async function agregarProductoAlCarrito(prod){
