@@ -69,6 +69,7 @@ function cambiarPagina(numeroPagina) {
 }
 
 // Product Rendering for Pagination
+// En script_pages.js - MODIFICA la función renderizarProductosPagina:
 function renderizarProductosPagina(productosPagina) {
     const productsGrid = document.getElementById('productsGrid');
     if (!productsGrid) return;
@@ -80,43 +81,37 @@ function renderizarProductosPagina(productosPagina) {
         return;
     }
     
-    productosPagina.forEach(producto => {
-        const productCard = crearProductCard(producto);
-        productsGrid.appendChild(productCard);
-    });
-}
-
-// Product Card Creation
-function crearProductCard(producto) {
-    const card = document.createElement('div');
-    card.className = 'product-card';
-    
-    const isDailyDeals = categoriaActual === 'Daily Deals';
-    const buttonText = isDailyDeals ? 'Grab Offer' : (producto.oferta ? 'Grab Offer' : 'Add to Cart');
-    const buttonClass = isDailyDeals || producto.oferta ? 'add-to-cart-btn daily-deals-btn' : 'add-to-cart-btn';
-    
-    card.innerHTML = `
-        <div class="product-image">
-            ${producto.oferta ? '<div class="offer-badge">Special Offer</div>' : ''}
-            <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNkZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPsOXIEltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
-        </div>
-        <div class="product-info">
-            <h3 class="product-name">${producto.nombre}</h3>
-            <p class="product-description">${producto.descripcion}</p>
-            <div class="product-price">
-                ${producto.oferta ? 
-                    `<span class="original-price">$${producto.precioOriginal.toFixed(2)}</span>
-                     <span class="discount-price">$${producto.precio.toFixed(2)}</span>` 
-                    : `$${producto.precio.toFixed(2)}`
-                }
+    // Usar la función de renderizado de productos SIN DESCRIPCIÓN
+    productsGrid.innerHTML = productosPagina.map(producto => {
+        const isDailyDeals = window.categoriaActual === 'Daily Deals';
+        const buttonText = isDailyDeals ? 'Grab Offer' : (producto.oferta ? 'Grab Offer' : 'Add to Cart');
+        const buttonClass = isDailyDeals || producto.oferta ? 'add-to-cart-btn daily-deals-btn' : 'add-to-cart-btn';
+        
+        const stockInfo = producto.stock < 5 ? `<div class="low-stock">Only ${producto.stock} left!</div>` : '';
+        
+        return `
+        <div class="product-card">
+            <div class="product-image">
+                ${producto.oferta ? '<div class="offer-badge">Special Offer</div>' : ''}
+                <img src="${producto.imagen}" alt="${producto.nombre}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzljYTNkZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPsOXIEltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
             </div>
-            <button class="${buttonClass}" onclick="agregarAlCarritoDesdePrincipal('${producto.id}')">
-                ${buttonText}
-            </button>
+            <div class="product-info">
+                <h3 class="product-name">${producto.nombre}</h3>
+                ${stockInfo}
+                <div class="product-price">
+                    ${producto.oferta && producto.precioOriginal ? 
+                        `<span class="original-price">$${producto.precioOriginal.toFixed(2)}</span>
+                         <span class="discount-price">$${producto.precio.toFixed(2)}</span>` 
+                        : `$${producto.precio.toFixed(2)}`
+                    }
+                </div>
+                <button class="${buttonClass}" onclick="agregarAlCarritoDesdePrincipal('${producto.id}')" ${producto.stock === 0 ? 'disabled' : ''}>
+                    ${producto.stock === 0 ? 'Out of Stock' : buttonText}
+                </button>
+            </div>
         </div>
-    `;
-    
-    return card;
+        `;
+    }).join('');
 }
 
 // No Products Message
