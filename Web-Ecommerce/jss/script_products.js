@@ -1,6 +1,6 @@
-// script_products.js - VERSIÓN SIN DESCRIPCIÓN Y CON FILTRO CORREGIDO
+// script_products.js - VERSIÓN CORREGIDA PARA IMÁGENES DE BD
 
-// Product Class (sin descripción)
+// Product Class
 class Producto {
     constructor(id, nombre, precio, categoria, imagen, oferta = false, precioOriginal = null, stock = 0) {
         this.id = id;
@@ -21,7 +21,7 @@ let productosGlobal = [];
 let productosOfertaGlobal = [];
 let categoriasGlobal = [];
 
-// Funciones auxiliares para encontrar datos
+// FUNCIONES MEJORADAS PARA MANEJO DE IMÁGENES
 function encontrarPrecio(item) {
     const clavesPrecio = ['Precio_venta', 'precio_venta', 'Precio', 'precio', 'precio_publico', 'costo', 'valor'];
     for (let clave of clavesPrecio) {
@@ -43,21 +43,137 @@ function encontrarCategoria(item) {
     return 'General';
 }
 
+// jss/script_products.js - VERSIÓN CON GOOGLE DRIVE FIX
+
+// FUNCIÓN MEJORADA PARA ENCONTRAR IMÁGENES
 function encontrarImagen(item) {
-    const clavesImagen = ['Imagen_url', 'imagen_url', 'imagen', 'url_imagen', 'foto', 'image'];
-    for (let clave of clavesImagen) {
-        if (item[clave] && typeof item[clave] === 'string' && item[clave].trim().length > 0) {
-            return item[clave];
+    console.log('🔍 Buscando imagen en:', item);
+    
+    const camposImagen = ['image_url', 'imagen_url', 'imagen', 'url_imagen', 'foto', 'image', 'Imagen'];
+    
+    for (let campo of camposImagen) {
+        if (item[campo] && typeof item[campo] === 'string' && item[campo].trim().length > 0) {
+            const imagenUrl = item[campo].trim();
+            console.log(`✅ Imagen encontrada en campo "${campo}":`, imagenUrl);
+            
+            return procesarUrlImagen(imagenUrl);
         }
     }
-    const categoria = encontrarCategoria(item).toLowerCase();
-    if (categoria.includes('fruta') || categoria.includes('vegetal')) {
-        return 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
-    } else if (categoria.includes('lácteo') || categoria.includes('leche') || categoria.includes('huevo')) {
-        return 'https://images.unsplash.com/photo-1563636619-e9143da7973b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
-    } else {
-        return 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
+    
+    console.log('❌ No se encontró imagen, usando placeholder');
+    return obtenerPlaceholderPorCategoria(encontrarCategoria(item));
+}
+
+// FUNCIÓN MEJORADA PARA PROCESAR URLS (CON GOOGLE DRIVE)
+function procesarUrlImagen(url) {
+    console.log('🔄 Procesando URL:', url);
+    
+    // CASO 1: Google Drive link - CONVERTIR a URL directa
+    if (url.includes('drive.google.com')) {
+        const driveUrl = convertirGoogleDriveADirecto(url);
+        console.log('📁 Google Drive convertido:', driveUrl);
+        return driveUrl;
     }
+    
+    // CASO 2: Ya es URL completa (http://...)
+    if (url.startsWith('http')) {
+        console.log('🌐 URL completa, usando directamente');
+        return url;
+    }
+    
+    // CASO 3: Es imagen en base64 (data:image...)
+    if (url.startsWith('data:')) {
+        console.log('📸 Imagen base64, usando directamente');
+        return url;
+    }
+    
+    // CASO 4: Ruta absoluta (/uploads/imagen.jpg)
+    if (url.startsWith('/')) {
+        const urlCompleta = `http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com${url}`;
+        console.log('📁 Ruta absoluta, construyendo URL:', urlCompleta);
+        return urlCompleta;
+    }
+    
+    // CASO 5: Ruta relativa (productos/leche.jpg)
+    if (!url.startsWith('../') && !url.startsWith('./')) {
+        const urlCompleta = `http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com/uploads/${url}`;
+        console.log('📂 Ruta relativa, construyendo URL:', urlCompleta);
+        return urlCompleta;
+    }
+    
+    // CASO 6: Ruta local (../images/producto.jpg)
+    console.log('🏠 Ruta local, usando directamente');
+    return url;
+}
+
+// NUEVA FUNCIÓN: Convertir Google Drive a URL directa
+function convertirGoogleDriveADirecto(driveUrl) {
+    try {
+        console.log('🔄 Convirtiendo Google Drive URL:', driveUrl);
+        
+        // Extraer el file ID de la URL
+        const match = driveUrl.match(/\/d\/([^\/]+)/);
+        if (match && match[1]) {
+            const fileId = match[1];
+            const directUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+            
+            console.log('✅ Google Drive convertido:', {
+                original: driveUrl,
+                fileId: fileId,
+                directUrl: directUrl
+            });
+            
+            return directUrl;
+        }
+        
+        // Si no se puede extraer el ID, devolver placeholder
+        console.warn('❌ No se pudo extraer fileId de Google Drive URL');
+        return obtenerPlaceholderPorCategoria('General');
+        
+    } catch (error) {
+        console.error('❌ Error convirtiendo Google Drive URL:', error);
+        return obtenerPlaceholderPorCategoria('General');
+    }
+}
+// FUNCIÓN PARA OBTENER PLACEHOLDER POR CATEGORÍA
+function obtenerPlaceholderPorCategoria(categoria) {
+    const categoriaLower = categoria.toLowerCase();
+    
+    const placeholders = {
+        'frutas': 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+        'vegetales': 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+        'lácteos': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+        'huevos': 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+        'carnes': 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+        'mariscos': 'https://images.unsplash.com/photo-1599084993091-1cb5c0721cc6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+        'limpieza': 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+        'cuidado personal': 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+    };
+    
+    for (const [key, placeholder] of Object.entries(placeholders)) {
+        if (categoriaLower.includes(key)) {
+            return placeholder;
+        }
+    }
+    
+    return 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
+}
+
+// FUNCIÓN PARA MANEJAR ERRORES DE IMAGEN
+function manejarErrorImagen(imgElement, productName) {
+    console.warn(`❌ Error cargando imagen para: ${productName}`, imgElement.src);
+    
+    // Intentar con placeholder genérico
+    imgElement.src = 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60';
+    imgElement.alt = `Imagen no disponible para ${productName}`;
+    
+    // Forzar recarga
+    setTimeout(() => {
+        imgElement.style.display = 'none';
+        setTimeout(() => {
+            imgElement.style.display = 'block';
+        }, 100);
+    }, 500);
 }
 
 // Cargar categorías desde la base de datos
@@ -152,23 +268,7 @@ function configurarEventListenersCategorias() {
     });
 }
 
-// Función para usar datos de ejemplo (productos)
-function usarDatosEjemplo() {
-    console.log('🔄 Usando datos de ejemplo...');
-    productosGlobal = [
-        new Producto('1', 'Manzanas Frescas', 2.99, 'Fruits & Vegetables', 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', false, null, 15),
-        new Producto('2', 'Leche Orgánica', 3.49, 'Dairy & Eggs', 'https://images.unsplash.com/photo-1563636619-e9143da7973b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', false, null, 8),
-        new Producto('3', 'Pan Integral', 2.29, 'Groceries', 'https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', false, null, 12),
-        new Producto('4', 'Pechuga de Pollo', 8.99, 'Meat & Seafood', 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', false, null, 6)
-    ];
-    
-    productosOfertaGlobal = [
-        new Producto('5', 'Café Premium', 9.99, 'Groceries', 'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', true, 12.99, 5),
-        new Producto('6', 'Huevos Orgánicos', 4.99, 'Dairy & Eggs', 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', true, 6.49, 3)
-    ];
-}
-
-// Cargar productos desde la base de datos
+// Cargar productos desde la base de datos - VERSIÓN MEJORADA
 async function cargarProductosDesdeBD() {
     try {
         console.log('🔄 Cargando productos desde la base de datos...');
@@ -177,6 +277,8 @@ async function cargarProductosDesdeBD() {
         
         console.log('🎯 RESPUESTA CRUDA DE LA API:', productosData);
         
+        let productosArray = productosData;
+        
         if (!Array.isArray(productosData)) {
             console.warn('⚠️ La respuesta no es un array, convirtiendo...');
             if (productosData && typeof productosData === 'object') {
@@ -184,16 +286,16 @@ async function cargarProductosDesdeBD() {
                     Array.isArray(productosData[key])
                 );
                 if (arrayKeys.length > 0) {
-                    productosData = productosData[arrayKeys[0]];
+                    productosArray = productosData[arrayKeys[0]];
                 } else {
-                    productosData = [productosData];
+                    productosArray = [productosData];
                 }
             }
         }
         
-        console.log('🔍 Procesando', productosData.length, 'productos...');
+        console.log('🔍 Procesando', productosArray.length, 'productos...');
         
-        productosGlobal = productosData.map((item, index) => {
+        productosGlobal = productosArray.map((item, index) => {
             console.log(`📊 Producto ${index}:`, item);
             
             let nombre = `Producto ${index + 1}`;
@@ -229,11 +331,12 @@ async function cargarProductosDesdeBD() {
             const categoria = encontrarCategoria(item);
             const imagen = encontrarImagen(item);
             
-            console.log('✅ Extraído:', { 
+            console.log('✅ Producto extraído:', { 
                 id, 
                 nombre, 
                 precio, 
-                categoria
+                categoria,
+                imagen
             });
             
             return new Producto(
@@ -257,6 +360,22 @@ async function cargarProductosDesdeBD() {
         mostrarNotificacion('Error al cargar productos. Usando datos de ejemplo.', 'error');
         usarDatosEjemplo();
     }
+}
+
+// Función para usar datos de ejemplo (productos)
+function usarDatosEjemplo() {
+    console.log('🔄 Usando datos de ejemplo...');
+    productosGlobal = [
+        new Producto('1', 'Manzanas Frescas', 2.99, 'Fruits & Vegetables', 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', false, null, 15),
+        new Producto('2', 'Leche Orgánica', 3.49, 'Dairy & Eggs', 'https://images.unsplash.com/photo-1563636619-e9143da7973b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', false, null, 8),
+        new Producto('3', 'Pan Integral', 2.29, 'Groceries', 'https://images.unsplash.com/photo-1509440159596-0249088772ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', false, null, 12),
+        new Producto('4', 'Pechuga de Pollo', 8.99, 'Meat & Seafood', 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', false, null, 6)
+    ];
+    
+    productosOfertaGlobal = [
+        new Producto('5', 'Café Premium', 9.99, 'Groceries', 'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', true, 12.99, 5),
+        new Producto('6', 'Huevos Orgánicos', 4.99, 'Dairy & Eggs', 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60', true, 6.49, 3)
+    ];
 }
 
 // Función principal para cargar todos los datos
@@ -591,6 +710,10 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
         }, 300);
     }, 3000);
 }
+
+// Hacer funciones globales
+window.manejarErrorImagen = manejarErrorImagen;
+window.agregarAlCarritoDesdePrincipal = agregarAlCarritoDesdePrincipal;
 
 // Initialization
 document.addEventListener('DOMContentLoaded', function() {
