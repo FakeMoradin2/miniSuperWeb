@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="../css/styles_pages.css">
 </head>
 <body>
+    <!-- Cargar auth.js primero para proteger la página -->
+    <script src="../jss/auth.js"></script>
 
     <nav class="navbar">   
         <div class="main-nav">
@@ -114,24 +116,36 @@
     function loadUserInfo() {
         const user = window.authManager.getUser();
         const userNameDisplay = document.getElementById('userNameDisplay');
+        const userMenuButton = document.getElementById('userMenuButton');
         
         if (user && user.name) {
-            // Mostrar el nombre del usuario (primera letra en mayúscula)
+            // Usuario autenticado - mostrar nombre y dropdown
             const displayName = user.name.charAt(0).toUpperCase() + user.name.slice(1);
             userNameDisplay.textContent = displayName;
             
+            // Cambiar el href para evitar redirección
+            userMenuButton.href = "#";
+            userMenuButton.onclick = null;
+            
             console.log('👤 User loaded:', user);
         } else {
-            console.warn('⚠️ No user name found');
+            // Usuario NO autenticado - configurar para redirigir al login
+            userNameDisplay.textContent = "My Account";
+            userMenuButton.href = "login.html";
+            userMenuButton.onclick = null; // Remover cualquier onclick previo
+            
+            console.log('🔐 User not authenticated - My Account will redirect to login');
         }
     }
 
-    // Función para inicializar el dropdown del usuario
+    // Función para inicializar el dropdown del usuario (solo para usuarios autenticados)
     function initUserDropdown() {
+        const user = window.authManager.getUser();
         const userMenuButton = document.getElementById('userMenuButton');
         const userDropdown = document.getElementById('userDropdown');
 
-        if (userMenuButton && userDropdown) {
+        // Solo inicializar dropdown si el usuario está autenticado
+        if (user && userMenuButton && userDropdown) {
             userMenuButton.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -147,6 +161,13 @@
             userDropdown.addEventListener('click', function(e) {
                 e.stopPropagation();
             });
+            
+            console.log('🎯 User dropdown initialized for authenticated user');
+        } else {
+            // Ocultar dropdown si no hay usuario autenticado
+            if (userDropdown) {
+                userDropdown.style.display = 'none';
+            }
         }
     }
 
@@ -160,16 +181,32 @@
         }
     }
 
+    // Función para manejar el clic en "My Account"
+    function handleUserMenuClick() {
+        const user = window.authManager.getUser();
+        
+        if (!user) {
+            // Usuario no autenticado - redirigir al login
+            console.log('🔐 Redirecting to login...');
+            window.location.href = 'login.html';
+            return false; // Prevenir comportamiento por defecto
+        }
+        // Usuario autenticado - el dropdown se maneja en initUserDropdown
+        return true;
+    }
+
     // Inicializar cuando la página cargue
     document.addEventListener('DOMContentLoaded', function() {
         loadUserInfo();
         initUserDropdown();
         loadCart();
         
-        // Mostrar bienvenida en consola
+        // Mostrar estado en consola
         const user = window.authManager.getUser();
         if (user) {
             console.log('🎉 Welcome, ' + user.name + '!');
+        } else {
+            console.log('🔐 Please log in to access user features');
         }
     });
 
@@ -177,6 +214,7 @@
     window.addEventListener('storage', function(e) {
         if (e.key === 'user') {
             loadUserInfo();
+            initUserDropdown(); // Re-inicializar dropdown si el estado de autenticación cambia
         }
         if (e.key === 'carrito') {
             loadCart();
@@ -196,6 +234,7 @@
         align-items: center;
         gap: 5px;
         position: relative;
+        cursor: pointer;
     }
 
     .dropdown-arrow {

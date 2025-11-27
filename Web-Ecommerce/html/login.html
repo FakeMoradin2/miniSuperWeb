@@ -7,16 +7,6 @@
     <link rel="stylesheet" href="../css/styles_login.css">
 </head>
 <body>
-    <!-- Cargar auth.js primero -->
-    <script src="../jss/auth.js"></script>
-    <script>
-        // Si ya está autenticado, redirigir a su página
-        if (window.authManager.checkAuthentication()) {
-            console.log('🔄 User already authenticated, redirecting...');
-            window.authManager.redirectToHome();
-        }
-    </script>
-
     <div class="container">
         <div class="corner-image" aria-hidden="true">
             <a href="principal.html">
@@ -114,37 +104,43 @@
                     return;
                 }
 
+                if (password.length < 8) {
+                    showError('Password must be at least 8 characters.');
+                    return;
+                }
+
                 try {
                     setLoading(true);
                     
+                    // SIMULACIÓN DE LOGIN - SIN DEPENDER DEL BACKEND
                     console.log('🔐 Attempting login with:', { username, password });
                     
                     // Simular delay de red
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     
-                    // Verificar credenciales (simulado)
+                    // Verificar si el usuario existe en localStorage (de registro previo)
                     const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-                    const user = registeredUsers.find(u => u.nombre_usuario === username && u.password === password);
+                    const userExists = registeredUsers.some(user => 
+                        user.nombre_usuario === username && user.password === password
+                    );
 
-                    if (user || (username && password.length >= 8)) {
-                        // Login exitoso
+                    if (userExists || (username && password.length >= 8)) {
+                        // Login exitoso - simular respuesta
                         const userData = {
-                            id: user ? user.id : Date.now(),
+                            id: Date.now(),
                             name: username,
                             username: username,
-                            role: user ? user.rol : 'cliente',
-                            token: 'token_' + Date.now()
+                            role: 'cliente', // Por defecto para usuarios nuevos
+                            token: 'simulated_token_' + Date.now()
                         };
                         
-                        // Usar AuthManager para el login
-                        const loginSuccess = window.authManager.login(userData);
+                        localStorage.setItem('user', JSON.stringify(userData));
+                        localStorage.setItem('isLoggedIn', 'true');
                         
-                        if (loginSuccess) {
-                            console.log('✅ Login successful, redirecting...');
-                            window.authManager.redirectToHome();
-                        } else {
-                            showError('Login failed. Please try again.');
-                        }
+                        console.log('✅ Login successful:', userData);
+                        
+                        // Redirigir a la página principal
+                        window.location.href = 'principal.html';
                         
                     } else {
                         showError('Invalid username or password. Please try again or sign up.');
@@ -166,6 +162,16 @@
                     showError('Password recovery feature coming soon.');
                 });
             }
+
+            // Verificar si hay usuarios registrados en localStorage (para testing)
+            window.checkRegisteredUsers = function() {
+                const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                console.log('📋 Registered users:', users);
+                return users;
+            };
+
+            // Para debugging: mostrar usuarios registrados en consola
+            console.log('👥 Currently registered users:', window.checkRegisteredUsers());
 
         })();
     </script>
