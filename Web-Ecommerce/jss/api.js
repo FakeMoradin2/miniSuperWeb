@@ -36,6 +36,11 @@ const auth = {
         body: JSON.stringify(body)
     }),
     
+    // Nueva función para verificar el token/estado de autenticación
+    verify: () => fetchJSON(`${API_BASE}/api/auth/verify.php`, {
+        method: 'POST'
+    }),
+    
     logout: () => fetchJSON(`${API_BASE}/api/auth/logout.php`, {
         method: 'POST'
     })

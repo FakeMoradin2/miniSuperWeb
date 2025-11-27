@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../css/styles_pages.css">
 </head>
 <body>
+
     <nav class="navbar">   
         <div class="main-nav">
             <a href="index.html" class="corner-image">
@@ -23,8 +24,18 @@
             </div>
 
             <div class="nav-links">
-                <a href="#" class="nav-link">My Account</a>
-                <a href="#" class="nav-link">My Orders</a>
+                <div class="user-menu">
+                    <a href="#" class="nav-link user-menu-btn" id="userMenuButton">
+                        <span id="userNameDisplay">My Account</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </a>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="profile.html" class="dropdown-item">My Profile</a>
+                        <a href="orders.html" class="dropdown-item">My Orders</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout-btn" onclick="window.authManager.logout()">Logout</a>
+                    </div>
+                </div>
                 <a href="cart.html" class="nav-link">
                     <span class="cart-icon">🛒</span>
                     Cart
@@ -97,5 +108,174 @@
 <script src="../jss/api.js"></script>
 <script src="../jss/script_pages.js"></script>
 <script src="../jss/script_products.js"></script>
-</body>
+
+<script>
+    // Función para cargar la información del usuario
+    function loadUserInfo() {
+        const user = window.authManager.getUser();
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        
+        if (user && user.name) {
+            // Mostrar el nombre del usuario (primera letra en mayúscula)
+            const displayName = user.name.charAt(0).toUpperCase() + user.name.slice(1);
+            userNameDisplay.textContent = displayName;
+            
+            console.log('👤 User loaded:', user);
+        } else {
+            console.warn('⚠️ No user name found');
+        }
+    }
+
+    // Función para inicializar el dropdown del usuario
+    function initUserDropdown() {
+        const userMenuButton = document.getElementById('userMenuButton');
+        const userDropdown = document.getElementById('userDropdown');
+
+        if (userMenuButton && userDropdown) {
+            userMenuButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+
+            // Cerrar dropdown al hacer clic fuera
+            document.addEventListener('click', function() {
+                userDropdown.classList.remove('show');
+            });
+
+            // Prevenir que el dropdown se cierre al hacer clic dentro
+            userDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+    }
+
+    // Función para cargar el carrito
+    function loadCart() {
+        const cart = JSON.parse(localStorage.getItem('carrito')) || [];
+        const cartCount = document.getElementById('cartCount');
+        
+        if (cartCount) {
+            cartCount.textContent = cart.length;
+        }
+    }
+
+    // Inicializar cuando la página cargue
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUserInfo();
+        initUserDropdown();
+        loadCart();
+        
+        // Mostrar bienvenida en consola
+        const user = window.authManager.getUser();
+        if (user) {
+            console.log('🎉 Welcome, ' + user.name + '!');
+        }
+    });
+
+    // Actualizar cuando cambie el usuario o carrito
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'user') {
+            loadUserInfo();
+        }
+        if (e.key === 'carrito') {
+            loadCart();
+        }
+    });
+</script>
+
+<style>
+    /* Estilos para el menú de usuario */
+    .user-menu {
+        position: relative;
+        display: inline-block;
+    }
+
+    .user-menu-btn {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        position: relative;
+    }
+
+    .dropdown-arrow {
+        font-size: 10px;
+        transition: transform 0.3s ease;
+        margin-left: 2px;
+    }
+
+    .user-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        min-width: 160px;
+        z-index: 1000;
+        display: none;
+        margin-top: 5px;
+    }
+
+    .user-dropdown.show {
+        display: block;
+    }
+
+    .dropdown-item {
+        display: block;
+        padding: 10px 16px;
+        text-decoration: none;
+        color: #333;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        font-size: 14px;
+    }
+
+    .dropdown-item:hover {
+        background: #f8f9fa;
+        color: #3B82F6;
+    }
+
+    .dropdown-divider {
+        height: 1px;
+        background: #e2e8f0;
+        margin: 5px 0;
+    }
+
+    .logout-btn {
+        color: #dc3545;
+    }
+
+    .logout-btn:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    /* Ajustes responsive para el menú de usuario */
+    @media (max-width: 768px) {
+        .user-menu-btn span:not(.dropdown-arrow) {
+            display: inline-block;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .user-dropdown {
+            right: -10px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .user-menu-btn span:not(.dropdown-arrow) {
+            max-width: 60px;
+        }
+    }
+</style>
+</body> 
 </html>

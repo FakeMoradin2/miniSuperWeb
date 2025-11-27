@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="../css/styles_login.css">
 </head>
 <body>
+    <!-- Cargar auth.js primero -->
+    <script src="../jss/auth.js"></script>
+    <script>
+        // Si ya está autenticado, redirigir a su página
+        if (window.authManager.checkAuthentication()) {
+            console.log('🔄 User already authenticated, redirecting...');
+            window.authManager.redirectToHome();
+        }
+    </script>
+
     <div class="container">
         <div class="corner-image" aria-hidden="true">
             <a href="principal.html">
@@ -19,8 +29,8 @@
 
         <form id="loginForm" novalidate>
             <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required>
             </div>
 
             <div class="form-group">
@@ -37,12 +47,16 @@
                 <a href="#" id="forgotPassword">Forgot your password?</a>
             </div>
             
-            <button type="submit" class="signin-btn">Login</button>
+            <button type="submit" class="signin-btn" id="loginButton">
+                <span class="button-text">Login</span>
+                <span class="button-loading" style="display: none;">Loading...</span>
+            </button>
             
-            <div class="signup">Don't have an account? <a href="signup.html">Sign up</a>
-            </div>
-            
+            <div class="signup">Don't have an account? <a href="signup.html">Sign up</a></div>
         </form>
+
+        <!-- Mensaje de error -->
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
     </div>
 
     <script>
@@ -50,24 +64,109 @@
             const form = document.getElementById('loginForm');
             const toggle = document.getElementById('showPassword');
             const pwd = document.getElementById('password');
+            const loginButton = document.getElementById('loginButton');
+            const errorMessage = document.getElementById('errorMessage');
 
+            // Función para mostrar mensaje de error
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            }
+
+            // Función para mostrar/ocultar loading
+            function setLoading(isLoading) {
+                const buttonText = loginButton.querySelector('.button-text');
+                const buttonLoading = loginButton.querySelector('.button-loading');
+                
+                if (isLoading) {
+                    buttonText.style.display = 'none';
+                    buttonLoading.style.display = 'inline';
+                    loginButton.disabled = true;
+                } else {
+                    buttonText.style.display = 'inline';
+                    buttonLoading.style.display = 'none';
+                    loginButton.disabled = false;
+                }
+            }
+
+            // Toggle para mostrar contraseña
             if (toggle && pwd) {
                 toggle.addEventListener('change', function() {
                     pwd.type = this.checked ? 'text' : 'password';
                 });
             }
 
+            // Manejo del formulario de login
             if (!form) return;
-            form.addEventListener('submit', function(e) {
+            
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const name = form.name.value.trim();
-                const pwdVal = form.password.value;
-                if (!name || !pwdVal) {
-                    alert('Please complete all fields.');
+                
+                const username = form.username.value.trim();
+                const password = form.password.value;
+
+                // Validaciones básicas
+                if (!username || !password) {
+                    showError('Please complete all fields.');
                     return;
                 }
-                alert('Form submitted (simulated)');
+
+                try {
+                    setLoading(true);
+                    
+                    console.log('🔐 Attempting login with:', { username, password });
+                    
+                    // Simular delay de red
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Verificar credenciales (simulado)
+                    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                    const user = registeredUsers.find(u => u.nombre_usuario === username && u.password === password);
+
+                    if (user || (username && password.length >= 8)) {
+                        // Login exitoso
+                        const userData = {
+                            id: user ? user.id : Date.now(),
+                            name: username,
+                            username: username,
+                            role: user ? user.rol : 'cliente',
+                            token: 'token_' + Date.now()
+                        };
+                        
+                        // Usar AuthManager para el login
+                        const loginSuccess = window.authManager.login(userData);
+                        
+                        if (loginSuccess) {
+                            console.log('✅ Login successful, redirecting...');
+                            window.authManager.redirectToHome();
+                        } else {
+                            showError('Login failed. Please try again.');
+                        }
+                        
+                    } else {
+                        showError('Invalid username or password. Please try again or sign up.');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Login error:', error);
+                    showError('Login error. Please try again later.');
+                } finally {
+                    setLoading(false);
+                }
             });
+
+            // Olvidó contraseña
+            const forgotPassword = document.getElementById('forgotPassword');
+            if (forgotPassword) {
+                forgotPassword.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showError('Password recovery feature coming soon.');
+                });
+            }
+
         })();
     </script>
 </body>

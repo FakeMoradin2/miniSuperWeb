@@ -90,6 +90,7 @@ h1 {
 
 .form-group {
     margin-bottom: 20px;
+    position: relative;
 }
 
 .name-row {
@@ -111,7 +112,8 @@ label {
 
 input[type="text"],
 input[type="tel"],
-input[type="password"] {
+input[type="password"],
+input[type="email"] {
     width: 100%;
     padding: 14px 16px;
     border: 1px solid #e1e8ed;
@@ -123,11 +125,23 @@ input[type="password"] {
 
 input[type="text"]:focus,
 input[type="tel"]:focus,
-input[type="password"]:focus {
+input[type="password"]:focus,
+input[type="email"]:focus {
     border-color: #3498db;
     outline: none;
     background-color: white;
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Estilos para campos con error */
+input.error {
+    border-color: #DC2626;
+    background-color: #FEF2F2;
+}
+
+input.success {
+    border-color: #10B981;
+    background-color: #F0FDF4;
 }
 
 .password-requirement {
@@ -135,7 +149,43 @@ input[type="password"]:focus {
     align-items: center;
     margin-top: 8px;
     font-size: 14px;
+}
+
+.password-requirement .valid {
     color: #22c55e;
+}
+
+.password-requirement .invalid {
+    color: #dc2626;
+}
+
+/* Estilos para mensajes de error y éxito */
+.error-message {
+    background: #FEE2E2;
+    color: #DC2626;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+    border: 1px solid #FECACA;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.success-message {
+    background: #D1FAE5;
+    color: #065F46;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+    border: 1px solid #A7F3D0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* Mensajes de error específicos por campo */
+.form-group .error-message {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
 }
 
 /* Show Password */
@@ -148,10 +198,16 @@ input[type="password"]:focus {
     color: #2c3e50;
 }
 
+.show-password input[type="checkbox"] {
+    margin: 0;
+    transform: scale(1.1);
+}
+
 .checkbox-group {
     display: flex;
     align-items: flex-start;
     margin: 25px 0 30px;
+    position: relative;
 }
 
 .checkbox-group input {
@@ -164,6 +220,14 @@ input[type="password"]:focus {
     font-weight: normal;
     margin-bottom: 0;
     line-height: 1.5;
+    flex: 1;
+}
+
+.checkbox-group .error-message {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    width: 100%;
 }
 
 .create-account-btn {
@@ -177,14 +241,63 @@ input[type="password"]:focus {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
     box-shadow: 0 2px 5px rgba(59, 130, 246, 0.3);
+    position: relative;
+    overflow: hidden;
 }
 
-.create-account-btn:hover {
+.create-account-btn:hover:not(:disabled) {
     background-color: #2563EB;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.create-account-btn:disabled {
+    background-color: #9CA3AF;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.create-account-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Estilos para el botón de loading */
+.button-text,
+.button-loading {
+    transition: opacity 0.3s ease;
+}
+
+.button-loading {
+    display: none;
+}
+
+.create-account-btn.loading .button-text {
+    opacity: 0;
+}
+
+.create-account-btn.loading .button-loading {
+    display: inline;
+    opacity: 1;
+}
+
+/* Animación de loading */
+@keyframes loadingPulse {
+    0% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.6;
+    }
+}
+
+.create-account-btn:disabled {
+    animation: loadingPulse 1.5s ease-in-out infinite;
 }
 
 .divider {
@@ -230,6 +343,14 @@ input[type="password"]:focus {
     text-decoration: underline;
 }
 
+/* Mensajes globales de éxito/error */
+#successMessage,
+#errorMessage {
+    margin: 1rem 0;
+    text-align: center;
+    font-weight: 500;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .container {
@@ -249,6 +370,12 @@ input[type="password"]:focus {
         width: 100px;
         height: 100px;
         top: -45px;
+    }
+    
+    .error-message,
+    .success-message {
+        font-size: 0.8rem;
+        padding: 0.6rem;
     }
 }
 
@@ -280,7 +407,8 @@ input[type="password"]:focus {
     
     input[type="text"],
     input[type="tel"],
-    input[type="password"] {
+    input[type="password"],
+    input[type="email"] {
         padding: 12px 14px;
         font-size: 15px;
     }
@@ -292,6 +420,10 @@ input[type="password"]:focus {
     
     .divider {
         margin: 25px 0;
+    }
+    
+    .checkbox-group {
+        margin: 20px 0 25px;
     }
 }
 
@@ -314,4 +446,37 @@ input[type="password"]:focus {
     .subtitle {
         font-size: 14px;
     }
+    
+    .error-message,
+    .success-message {
+        font-size: 0.75rem;
+        padding: 0.5rem;
+    }
+}
+
+/* Mejoras de accesibilidad */
+input:focus-visible {
+    outline: 2px solid #3B82F6;
+    outline-offset: 2px;
+}
+
+button:focus-visible {
+    outline: 2px solid #3B82F6;
+    outline-offset: 2px;
+}
+
+/* Transiciones suaves para todos los estados interactivos */
+input,
+button,
+.corner-image {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Mejora visual para estados de validación */
+.form-group:has(.error-message:not([style*="display: none"])) {
+    margin-bottom: 0.5rem;
+}
+
+.form-group:has(.error-message:not([style*="display: none"])) + .form-group {
+    margin-top: 1.5rem;
 }

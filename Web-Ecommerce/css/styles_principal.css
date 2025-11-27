@@ -676,6 +676,25 @@ footer p {
     animation: spin 1s linear infinite;
 }
 
+.no-products-message {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    grid-column: 1 / -1;
+}
+
+.no-products-message h3 {
+    color: #6c757d;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.no-products-message p {
+    color: #868e96;
+    margin-bottom: 1.5rem;
+}
+
 @keyframes spin {
     0% { transform: translateY(-50%) rotate(0deg); }
     100% { transform: translateY(-50%) rotate(360deg); }
