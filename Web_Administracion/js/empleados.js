@@ -94,20 +94,21 @@ document.addEventListener('DOMContentLoaded', function() {
     async function cargarEmpleados() {
         try {
             const response = await window.api.empleados.getAll();
-            
+
             const tbody = document.querySelector('#empleadosTable tbody');
             tbody.innerHTML = '';
 
-            // Manejar diferentes formatos de respuesta
+            // Manejar diferentes formatos de respuesta y quedarnos sólo con cajeros
             let empleadosArray = [];
-            
-            if (response.data && Array.isArray(response.data)) {
+
+            if (response?.data && Array.isArray(response.data)) {
                 empleadosArray = response.data;
             } else if (Array.isArray(response)) {
                 empleadosArray = response;
-            } else {
-                empleadosArray = [];
             }
+
+            // Filtrar sólo empleados con rol cajero
+            empleadosArray = empleadosArray.filter(e => (e.rol || '').toLowerCase() === 'cajero');
 
             // Guardar datos para usar en otras funciones
             empleadosData = empleadosArray;

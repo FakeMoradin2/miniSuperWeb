@@ -8,18 +8,32 @@ async function cargarReporteRango(inicio, fin){
     let usandoLocalStorage = false;
     
     try {
-      const ventasResponse = await window.api.ventasAPI.listar(`?inicio=${inicio}&fin=${fin}`);
-      console.log('Respuesta ventas completa:', JSON.stringify(ventasResponse, null, 2));
+      // El backend ya expone los datos del historial, filtramos client-side por rango
+      const query = `?inicio=${inicio}&fin=${fin}`;
+      const ventasResponse = await window.api.reportes.historial(query);
+      console.log('Respuesta historial completa:', JSON.stringify(ventasResponse, null, 2));
       
-      // Extraer array de ventas - intentar múltiples formatos
       if(Array.isArray(ventasResponse)) {
         ventas = ventasResponse;
       } else if(ventasResponse?.success && Array.isArray(ventasResponse?.data)) {
         ventas = ventasResponse.data;
+      } else if(Array.isArray(ventasResponse?.data)) {
+        ventas = ventasResponse.data;
       } else if(Array.isArray(ventasResponse?.ventas)) {
         ventas = ventasResponse.ventas;
-      } else if(ventasResponse?.data && Array.isArray(ventasResponse.data)) {
-        ventas = ventasResponse.data;
+      }
+
+      // Aplicar filtro por rango en el frontend por si el backend ignora los parámetros
+      if(ventas.length > 0) {
+        const inicioDate = new Date(inicio);
+        const finDate = new Date(`${fin}T23:59:59`);
+        ventas = ventas.filter(v => {
+          const fechaStr = v?.fecha ?? v?.creada_en_venta ?? v?.creada_en ?? v?.creada_enVenta;
+          if(!fechaStr) return false;
+          const fechaVenta = new Date(fechaStr);
+          if(isNaN(fechaVenta.getTime())) return false;
+          return fechaVenta >= inicioDate && fechaVenta <= finDate;
+        });
       }
     } catch(error) {
       console.warn('No se pudo cargar desde backend, usando localStorage:', error);
@@ -43,7 +57,10 @@ async function cargarReporteRango(inicio, fin){
     console.log('Ventas extraídas:', ventas.length, ventas);
     
     // Filtrar solo ventas confirmadas
-    ventas = ventas.filter(v => v?.estado === 'confirmada' || v?.estado === 'completada');
+    ventas = ventas.filter(v => {
+      const estado = v?.estado ?? v?.estado_venta ?? '';
+      return estado === 'confirmada' || estado === 'completada';
+    });
     console.log('Ventas confirmadas:', ventas.length);
     
     // Calcular totales
@@ -69,14 +86,15 @@ async function cargarReporteRango(inicio, fin){
     
     if(ventas.length === 0){
       const tr = document.createElement('tr');
-      tr.innerHTML = '<td colspan="7" style="text-align:center;color:var(--gray)">No hay ventas confirmadas en este periodo</td>';
+      tr.innerHTML = '<td colspan="6" style="text-align:center;color:var(--gray)">No hay ventas confirmadas en este periodo</td>';
       tbody.appendChild(tr);
     } else {
       for(const venta of ventas){
         const tr = document.createElement('tr');
         
         const folio = venta?.id_venta ?? venta?.venta_id ?? venta?.id ?? 'N/A';
-        const fecha = venta?.fecha ? new Date(venta.fecha).toLocaleString('es-MX', {
+        const fechaVenta = venta?.fecha ?? venta?.creada_en_venta ?? venta?.creada_en ?? null;
+        const fecha = fechaVenta ? new Date(fechaVenta).toLocaleString('es-MX', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -86,89 +104,25 @@ async function cargarReporteRango(inicio, fin){
         const cliente = venta?.nombre_cliente ?? venta?.cliente ?? venta?.comprador ?? 'Cliente General';
         const metodoPago = venta?.metodo_pago ?? venta?.metodoPago ?? venta?.forma_pago ?? 'N/A';
         const total = Number(venta?.total ?? venta?.monto_total ?? venta?.precio_total ?? 0);
-        const estado = venta?.estado ?? 'pendiente';
+        const estado = venta?.estado ?? venta?.estado_venta ?? 'pendiente';
         
-        // Si la venta ya tiene productos en la respuesta, mostrarlos directamente
-        let productosHTML = '<em style="color:var(--gray)">Cargando...</em>';
-        
+        // Fila simple sin cards/modales de productos
         tr.innerHTML = `
           <td>${folio}</td>
           <td>${fecha}</td>
           <td>${cliente}</td>
-          <td id="productos-${folio}">${productosHTML}</td>
           <td>${metodoPago}</td>
           <td>$${total.toFixed(2)}</td>
           <td><span class="badge ${estado === 'confirmada' || estado === 'completada' ? 'success' : 'warning'}">${estado}</span></td>
         `;
         tbody.appendChild(tr);
-        
-        // Cargar productos asíncronamente
-        cargarProductosVenta(folio, venta);
       }
     }
   }catch(err){ 
     console.error('Error en reportes:', err); 
     document.getElementById('resumenTotales').innerHTML = '<span style="color:red">Error al cargar reportes</span>';
     const tbody = document.querySelector('#ventasTable tbody'); 
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red">Error: ' + err.message + '</td></tr>';
-  }
-}
-
-// Función para cargar productos de una venta específica
-async function cargarProductosVenta(ventaId, ventaData = null) {
-  const celda = document.getElementById(`productos-${ventaId}`);
-  if(!celda) return;
-  
-  try {
-    // Si la venta ya tiene productos en los datos, usarlos directamente
-    if(ventaData?.productos && Array.isArray(ventaData.productos)) {
-      mostrarProductos(celda, ventaData.productos);
-      return;
-    }
-    if(ventaData?.detalles && Array.isArray(ventaData.detalles)) {
-      mostrarProductos(celda, ventaData.detalles);
-      return;
-    }
-    
-    // Si no, hacer petición al backend
-    const ventaDetalle = await window.api.ventasAPI.obtenerPorId(ventaId);
-    console.log(`Detalle venta ${ventaId}:`, ventaDetalle);
-    
-    // Extraer productos del detalle
-    let productos = [];
-    if(Array.isArray(ventaDetalle?.productos)) {
-      productos = ventaDetalle.productos;
-    } else if(Array.isArray(ventaDetalle?.detalles)) {
-      productos = ventaDetalle.detalles;
-    } else if(Array.isArray(ventaDetalle?.items)) {
-      productos = ventaDetalle.items;
-    } else if(Array.isArray(ventaDetalle?.data?.productos)) {
-      productos = ventaDetalle.data.productos;
-    } else if(Array.isArray(ventaDetalle?.data?.detalles)) {
-      productos = ventaDetalle.data.detalles;
-    } else if(ventaDetalle?.success && Array.isArray(ventaDetalle?.data)) {
-      productos = ventaDetalle.data;
-    }
-    
-    mostrarProductos(celda, productos);
-    
-  } catch(err) {
-    console.error(`Error cargando productos de venta ${ventaId}:`, err);
-    celda.innerHTML = '<em style="color:orange">No disponible</em>';
-  }
-}
-
-// Función auxiliar para mostrar productos en una celda
-function mostrarProductos(celda, productos) {
-  if(!productos || productos.length === 0) {
-    celda.innerHTML = '<em style="color:var(--gray)">Sin productos</em>';
-  } else {
-    const productosTexto = productos.map(p => {
-      const nombre = p?.nombre_producto ?? p?.nombre ?? p?.producto ?? 'Producto';
-      const cantidad = p?.cantidad ?? 1;
-      return `${nombre} (x${cantidad})`;
-    }).join(', ');
-    celda.innerHTML = productosTexto;
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red">Error: ' + err.message + '</td></tr>';
   }
 }
 

@@ -254,15 +254,8 @@ const empleados = {
     body: JSON.stringify(body)
   }),
   
-  // Listar desde localStorage (similar a clientes)
-  getAll: () => {
-    try {
-      const empleadosData = JSON.parse(localStorage.getItem('minisuper_empleados') || '[]');
-      return Promise.resolve({ success: true, data: empleadosData });
-    } catch (error) {
-      return Promise.resolve({ success: true, data: [] });
-    }
-  },
+  // Listar desde el backend (clientes y cajeros)
+  getAll: () => fetchJSON(`${API_BASE}/api/auth/listar.php`),
   
   // Actualizar en localStorage
   update: (body) => {
