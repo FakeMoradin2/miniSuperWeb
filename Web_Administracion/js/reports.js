@@ -3,31 +3,30 @@ async function cargarReporteRango(inicio, fin){
   try{
     console.log('Cargando reporte del', inicio, 'al', fin);
     
-    // Intentar cargar desde backend primero
-    let ventas = [];
-    let usandoLocalStorage = false;
+    let ventasBackend = [];
+    let ventasLocal = [];
     
+    // 1. Cargar ventas del backend (incluye móvil y web del servidor)
     try {
-      // El backend ya expone los datos del historial, filtramos client-side por rango
       const query = `?inicio=${inicio}&fin=${fin}`;
       const ventasResponse = await window.api.reportes.historial(query);
-      console.log('Respuesta historial completa:', JSON.stringify(ventasResponse, null, 2));
+      console.log('Respuesta backend:', JSON.stringify(ventasResponse, null, 2));
       
       if(Array.isArray(ventasResponse)) {
-        ventas = ventasResponse;
+        ventasBackend = ventasResponse;
       } else if(ventasResponse?.success && Array.isArray(ventasResponse?.data)) {
-        ventas = ventasResponse.data;
+        ventasBackend = ventasResponse.data;
       } else if(Array.isArray(ventasResponse?.data)) {
-        ventas = ventasResponse.data;
+        ventasBackend = ventasResponse.data;
       } else if(Array.isArray(ventasResponse?.ventas)) {
-        ventas = ventasResponse.ventas;
+        ventasBackend = ventasResponse.ventas;
       }
 
-      // Aplicar filtro por rango en el frontend por si el backend ignora los parámetros
-      if(ventas.length > 0) {
+      // Filtrar por rango de fechas
+      if(ventasBackend.length > 0) {
         const inicioDate = new Date(inicio);
         const finDate = new Date(`${fin}T23:59:59`);
-        ventas = ventas.filter(v => {
+        ventasBackend = ventasBackend.filter(v => {
           const fechaStr = v?.fecha ?? v?.creada_en_venta ?? v?.creada_en ?? v?.creada_enVenta;
           if(!fechaStr) return false;
           const fechaVenta = new Date(fechaStr);
@@ -35,28 +34,56 @@ async function cargarReporteRango(inicio, fin){
           return fechaVenta >= inicioDate && fechaVenta <= finDate;
         });
       }
+      
+      console.log('Ventas del backend:', ventasBackend.length);
     } catch(error) {
-      console.warn('No se pudo cargar desde backend, usando localStorage:', error);
-      usandoLocalStorage = true;
+      console.warn('Error cargando desde backend:', error);
     }
     
-    // Si no hay ventas del backend o falló, usar localStorage
-    if(ventas.length === 0 || usandoLocalStorage) {
-      console.log('Cargando ventas desde localStorage...');
-      const ventasLocal = JSON.parse(localStorage.getItem('minisuper_ventas') || '[]');
-      
-      // Filtrar por rango de fechas
-      ventas = ventasLocal.filter(v => {
-        const fechaVenta = v.fecha.split('T')[0]; // YYYY-MM-DD
+    // 2. Cargar ventas de localStorage (POS web local)
+    try {
+      const todasVentasLocal = JSON.parse(localStorage.getItem('minisuper_ventas') || '[]');
+      ventasLocal = todasVentasLocal.filter(v => {
+        const fechaVenta = v.fecha ? v.fecha.split('T')[0] : '';
         return fechaVenta >= inicio && fechaVenta <= fin;
       });
-      
-      console.log('Ventas desde localStorage:', ventas.length, ventas);
+      console.log('Ventas de localStorage:', ventasLocal.length);
+    } catch(error) {
+      console.warn('Error cargando localStorage:', error);
     }
     
-    console.log('Ventas extraídas:', ventas.length, ventas);
+    // 3. Combinar ambas fuentes evitando duplicados
+    const ventasMap = new Map();
     
-    // Filtrar solo ventas confirmadas
+    // Agregar del backend
+    ventasBackend.forEach(v => {
+      const id = v?.id_venta ?? v?.venta_id ?? v?.id ?? v?.idVenta;
+      if(id) ventasMap.set(String(id), v);
+    });
+    
+    // Agregar de localStorage (sobrescribe si tiene más info)
+    ventasLocal.forEach(v => {
+      const id = v?.id_venta ?? v?.venta_id ?? v?.id ?? v?.idVenta;
+      if(id) {
+        const ventaExistente = ventasMap.get(String(id));
+        // Si la venta existe pero no tiene productos y localStorage sí, combinar
+        if(ventaExistente) {
+          if((!ventaExistente.productos || ventaExistente.productos.length === 0) && v.productos) {
+            ventasMap.set(String(id), { ...ventaExistente, productos: v.productos });
+          }
+        } else {
+          // Si no existe, agregarla
+          ventasMap.set(String(id), v);
+        }
+      }
+    });
+    
+    // Convertir a array
+    let ventas = Array.from(ventasMap.values());
+    
+    console.log('Total ventas combinadas (backend + localStorage):', ventas.length);
+    
+    // Filtrar solo confirmadas
     ventas = ventas.filter(v => {
       const estado = v?.estado ?? v?.estado_venta ?? '';
       return estado === 'confirmada' || estado === 'completada';
