@@ -3,57 +3,172 @@ async function cargarReporteRango(inicio, fin){
   try{
     console.log('Cargando reporte del', inicio, 'al', fin);
     
-    const resumen = await api.reportes.reporteDia(`?inicio=${inicio}&fin=${fin}`);
-    console.log('Respuesta reporteDia completa:', JSON.stringify(resumen, null, 2));
+    // Intentar cargar desde backend primero
+    let ventas = [];
+    let usandoLocalStorage = false;
     
-    // Extraer valores del resumen (puede estar en diferentes estructuras)
-    const totalNum = Number(resumen?.total ?? resumen?.data?.total ?? 0);
-    const transNum = Number(resumen?.transacciones ?? resumen?.count ?? resumen?.data?.transacciones ?? 0);
-    
-    document.getElementById('resumenTotales').innerHTML = `
-      <strong>Total ventas:</strong> $${totalNum.toFixed(2)}<br>
-      <strong>Transacciones:</strong> ${transNum}
-    `;
-
-    const top = await api.reportes.productosTop(`?inicio=${inicio}&fin=${fin}`);
-    console.log('Respuesta productosTop completa:', JSON.stringify(top, null, 2));
-    
-    const tbody = document.querySelector('#topProductosTable tbody'); 
-    tbody.innerHTML='';
-    
-    // Intentar múltiples formas de extraer el array de productos
-    let productos = [];
-    if(Array.isArray(top)) {
-      productos = top;
-    } else if(Array.isArray(top?.data)) {
-      productos = top.data;
-    } else if(Array.isArray(top?.productos)) {
-      productos = top.productos;
-    } else if(top && typeof top === 'object') {
-      // Si es un objeto con propiedades, intentar convertirlo a array
-      productos = Object.values(top).filter(item => item && typeof item === 'object');
+    try {
+      const ventasResponse = await window.api.ventasAPI.listar(`?inicio=${inicio}&fin=${fin}`);
+      console.log('Respuesta ventas completa:', JSON.stringify(ventasResponse, null, 2));
+      
+      // Extraer array de ventas - intentar múltiples formatos
+      if(Array.isArray(ventasResponse)) {
+        ventas = ventasResponse;
+      } else if(ventasResponse?.success && Array.isArray(ventasResponse?.data)) {
+        ventas = ventasResponse.data;
+      } else if(Array.isArray(ventasResponse?.ventas)) {
+        ventas = ventasResponse.ventas;
+      } else if(ventasResponse?.data && Array.isArray(ventasResponse.data)) {
+        ventas = ventasResponse.data;
+      }
+    } catch(error) {
+      console.warn('No se pudo cargar desde backend, usando localStorage:', error);
+      usandoLocalStorage = true;
     }
     
-    console.log('Productos extraídos:', productos.length, productos);
+    // Si no hay ventas del backend o falló, usar localStorage
+    if(ventas.length === 0 || usandoLocalStorage) {
+      console.log('Cargando ventas desde localStorage...');
+      const ventasLocal = JSON.parse(localStorage.getItem('minisuper_ventas') || '[]');
+      
+      // Filtrar por rango de fechas
+      ventas = ventasLocal.filter(v => {
+        const fechaVenta = v.fecha.split('T')[0]; // YYYY-MM-DD
+        return fechaVenta >= inicio && fechaVenta <= fin;
+      });
+      
+      console.log('Ventas desde localStorage:', ventas.length, ventas);
+    }
     
-    if(productos.length === 0){
+    console.log('Ventas extraídas:', ventas.length, ventas);
+    
+    // Filtrar solo ventas confirmadas
+    ventas = ventas.filter(v => v?.estado === 'confirmada' || v?.estado === 'completada');
+    console.log('Ventas confirmadas:', ventas.length);
+    
+    // Calcular totales
+    let totalVentas = 0;
+    let totalTransacciones = ventas.length;
+    
+    ventas.forEach(v => {
+      const total = Number(v?.total ?? v?.monto_total ?? v?.precio_total ?? 0);
+      totalVentas += total;
+    });
+    
+    const ticketPromedio = totalTransacciones > 0 ? totalVentas / totalTransacciones : 0;
+    
+    document.getElementById('resumenTotales').innerHTML = `
+      <strong>Total ventas:</strong> $${totalVentas.toFixed(2)}<br>
+      <strong>Transacciones:</strong> ${totalTransacciones}<br>
+      <strong>Ticket promedio:</strong> $${ticketPromedio.toFixed(2)}
+    `;
+
+    // Cargar tabla de ventas
+    const tbody = document.querySelector('#ventasTable tbody'); 
+    tbody.innerHTML='';
+    
+    if(ventas.length === 0){
       const tr = document.createElement('tr');
-      tr.innerHTML = '<td colspan="3" style="text-align:center;color:var(--gray)">No hay productos vendidos en este periodo</td>';
+      tr.innerHTML = '<td colspan="7" style="text-align:center;color:var(--gray)">No hay ventas confirmadas en este periodo</td>';
       tbody.appendChild(tr);
     } else {
-      productos.forEach(p=>{
+      for(const venta of ventas){
         const tr = document.createElement('tr');
-        const totalProd = Number(p?.total ?? p?.precio_total ?? 0);
-        const cantProd = Number(p?.cantidad ?? p?.ventas ?? p?.total_vendido ?? 0);
-        const nombreProd = p?.nombre_producto ?? p?.nombre ?? p?.producto ?? 'N/A';
-        tr.innerHTML = `<td>${nombreProd}</td><td>${cantProd}</td><td>$${totalProd.toFixed(2)}</td>`;
+        
+        const folio = venta?.id_venta ?? venta?.venta_id ?? venta?.id ?? 'N/A';
+        const fecha = venta?.fecha ? new Date(venta.fecha).toLocaleString('es-MX', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : 'N/A';
+        const cliente = venta?.nombre_cliente ?? venta?.cliente ?? venta?.comprador ?? 'Cliente General';
+        const metodoPago = venta?.metodo_pago ?? venta?.metodoPago ?? venta?.forma_pago ?? 'N/A';
+        const total = Number(venta?.total ?? venta?.monto_total ?? venta?.precio_total ?? 0);
+        const estado = venta?.estado ?? 'pendiente';
+        
+        // Si la venta ya tiene productos en la respuesta, mostrarlos directamente
+        let productosHTML = '<em style="color:var(--gray)">Cargando...</em>';
+        
+        tr.innerHTML = `
+          <td>${folio}</td>
+          <td>${fecha}</td>
+          <td>${cliente}</td>
+          <td id="productos-${folio}">${productosHTML}</td>
+          <td>${metodoPago}</td>
+          <td>$${total.toFixed(2)}</td>
+          <td><span class="badge ${estado === 'confirmada' || estado === 'completada' ? 'success' : 'warning'}">${estado}</span></td>
+        `;
         tbody.appendChild(tr);
-      });
+        
+        // Cargar productos asíncronamente
+        cargarProductosVenta(folio, venta);
+      }
     }
   }catch(err){ 
     console.error('Error en reportes:', err); 
     document.getElementById('resumenTotales').innerHTML = '<span style="color:red">Error al cargar reportes</span>';
-    alert('Error al cargar reporte: ' + err.message); 
+    const tbody = document.querySelector('#ventasTable tbody'); 
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red">Error: ' + err.message + '</td></tr>';
+  }
+}
+
+// Función para cargar productos de una venta específica
+async function cargarProductosVenta(ventaId, ventaData = null) {
+  const celda = document.getElementById(`productos-${ventaId}`);
+  if(!celda) return;
+  
+  try {
+    // Si la venta ya tiene productos en los datos, usarlos directamente
+    if(ventaData?.productos && Array.isArray(ventaData.productos)) {
+      mostrarProductos(celda, ventaData.productos);
+      return;
+    }
+    if(ventaData?.detalles && Array.isArray(ventaData.detalles)) {
+      mostrarProductos(celda, ventaData.detalles);
+      return;
+    }
+    
+    // Si no, hacer petición al backend
+    const ventaDetalle = await window.api.ventasAPI.obtenerPorId(ventaId);
+    console.log(`Detalle venta ${ventaId}:`, ventaDetalle);
+    
+    // Extraer productos del detalle
+    let productos = [];
+    if(Array.isArray(ventaDetalle?.productos)) {
+      productos = ventaDetalle.productos;
+    } else if(Array.isArray(ventaDetalle?.detalles)) {
+      productos = ventaDetalle.detalles;
+    } else if(Array.isArray(ventaDetalle?.items)) {
+      productos = ventaDetalle.items;
+    } else if(Array.isArray(ventaDetalle?.data?.productos)) {
+      productos = ventaDetalle.data.productos;
+    } else if(Array.isArray(ventaDetalle?.data?.detalles)) {
+      productos = ventaDetalle.data.detalles;
+    } else if(ventaDetalle?.success && Array.isArray(ventaDetalle?.data)) {
+      productos = ventaDetalle.data;
+    }
+    
+    mostrarProductos(celda, productos);
+    
+  } catch(err) {
+    console.error(`Error cargando productos de venta ${ventaId}:`, err);
+    celda.innerHTML = '<em style="color:orange">No disponible</em>';
+  }
+}
+
+// Función auxiliar para mostrar productos en una celda
+function mostrarProductos(celda, productos) {
+  if(!productos || productos.length === 0) {
+    celda.innerHTML = '<em style="color:var(--gray)">Sin productos</em>';
+  } else {
+    const productosTexto = productos.map(p => {
+      const nombre = p?.nombre_producto ?? p?.nombre ?? p?.producto ?? 'Producto';
+      const cantidad = p?.cantidad ?? 1;
+      return `${nombre} (x${cantidad})`;
+    }).join(', ');
+    celda.innerHTML = productosTexto;
   }
 }
 

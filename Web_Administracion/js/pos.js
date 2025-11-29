@@ -273,7 +273,7 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     console.log('Respuesta de confirmar venta:', confirmResp);
     console.log('Venta confirmada exitosamente con ID:', currentVentaId);
 
-    // Armar recibo
+    // Guardar venta en localStorage para reportes
     const fechaIso = new Date();
     const fechaStr = fechaIso.toLocaleString();
     const hoy = new Date();
@@ -281,6 +281,28 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     const mm = String(hoy.getMonth()+1).padStart(2,'0');
     const dd = String(hoy.getDate()).padStart(2,'0');
     const total = cart.reduce((s,i)=> s + i.precio*i.cantidad, 0);
+    
+    // Guardar en localStorage
+    const ventaLocal = {
+      id_venta: currentVentaId,
+      fecha: fechaIso.toISOString(),
+      cliente: clienteNombre,
+      metodo_pago: metodo,
+      total: total,
+      estado: 'confirmada',
+      productos: cart.map(item => ({
+        nombre_producto: item.nombre_producto,
+        cantidad: item.cantidad,
+        precio_unitario: item.precio,
+        subtotal: item.precio * item.cantidad
+      }))
+    };
+    
+    // Obtener ventas existentes
+    let ventasGuardadas = JSON.parse(localStorage.getItem('minisuper_ventas') || '[]');
+    ventasGuardadas.push(ventaLocal);
+    localStorage.setItem('minisuper_ventas', JSON.stringify(ventasGuardadas));
+    console.log('Venta guardada en localStorage:', ventaLocal);
     const reciboHtml = `
       <div style="font-size:14px">
         <div style="display:flex;justify-content:space-between">

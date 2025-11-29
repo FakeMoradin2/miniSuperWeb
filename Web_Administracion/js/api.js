@@ -3,8 +3,39 @@ const API_BASE = "http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbean
 
 async function fetchJSON(url, opts = {}) {
   try {
-    const res = await fetch(url, opts);
+    const defaultHeaders = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    };
+    
+    const config = {
+      method: opts.method || 'GET',
+      mode: 'cors',
+      cache: 'no-cache',
+      credentials: 'omit',
+      headers: {
+        ...defaultHeaders,
+        ...(opts.headers || {})
+      },
+      ...opts
+    };
+    
+    // No incluir body en peticiones GET
+    if (config.method === 'GET' && config.body) {
+      delete config.body;
+    }
+    
+    console.log('Fetching:', url, config);
+    
+    const res = await fetch(url, config);
+    
+    if (!res.ok) {
+      console.error(`HTTP Error ${res.status}:`, res.statusText);
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    
     const text = await res.text();
+    console.log('Response:', text);
     
     // Intentar parsear como JSON
     let data;
@@ -15,18 +46,12 @@ async function fetchJSON(url, opts = {}) {
       throw new Error(`Respuesta no válida del servidor: ${text.substring(0, 100)}`);
     }
     
-    if (!res.ok) {
-      console.error(`Error HTTP ${res.status}:`, data);
-      throw new Error(data.message || data.error || `HTTP ${res.status}: ${JSON.stringify(data)}`);
-    }
-    
     return data;
   } catch (error) {
     console.error('Error en fetchJSON:', error);
     throw error;
   }
 }
-
 /* Autenticación */
 const auth = {
   login: (body) => fetchJSON(`${API_BASE}/api/auth/login.php`, {
@@ -140,8 +165,14 @@ const ventasAPI = {
     // Si no encontramos ID pero la respuesta indica éxito, devolver todo
     return response;
   },
-  listar: (params = '') => fetchJSON(`${API_BASE}/api/ventas/listar.php${params}`),
-  obtenerPorId: (id) => fetchJSON(`${API_BASE}/api/ventas/obtener.php?id=${id}`),
+  listar: (params = '') => fetchJSON(`${API_BASE}/api/ventas/listar.php${params}`, {
+    method: 'GET',
+    headers: {'Accept':'application/json'}
+  }),
+  obtenerPorId: (id) => fetchJSON(`${API_BASE}/api/ventas/obtener.php?id=${id}`, {
+    method: 'GET',
+    headers: {'Accept':'application/json'}
+  }),
   agregarProducto: (body) => fetchJSON(`${API_BASE}/api/ventas/agregarProducto.php`, {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
