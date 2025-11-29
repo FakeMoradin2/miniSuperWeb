@@ -79,6 +79,18 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <script src="js/api.js"></script>
   <script src="js/pos.js"></script>
+  <!-- Modal Recibo -->
+  <div id="receiptModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:10px;max-width:520px;width:92%;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.25)">
+      <h3 style="margin-top:0">Recibo de compra</h3>
+      <div id="receiptContent" style="max-height:55vh;overflow:auto;border:1px solid var(--border-color);border-radius:8px;padding:12px;background:#fafafa"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button id="btnOpenReports" class="btn secondary">Ver en Reportes</button>
+        <button id="btnPrintReceipt" class="btn secondary">Imprimir</button>
+        <button id="btnCloseReceipt" class="btn">Cerrar</button>
+      </div>
+    </div>
+  </div>
   <script>
     // Inicializar cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', init);

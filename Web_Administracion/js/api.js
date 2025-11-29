@@ -2,12 +2,29 @@
 const API_BASE = "http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com";
 
 async function fetchJSON(url, opts = {}) {
-  const res = await fetch(url, opts);
-  if (!res.ok) {
+  try {
+    const res = await fetch(url, opts);
     const text = await res.text();
-    throw new Error(`HTTP ${res.status}: ${text}`);
+    
+    // Intentar parsear como JSON
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Respuesta no es JSON válido:', text);
+      throw new Error(`Respuesta no válida del servidor: ${text.substring(0, 100)}`);
+    }
+    
+    if (!res.ok) {
+      console.error(`Error HTTP ${res.status}:`, data);
+      throw new Error(data.message || data.error || `HTTP ${res.status}: ${JSON.stringify(data)}`);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error en fetchJSON:', error);
+    throw error;
   }
-  return res.json();
 }
 
 /* Autenticación */
@@ -84,11 +101,45 @@ const productos = {
 
 /* Ventas / Carrito */
 const ventasAPI = {
-  crear: (body) => fetchJSON(`${API_BASE}/api/ventas/crear.php`, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  }),
+  crearCompleta: async (body) => {
+    // Nueva función: crear venta completa sin IDs de usuario
+    const response = await fetchJSON(`${API_BASE}/api/ventas/crear.php`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    
+    console.log('Respuesta de crear venta completa:', response);
+    return response;
+  },
+  crear: async (body) => {
+    const response = await fetchJSON(`${API_BASE}/api/ventas/crear.php`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    
+    console.log('Respuesta RAW de crear venta:', JSON.stringify(response, null, 2));
+    
+    // Buscar ID en todas las ubicaciones posibles
+    const possibleId = response.id_venta || response.id || response.venta_id || 
+                      response.idVenta || response.ventaId || response.ID ||
+                      response.data?.id_venta || response.data?.id || response.data?.venta_id ||
+                      response.insertId || response.insert_id;
+    
+    console.log('ID extraído:', possibleId);
+    
+    if (possibleId) {
+      return {
+        ...response,
+        id_venta: possibleId,
+        id: possibleId
+      };
+    }
+    
+    // Si no encontramos ID pero la respuesta indica éxito, devolver todo
+    return response;
+  },
   listar: (params = '') => fetchJSON(`${API_BASE}/api/ventas/listar.php${params}`),
   obtenerPorId: (id) => fetchJSON(`${API_BASE}/api/ventas/obtener.php?id=${id}`),
   agregarProducto: (body) => fetchJSON(`${API_BASE}/api/ventas/agregarProducto.php`, {

@@ -19,6 +19,30 @@ let currentVentaId = null;
 let allProducts = []; // cache de productos
 let usuarioActual = {id: 1, nombre: 'Juan Delgado', rol: 'Cajero'}; // obtener del sistema de login
 
+// Helpers
+function safeExtractId(obj){
+  if(!obj || typeof obj !== 'object') return null;
+  const fields = ['id_venta','venta_id','idVenta','ventaId','id','usuario_id','cliente_id','ID','insertId','insert_id'];
+  for(const f of fields){
+    const v = obj[f];
+    if(typeof v === 'number' && v > 0) return v;
+    if(typeof v === 'string' && v.trim() && !isNaN(+v) && +v > 0) return +v;
+  }
+  if(obj.data) return safeExtractId(obj.data);
+  
+  // Buscar en todas las propiedades cualquier número > 0
+  for(const key in obj){
+    const val = obj[key];
+    if(typeof val === 'number' && val > 0 && !key.includes('precio') && !key.includes('total') && !key.includes('cantidad')){
+      console.log(`Usando ${key}=${val} como posible ID`);
+      return val;
+    }
+  }
+  return null;
+}
+
+// Eliminada función ensureDefaultClienteId - ya no necesitamos validar IDs
+
 // Cargar productos al iniciar
 async function cargarProductos(){
   try{
@@ -177,48 +201,21 @@ document.getElementById('btnClearSearch').addEventListener('click', ()=>{
 
 async function agregarProductoAlCarrito(prod){
   try{
-    // Si no existe venta temporal, crearla
-    if(!currentVentaId){
-      const vendedor_id = usuarioActual.id || 1;
-      const resp = await window.api.ventasAPI.crear({
-        comprador_id: 0, 
-        vendedor_id: vendedor_id,
-        estado: 'pendiente'
-      });
-      currentVentaId = resp.id_venta ?? resp.id ?? resp.venta_id ?? resp.idVenta;
-      console.log('Venta creada:', currentVentaId);
-    }
-    
-    // Agregar al carrito en el servidor
-    const productoId = prod.producto_id;
+    // Operamos localmente; la venta en servidor se creará al confirmar
+    const productoId = prod.producto_id ?? prod.id;
     const nombre = prod.nombre_producto || prod.nombre || 'Producto';
     const precio = parseFloat(prod.precio) || 0;
-    
-    await window.api.ventasAPI.agregarProducto({
-      venta_id: currentVentaId, 
-      producto_id: productoId, 
-      cantidad: 1
-    });
-    
-    // Agregar localmente
+
     const exists = cart.find(c => String(c.producto_id) === String(productoId));
     if(exists){
       exists.cantidad += 1;
     } else {
-      cart.push({
-        producto_id: productoId,
-        nombre_producto: nombre,
-        precio: precio,
-        cantidad: 1
-      });
+      cart.push({ producto_id: productoId, nombre_producto: nombre, precio, cantidad: 1 });
     }
-    
+
     renderCart();
-    
-    // Limpiar input
     document.getElementById('searchInput').value = '';
     document.getElementById('searchResults').innerHTML = '';
-    
   }catch(err){
     console.error('Error agregando producto al carrito:', err);
     alert('Error: No se pudo agregar el producto. ' + err.message);
@@ -226,41 +223,113 @@ async function agregarProductoAlCarrito(prod){
 }
 
 document.getElementById('btnConfirm').addEventListener('click', async ()=>{
-  if(!currentVentaId){
-    alert('No hay venta creada. Agrega productos primero.');
-    return;
-  }
-  
-  if(cart.length === 0){
-    alert('El carrito está vacío.');
-    return;
-  }
-  
+  if(cart.length === 0){ alert('El carrito está vacío. Agrega productos primero.'); return; }
+
   const metodo = document.getElementById('metodoPago').value;
-  const cliente = document.getElementById('clienteInput').value || 'Cliente General';
-  
+  const clienteNombre = document.getElementById('clienteInput').value.trim() || 'Cliente';
+
   try{
-    // Confirmar venta en servidor
-    await window.api.ventasAPI.confirmar({
-      venta_id: currentVentaId,
-      metodo_pago: metodo,
-      cliente: cliente
+    console.log('Iniciando proceso de venta...');
+    
+    // Usar ID del cliente_general_pos (ID: 18)
+    const userId = 18;
+    
+    // Paso 1: Crear venta básica
+    const crearResp = await window.api.ventasAPI.crear({
+      comprador_id: userId,
+      vendedor_id: userId,
+      estado: 'pendiente'
     });
     
-    alert('✓ Venta confirmada exitosamente');
+    console.log('Respuesta crear venta:', crearResp);
+    currentVentaId = safeExtractId(crearResp);
     
-    // Limpiar formulario
-    cart = [];
-    currentVentaId = null;
+    if(!currentVentaId){
+      console.error('No se obtuvo ID de venta. Respuesta completa:', crearResp);
+      throw new Error('No se pudo crear la venta en el servidor');
+    }
+    
+    console.log('Venta creada con ID:', currentVentaId);
+    
+    // Paso 2: Agregar cada producto a la venta
+    for(const item of cart){
+      console.log('Agregando producto:', item.nombre_producto);
+      await window.api.ventasAPI.agregarProducto({
+        venta_id: currentVentaId,
+        producto_id: item.producto_id,
+        cantidad: item.cantidad
+      });
+    }
+    
+    console.log('Todos los productos agregados');
+    
+    // Paso 3: Confirmar la venta con nombre del cliente
+    const confirmResp = await window.api.ventasAPI.confirmar({
+      venta_id: currentVentaId,
+      metodo_pago: metodo,
+      cliente: clienteNombre
+    });
+    
+    console.log('Respuesta de confirmar venta:', confirmResp);
+    console.log('Venta confirmada exitosamente con ID:', currentVentaId);
+
+    // Armar recibo
+    const fechaIso = new Date();
+    const fechaStr = fechaIso.toLocaleString();
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth()+1).padStart(2,'0');
+    const dd = String(hoy.getDate()).padStart(2,'0');
+    const total = cart.reduce((s,i)=> s + i.precio*i.cantidad, 0);
+    const reciboHtml = `
+      <div style="font-size:14px">
+        <div style="display:flex;justify-content:space-between">
+          <div><strong>Minisúper</strong><br><span style="color:var(--gray)">Punto de Venta</span></div>
+          <div style="text-align:right">
+            <div><strong>Folio:</strong> ${currentVentaId}</div>
+            <div><strong>Fecha:</strong> ${fechaStr}</div>
+            <div><strong>Método:</strong> ${metodo}</div>
+          </div>
+        </div>
+        <div style="margin:10px 0"><strong>Cliente:</strong> ${clienteNombre}</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:#eee"><th style="text-align:left;padding:6px;border:1px solid #ddd">Producto</th><th style="text-align:right;padding:6px;border:1px solid #ddd">Precio</th><th style="text-align:right;padding:6px;border:1px solid #ddd">Cant</th><th style="text-align:right;padding:6px;border:1px solid #ddd">Subtotal</th></tr>
+          </thead>
+          <tbody>
+            ${cart.map(i=>`<tr><td style=\"padding:6px;border:1px solid #ddd\">${i.nombre_producto}</td><td style=\"padding:6px;border:1px solid #ddd;text-align:right\">$${i.precio.toFixed(2)}</td><td style=\"padding:6px;border:1px solid #ddd;text-align:right\">${i.cantidad}</td><td style=\"padding:6px;border:1px solid #ddd;text-align:right\">$${(i.precio*i.cantidad).toFixed(2)}</td></tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="text-align:right;margin-top:8px;font-size:15px"><strong>Total: $${total.toFixed(2)}</strong></div>
+      </div>
+    `;
+    const modal = document.getElementById('receiptModal');
+    const content = document.getElementById('receiptContent');
+    content.innerHTML = reciboHtml;
+    modal.style.display = 'flex';
+
+    // Configurar acciones del modal
+    const inicio = `${yyyy}-${mm}-${dd}`;
+    const fin = inicio; // rango de hoy
+    const openReports = document.getElementById('btnOpenReports');
+    openReports.onclick = () => { window.location.href = `reports.html?inicio=${inicio}&fin=${fin}`; };
+    const printBtn = document.getElementById('btnPrintReceipt');
+    printBtn.onclick = () => { const w = window.open('', '_blank'); w.document.write(`<html><head><title>Recibo</title></head><body>${reciboHtml}</body></html>`); w.document.close(); w.focus(); w.print(); w.close(); };
+    const closeBtn = document.getElementById('btnCloseReceipt');
+    closeBtn.onclick = () => { modal.style.display = 'none'; };
+
+    // Limpiar UI y estado para nueva venta
+    cart = []; currentVentaId = null;
     document.getElementById('clienteInput').value = '';
     document.getElementById('metodoPago').value = 'Efectivo';
     document.getElementById('searchInput').value = '';
     document.getElementById('searchResults').innerHTML = '';
-    
     renderCart();
   }catch(err){
-    alert('Error al confirmar venta: ' + err.message);
-    console.error(err);
+    console.error('Error en confirmación:', err);
+    // Si ya se creó la venta pero algo falló, intentar cancelar
+    try{ if(currentVentaId) await window.api.ventasAPI.cancelar({venta_id: currentVentaId}); }catch{}
+    alert('Error al procesar la venta: ' + (err.message || err));
   }
 });
 

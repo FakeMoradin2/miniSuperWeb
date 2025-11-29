@@ -70,6 +70,13 @@
         <div id="result-reportes" class="result" style="display:none;"></div>
     </div>
 
+    <div class="test-section">
+        <h2>🛒 Ventas (POST/PUT)</h2>
+        <button onclick="testCrearVenta()">Crear Venta (POST)</button>
+        <button onclick="testListarVentas()">Listar Ventas (GET)</button>
+        <div id="result-ventas" class="result" style="display:none;"></div>
+    </div>
+
     <script>
         const API_BASE = "http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com";
 
@@ -142,6 +149,96 @@
                 
                 resultDiv.className = 'result';
                 resultDiv.textContent = `✅ Status: ${response.status}\n\nURL: ${url}\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testCrearVenta() {
+            const resultDiv = document.getElementById('result-ventas');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Probando diferentes combinaciones...';
+
+            const intentos = [
+                {
+                    nombre: 'Con comprador y vendedor iguales + estado',
+                    body: {
+                        comprador_id: 1,
+                        vendedor_id: 1,
+                        estado: 'pendiente'
+                    }
+                },
+                {
+                    nombre: 'Con todos los campos posibles',
+                    body: {
+                        comprador_id: 1,
+                        vendedor_id: 1,
+                        estado: 'pendiente',
+                        metodo_pago: 'Efectivo',
+                        total: 0
+                    }
+                },
+                {
+                    nombre: 'Con usuario_id',
+                    body: {
+                        usuario_id: 1,
+                        comprador_id: 1,
+                        vendedor_id: 1
+                    }
+                }
+            ];
+
+            for (let intento of intentos) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/ventas/crear.php`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(intento.body)
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success || data.id_venta || data.id || (response.ok && !data.error)) {
+                        resultDiv.className = 'result';
+                        resultDiv.textContent = `✅ ÉXITO con: ${intento.nombre}\n\nStatus: ${response.status}\n\nRequest:\n${JSON.stringify(intento.body, null, 2)}\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                        
+                        // Buscar el ID
+                        const idFields = ['id', 'id_venta', 'venta_id', 'idVenta', 'ventaId'];
+                        resultDiv.textContent += '\n\n🔍 ID encontrado:';
+                        idFields.forEach(field => {
+                            if (data[field]) resultDiv.textContent += `\n  - ${field}: ${data[field]}`;
+                        });
+                        return;
+                    }
+                } catch (error) {
+                    console.log(`Intento "${intento.nombre}" falló:`, error);
+                }
+            }
+
+            // Si llegamos aquí, todos los intentos fallaron
+            resultDiv.className = 'result error';
+            resultDiv.textContent = `❌ Todos los intentos fallaron.\n\nRevisa la consola del navegador para más detalles.`;
+        }
+
+        async function testListarVentas() {
+            const resultDiv = document.getElementById('result-ventas');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Cargando ventas...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/ventas/listar.php`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await response.json();
+                
+                resultDiv.className = 'result';
+                resultDiv.textContent = `✅ Status: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
             } catch (error) {
                 resultDiv.className = 'result error';
                 resultDiv.textContent = `❌ Error: ${error.message}`;
