@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Empleados - Minisúper</title>
+  <link rel="stylesheet" href="css/styles.css?v=3">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="header">
+      <i class="fas fa-store"></i>
+      <h2 style="margin-left:6px">Minisuper System</h2>
+</div>
+    <ul>
+      <script>
+      if (window.location.pathname.includes('dashboard.html')) {
+        if (!window.authManager.hasRole('admin')) {
+            window.authManager.redirectToUnauthorized();
+        }
+    }</script>
+      <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+      <li><a href="pos.html"><i class="fas fa-cash-register"></i><span>Punto de Venta</span></a></li>
+      <li><a href="inventory.html"><i class="fas fa-boxes"></i><span>Inventario</span></a></li>
+      <li><a href="reports.html"><i class="fas fa-chart-bar"></i><span>Reportes</span></a></li>
+      <li><a href="customers.html"><i class="fas fa-users"></i><span>Clientes</span></a></li>
+      <li><a href="proveedores.html"><i class="fas fa-truck"></i><span>Proveedores</span></a></li>
+      <li><a href="categoria.html"><i class="fas fa-tags"></i><span>Categorías</span></a></li>
+      <li><a href="signup_workers.html"><i class="fas fa-user-tie"></i><span>Empleados</span></a></li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <div class="header-top">
+      <h1>Gestión de Empleados</h1>
+      <div class="user">
+        <div class="avatar">JD</div>
+      </div>
+    </div>
+
+    <!-- Formulario para agregar empleado -->
+    <div class="form-card">
+      <h3>Registrar Nuevo Empleado</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre de Usuario *</label>
+          <input id="nombreUsuario" type="text" placeholder="Ingrese el nombre de usuario" required>
+        </div>
+        <div class="form-group">
+          <label>Teléfono *</label>
+          <input id="telefonoEmpleado" type="tel" placeholder="10 dígitos" maxlength="10" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Contraseña *</label>
+          <input id="passwordEmpleado" type="password" placeholder="Mínimo 8 caracteres" required>
+        </div>
+        <div class="form-group">
+          <label>Confirmar Contraseña *</label>
+          <input id="confirmPassword" type="password" placeholder="Repita la contraseña" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Rol *</label>
+        <select id="rolEmpleado" required>
+          <option value="">Seleccionar rol</option>
+          <option value="admin">Administrador</option>
+          <option value="cajero">Cajero</option>
+          <option value="cliente">Cliente</option>
+        </select>
+      </div>
+      <div>
+        <button id="btnAddEmpleado" class="btn primary">Registrar Empleado</button>
+      </div>
+    </div>
+
+    <!-- Tabla de empleados -->
+    <div class="table-card">
+      <h3>Empleados Registrados</h3>
+      <table id="empleadosTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Teléfono</th>
+            <th>Rol</th>
+            <th>Fecha Registro</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Modal para editar empleado -->
+    <div id="editEmpleadoModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Editar Empleado</h3>
+        <div class="form-group">
+          <label>Nombre de Usuario</label>
+          <input id="editNombreUsuario" type="text">
+        </div>
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input id="editTelefonoEmpleado" type="tel" maxlength="10">
+        </div>
+        <div class="form-group">
+          <label>Rol</label>
+          <select id="editRolEmpleado">
+            <option value="admin">Administrador</option>
+            <option value="cajero">Cajero</option>
+            <option value="cliente">Cliente</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="editEstadoEmpleado">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+        <div>
+          <button id="btnUpdateEmpleado" class="btn primary">Actualizar Empleado</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/empleados.js"></script>
+</body>
+</html>

@@ -123,26 +123,23 @@ class AuthManager {
         this.redirectByRole(role);
     }
 
-redirectByRole(role) {
-    const roleLower = role ? role.toLowerCase() : 'cliente';
-    console.log('🎯 Redirecting by role:', roleLower);
-    
-    switch(roleLower) {
-        case 'admin':
-            // Redirigir al dashboard de administración
-            window.location.href = '../Web_Administracion/dashboard.html';
-            break;
-        case 'cajero':
-            // Redirigir al POS del cajero
-            window.location.href = '../Web_Administracion/pos.html';
-            break;
-        case 'cliente':
-        default:
-            // Redirigir a la página principal del ecommerce
-            window.location.href = 'principal.html';
-            break;
+    redirectByRole(role) {
+        const roleLower = role ? role.toLowerCase() : 'cliente';
+        console.log('🎯 Redirecting by role:', roleLower);
+        
+        switch(roleLower) {
+            case 'admin':
+                window.location.href = '../admin/dashboard.html';
+                break;
+            case 'cajero':
+                window.location.href = '../cajero/pos.html';
+                break;
+            case 'cliente':
+            default:
+                window.location.href = 'principal.html';
+                break;
+        }
     }
-}
 }
 
 // Instancia global

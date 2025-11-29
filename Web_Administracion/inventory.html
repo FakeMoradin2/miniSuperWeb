@@ -48,19 +48,29 @@
   </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="header">
-      <i class="fas fa-store"></i>
-      <h2 style="margin-left:6px">Minisuper System</h2>
-    </div>
+  <script>  
+      if (window.location.pathname.includes('pos.html')) {
+        if (!window.authManager.hasAnyRole(['admin', 'cajero'])) {
+            window.authManager.redirectToUnauthorized();
+        }
+    }
+  </script>
+</div>
     <ul>
-      <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+      <script>
+      if (window.location.pathname.includes('dashboard.html')) {
+        if (!window.authManager.hasRole('admin')) {
+            window.authManager.redirectToUnauthorized();
+        }
+    }</script>
+      <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
       <li><a href="pos.html"><i class="fas fa-cash-register"></i><span>Punto de Venta</span></a></li>
-      <li class="active"><a href="inventory.html"><i class="fas fa-boxes"></i><span>Inventario</span></a></li>
+      <li><a href="inventory.html"><i class="fas fa-boxes"></i><span>Inventario</span></a></li>
       <li><a href="reports.html"><i class="fas fa-chart-bar"></i><span>Reportes</span></a></li>
       <li><a href="customers.html"><i class="fas fa-users"></i><span>Clientes</span></a></li>
       <li><a href="proveedores.html"><i class="fas fa-truck"></i><span>Proveedores</span></a></li>
-      <li><a href="categorias.html"><i class="fas fa-tags"></i><span>Categorías</span></a></li>
+      <li><a href="categoria.html"><i class="fas fa-tags"></i><span>Categorías</span></a></li>
+      <li><a href="signup_workers.html"><i class="fas fa-user-tie"></i><span>Empleados</span></a></li>
     </ul>
   </div>
 

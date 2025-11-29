@@ -47,10 +47,34 @@
 
         <!-- Mensaje de error -->
         <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <!-- Información de usuarios de prueba -->
+        <div class="test-users-info" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; font-size: 12px; color: #666;">
+            <strong>Usuarios de prueba:</strong><br>
+            • Admin: admin01 / password123<br>
+            • Cajero: cajero01 / password123<br>
+            • Cliente: cliente01 / password123
+        </div>
     </div>
+
+    <!-- Incluir el AuthManager -->
+    <script src="../jss/auth.js"></script>
 
     <script>
         (function() {
+            // Crear usuarios de prueba para testing
+            const testUsers = [
+                { nombre_usuario: 'admin01', password: 'password123', role: 'admin', name: 'Administrador Principal' },
+                { nombre_usuario: 'cajero01', password: 'password123', role: 'cajero', name: 'Cajero Principal' },
+                { nombre_usuario: 'cliente01', password: 'password123', role: 'cliente', name: 'Cliente Ejemplo' }
+            ];
+
+            // Guardar usuarios de prueba en localStorage si no existen
+            if (!localStorage.getItem('registeredUsers')) {
+                localStorage.setItem('registeredUsers', JSON.stringify(testUsers));
+                console.log('✅ Usuarios de prueba creados:', testUsers);
+            }
+
             const form = document.getElementById('loginForm');
             const toggle = document.getElementById('showPassword');
             const pwd = document.getElementById('password');
@@ -89,6 +113,56 @@
                 });
             }
 
+            // Función para determinar el rol basado en el usuario
+            function determineUserRole(username, registeredUsers) {
+                // Buscar en usuarios registrados
+                const registeredUser = registeredUsers.find(user => 
+                    user.nombre_usuario === username
+                );
+                
+                if (registeredUser) {
+                    return registeredUser.role;
+                }
+                
+                // Si no está registrado, determinar por el nombre de usuario
+                const usernameLower = username.toLowerCase();
+                if (usernameLower.includes('admin')) {
+                    return 'admin';
+                } else if (usernameLower.includes('cajero') || usernameLower.includes('cashier')) {
+                    return 'cajero';
+                } else {
+                    return 'cliente';
+                }
+            }
+
+            // Función para obtener datos del usuario
+            function getUserData(username, role, registeredUsers) {
+                const registeredUser = registeredUsers.find(user => 
+                    user.nombre_usuario === username
+                );
+                
+                if (registeredUser) {
+                    return {
+                        id: Date.now(),
+                        name: registeredUser.name || username,
+                        username: username,
+                        role: role,
+                        email: `${username}@minisuper.com`,
+                        token: 'simulated_token_' + Date.now()
+                    };
+                }
+                
+                // Usuario no registrado (login básico)
+                return {
+                    id: Date.now(),
+                    name: username,
+                    username: username,
+                    role: role,
+                    email: `${username}@minisuper.com`,
+                    token: 'simulated_token_' + Date.now()
+                };
+            }
+
             // Manejo del formulario de login
             if (!form) return;
             
@@ -124,23 +198,26 @@
                         user.nombre_usuario === username && user.password === password
                     );
 
+                    // Permitir login también con cualquier usuario que cumpla requisitos básicos
                     if (userExists || (username && password.length >= 8)) {
-                        // Login exitoso - simular respuesta
-                        const userData = {
-                            id: Date.now(),
-                            name: username,
-                            username: username,
-                            role: 'cliente', // Por defecto para usuarios nuevos
-                            token: 'simulated_token_' + Date.now()
-                        };
+                        // Determinar el rol del usuario
+                        const userRole = determineUserRole(username, registeredUsers);
                         
-                        localStorage.setItem('user', JSON.stringify(userData));
-                        localStorage.setItem('isLoggedIn', 'true');
+                        // Obtener datos del usuario
+                        const userData = getUserData(username, userRole, registeredUsers);
                         
-                        console.log('✅ Login successful:', userData);
+                        // Usar el AuthManager para el login
+                        const loginSuccess = window.authManager.login(userData);
                         
-                        // Redirigir a la página principal
-                        window.location.href = 'principal.html';
+                        if (loginSuccess) {
+                            console.log('✅ Login successful:', userData);
+                            console.log('🎯 User role:', userRole);
+                            
+                            // Redirigir según el rol usando el AuthManager
+                            window.authManager.redirectByRole(userRole);
+                        } else {
+                            showError('Error during login process. Please try again.');
+                        }
                         
                     } else {
                         showError('Invalid username or password. Please try again or sign up.');
@@ -170,10 +247,81 @@
                 return users;
             };
 
+            // Verificar si ya está autenticado y redirigir
+            function checkExistingAuth() {
+                if (window.authManager && window.authManager.checkAuthentication()) {
+                    const user = window.authManager.getUser();
+                    console.log('🔐 User already authenticated:', user);
+                    
+                    // Mostrar mensaje informativo
+                    const alreadyLoggedIn = document.createElement('div');
+                    alreadyLoggedIn.className = 'info-message';
+                    alreadyLoggedIn.style.cssText = `
+                        background: #d4edda;
+                        color: #155724;
+                        padding: 12px;
+                        border-radius: 5px;
+                        margin: 10px 0;
+                        text-align: center;
+                    `;
+                    alreadyLoggedIn.innerHTML = `
+                        Ya estás autenticado como <strong>${user.name}</strong> (${user.role}). 
+                        <br><a href="#" id="continueAsUser">Continuar como ${user.name}</a> | 
+                        <a href="#" id="logoutAndLogin">Cerrar sesión y entrar como otro usuario</a>
+                    `;
+                    
+                    form.parentNode.insertBefore(alreadyLoggedIn, form);
+                    
+                    // Event listeners para los enlaces
+                    document.getElementById('continueAsUser').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.authManager.redirectByRole(user.role);
+                    });
+                    
+                    document.getElementById('logoutAndLogin').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.authManager.logout();
+                    });
+                }
+            }
+
+            // Ejecutar verificación de autenticación existente cuando el AuthManager esté listo
+            if (window.authManager) {
+                setTimeout(checkExistingAuth, 100);
+            } else {
+                window.addEventListener('load', checkExistingAuth);
+            }
+
             // Para debugging: mostrar usuarios registrados en consola
             console.log('👥 Currently registered users:', window.checkRegisteredUsers());
 
         })();
     </script>
+
+    <style>
+        .info-message a {
+            color: #155724;
+            text-decoration: underline;
+            margin: 0 5px;
+        }
+        
+        .info-message a:hover {
+            color: #0b2e13;
+        }
+        
+        .test-users-info {
+            border: 1px solid #dee2e6;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </body>
-</html>
+</html>    
