@@ -1,4 +1,4 @@
-// script_cart.js - Shopping Cart with Linked List
+        // script_cart.js - Shopping Cart with Linked List
 
 // Linked List Node
 class NodoCarrito {

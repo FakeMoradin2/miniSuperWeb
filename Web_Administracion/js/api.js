@@ -215,5 +215,54 @@ const dashboard = {
   productosMasVendidos: (limit = 5) => fetchJSON(`${API_BASE}/api/dashboard/productosMasVendidos.php?limit=${limit}`)
 };
 
+/* Empleados - Usando el mismo endpoint de auth pero con localStorage para listar */
+const empleados = {
+  register: (body) => fetchJSON(`${API_BASE}/api/auth/register.php`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }),
+  
+  // Listar desde localStorage (similar a clientes)
+  getAll: () => {
+    try {
+      const empleadosData = JSON.parse(localStorage.getItem('minisuper_empleados') || '[]');
+      return Promise.resolve({ success: true, data: empleadosData });
+    } catch (error) {
+      return Promise.resolve({ success: true, data: [] });
+    }
+  },
+  
+  // Actualizar en localStorage
+  update: (body) => {
+    try {
+      const empleadosData = JSON.parse(localStorage.getItem('minisuper_empleados') || '[]');
+      const index = empleadosData.findIndex(emp => emp.usuario_id == body.usuario_id);
+      
+      if (index !== -1) {
+        empleadosData[index] = { ...empleadosData[index], ...body };
+        localStorage.setItem('minisuper_empleados', JSON.stringify(empleadosData));
+      }
+      
+      return Promise.resolve({ success: true, message: 'Empleado actualizado' });
+    } catch (error) {
+      return Promise.resolve({ success: false, message: error.message });
+    }
+  },
+  
+  // Eliminar de localStorage
+  delete: (usuarioId) => {
+    try {
+      const empleadosData = JSON.parse(localStorage.getItem('minisuper_empleados') || '[]');
+      const nuevosEmpleados = empleadosData.filter(emp => emp.usuario_id != usuarioId);
+      localStorage.setItem('minisuper_empleados', JSON.stringify(nuevosEmpleados));
+      
+      return Promise.resolve({ success: true, message: 'Empleado eliminado' });
+    } catch (error) {
+      return Promise.resolve({ success: false, message: error.message });
+    }
+  }
+};
+
 /* Export objetos para uso global */
-window.api = { auth, categorias, proveedores, productos, ventasAPI, reportes, clientes, stock, dashboard };
+window.api = { auth, categorias, proveedores, productos, ventasAPI, reportes, clientes, stock, dashboard, empleados };
