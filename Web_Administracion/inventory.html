@@ -5,54 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Inventario - Minisúper</title>
   <link rel="stylesheet" href="css/styles.css?v=3">
-  <style>
-    .product-image {
-      width: 50px;
-      height: 50px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      display: block;
-    }
-    
-    .image-preview {
-      max-width: 100px;
-      max-height: 100px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      overflow: hidden;
-    }
-    
-    .status-badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    
-    .status-active {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .status-inactive {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    
-    #productosTable tbody tr:hover {
-      background-color: #f8f9fa;
-    }
-  </style>
 </head>
 <body>
   <div class="sidebar">
     <div class="header">
       <i class="fas fa-store"></i>
       <h2 style="margin-left:6px">Minisuper System</h2>
-</div>
+    </div>
     <ul>
       <script>
       if (window.location.pathname.includes('dashboard.html')) {
@@ -116,9 +75,29 @@
           </div>
           
           <div class="form-group">
-            <label>URL de Imagen</label>
-            <input id="prodImagen" type="url" placeholder="https://ejemplo.com/imagen.jpg">
-            <div id="imagePreview" class="image-preview" style="display:none;"></div>
+            <label>Imagen del Producto</label>
+            <div class="image-upload-container">
+              <div class="image-input-group">
+                <input id="prodImagen" type="text" placeholder="O ingresa URL de imagen...">
+                <button type="button" id="btnUploadImage" class="btn secondary" style="white-space: nowrap;">
+                  <i class="fas fa-link"></i> Usar URL
+                </button>
+              </div>
+              <div id="imageUploadBtn" class="image-upload-btn">
+                <i class="fas fa-cloud-upload-alt"></i> Subir imagen desde dispositivo
+              </div>
+              <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+              
+              <div id="uploadProgress" class="upload-progress">
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px;">
+                  <span>Subiendo...</span>
+                  <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar" style="width: 0%"></div>
+              </div>
+              
+              <div id="imagePreview" class="image-preview" style="display:none;"></div>
+            </div>
           </div>
           
           <div class="form-group">
@@ -187,6 +166,8 @@
     </div>
   </div>
 
+  <!-- Incluir Cloudinary SDK -->
+  <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <script src="js/api.js"></script>
   <script src="js/inventory.js"></script>

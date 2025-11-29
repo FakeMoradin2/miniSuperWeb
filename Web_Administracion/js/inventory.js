@@ -1,16 +1,5 @@
 // frontend/js/inventory.js
 // Conectado con api.js para gestión de inventario
-//
-// FUNCIONES API DISPONIBLES:
-// - window.api.productos.listar()
-// - window.api.productos.buscar(termino)
-// - window.api.productos.agregar(body)
-// - window.api.productos.editar(body)
-// - window.api.productos.eliminar(body)
-// - window.api.categorias.listar()
-// - window.api.proveedores.listar()
-// - window.api.stock.obtenerBajoStock()
-// - window.api.stock.actualizar(body)
 
 let productosOriginales = [];
 let categoriasCache = [];
@@ -18,6 +7,124 @@ let proveedoresCache = [];
 let busquedaActual = '';
 let filtroCategoria = '';
 let filtroEstado = '';
+let cloudinaryUrl = ''; // Variable para almacenar la URL de Cloudinary
+
+// ========== CONFIGURACIÓN DE CLOUDINARY ==========
+
+// Configura tus credenciales de Cloudinary aquí
+const CLOUDINARY_CONFIG = {
+    cloudName: 'dmssshsp9', // Reemplaza con tu cloud name
+    uploadPreset: 'minisuper_products', // Crea un upload preset en tu dashboard de Cloudinary
+    apiKey: '843194535233728' // Opcional para uploads directos
+};
+
+// ========== WIDGET DE CLOUDINARY ==========
+
+function inicializarCloudinary() {
+    // El widget de Cloudinary se carga desde el CDN
+    console.log('Cloudinary SDK cargado');
+}
+
+function abrirWidgetCloudinary() {
+    return new Promise((resolve, reject) => {
+        const widget = cloudinary.createUploadWidget({
+            cloudName: CLOUDINARY_CONFIG.cloudName,
+            uploadPreset: CLOUDINARY_CONFIG.uploadPreset,
+            sources: ['local', 'camera', 'url'], // Fuentes permitidas
+            multiple: false,
+            maxFiles: 1,
+            clientAllowedFormats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+            maxFileSize: 5000000, // 5MB
+            styles: {
+                palette: {
+                    window: "#FFFFFF",
+                    sourceBg: "#F4F4F5",
+                    windowBorder: "#90a0b3",
+                    tabIcon: "#0078FF",
+                    inactiveTabIcon: "#69778A",
+                    menuIcons: "#0078FF",
+                    link: "#0078FF",
+                    action: "#FF620C",
+                    inProgress: "#0078FF",
+                    complete: "#20B832",
+                    error: "#EA3D3D",
+                    textDark: "#000000",
+                    textLight: "#FFFFFF"
+                }
+            }
+        }, (error, result) => {
+            if (!error && result && result.event === "success") {
+                console.log('Imagen subida a Cloudinary:', result.info);
+                cloudinaryUrl = result.info.secure_url;
+                mostrarPrevisualizacion(cloudinaryUrl);
+                resolve(cloudinaryUrl);
+            } else if (error) {
+                console.error('Error subiendo a Cloudinary:', error);
+                reject(error);
+            }
+        });
+
+        widget.open();
+    });
+}
+
+// ========== SUBIDA DIRECTA CON XMLHttpRequest (Alternativa) ==========
+
+async function subirImagenCloudinary(file) {
+    return new Promise((resolve, reject) => {
+        mostrarProgresoSubida(0);
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+        formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
+        
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                mostrarProgresoSubida(percentComplete);
+            }
+        });
+        
+        xhr.addEventListener('load', () => {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                cloudinaryUrl = response.secure_url;
+                mostrarPrevisualizacion(cloudinaryUrl);
+                ocultarProgresoSubida();
+                resolve(cloudinaryUrl);
+            } else {
+                ocultarProgresoSubida();
+                reject(new Error('Error en la subida'));
+            }
+        });
+        
+        xhr.addEventListener('error', () => {
+            ocultarProgresoSubida();
+            reject(new Error('Error de conexión'));
+        });
+        
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`);
+        xhr.send(formData);
+    });
+}
+
+function mostrarProgresoSubida(porcentaje) {
+    const progress = document.getElementById('uploadProgress');
+    const progressBar = progress.querySelector('.progress-bar');
+    const progressPercent = document.getElementById('progressPercent');
+    
+    progress.style.display = 'block';
+    progressBar.style.width = `${porcentaje}%`;
+    progressPercent.textContent = `${Math.round(porcentaje)}%`;
+}
+
+function ocultarProgresoSubida() {
+    const progress = document.getElementById('uploadProgress');
+    progress.style.display = 'none';
+}
 
 // ========== SISTEMA DE ORDENAMIENTO (QuickSort) ==========
 
@@ -159,6 +266,62 @@ function renderizarProductosTabla(prods) {
     });
 }
 
+// ========== FUNCIONES DE SUBIDA DE IMÁGENES ==========
+
+function configurarSubidaImagen() {
+    const imageUploadBtn = document.getElementById('imageUploadBtn');
+    const btnUploadImage = document.getElementById('btnUploadImage');
+    const prodImagen = document.getElementById('prodImagen');
+    
+    // Abrir widget de Cloudinary
+    imageUploadBtn.addEventListener('click', async () => {
+        try {
+            await abrirWidgetCloudinary();
+        } catch (error) {
+            console.error('Error abriendo widget de Cloudinary:', error);
+            alert('Error al subir imagen: ' + error.message);
+        }
+    });
+    
+    // Usar URL manual
+    btnUploadImage.addEventListener('click', () => {
+        const url = prodImagen.value.trim();
+        if (url) {
+            if (url.startsWith('http')) {
+                cloudinaryUrl = url;
+                mostrarPrevisualizacion(url);
+            } else {
+                alert('Por favor ingresa una URL válida que comience con http:// o https://');
+            }
+        } else {
+            alert('Por favor ingresa una URL de imagen');
+        }
+    });
+}
+
+function mostrarPrevisualizacion(src) {
+    const preview = document.getElementById('imagePreview');
+    
+    preview.innerHTML = `
+        <div class="image-preview-container">
+            <img src="${src}" style="max-width:100%;border-radius:4px;" onerror="this.style.display='none'">
+            <button type="button" class="remove-image-btn" title="Eliminar imagen">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    preview.style.display = 'block';
+    
+    // Agregar listener para eliminar imagen
+    const removeBtn = preview.querySelector('.remove-image-btn');
+    removeBtn.addEventListener('click', function() {
+        cloudinaryUrl = '';
+        preview.style.display = 'none';
+        document.getElementById('prodImagen').value = '';
+    });
+}
+
 // ========== FUNCIONES DE EDICIÓN Y ELIMINACIÓN ==========
 
 function editarProducto(prod) {
@@ -184,18 +347,19 @@ function editarProducto(prod) {
     }
     document.getElementById('prodProveedor').value = proveedorId;
     
-    document.getElementById('prodImagen').value = prod.image_url || prod.imagen || '';
+    // Manejar imagen
+    const imagen = prod.image_url || prod.imagen || '';
+    document.getElementById('prodImagen').value = imagen;
+    cloudinaryUrl = imagen;
     
-    const activo = prod.activo_producto === 1 || prod.activo === 1 || prod.activo === true;
-    document.getElementById('prodActivo').value = activo.toString();
-    
-    const imagen = prod.image_url || prod.imagen;
     if (imagen) {
-        document.getElementById('imagePreview').innerHTML = `<img src="${imagen}" style="max-width:100%;border-radius:4px;" onerror="this.style.display='none'">`;
-        document.getElementById('imagePreview').style.display = 'block';
+        mostrarPrevisualizacion(imagen);
     } else {
         document.getElementById('imagePreview').style.display = 'none';
     }
+    
+    const activo = prod.activo_producto === 1 || prod.activo === 1 || prod.activo === true;
+    document.getElementById('prodActivo').value = activo.toString();
     
     document.getElementById('btnCancelEdit').style.display = 'inline-block';
     document.querySelector('.form-card').scrollIntoView({ behavior: 'smooth' });
@@ -235,8 +399,8 @@ async function loadCategorias() {
         if (sel) {
             sel.innerHTML = '<option value="">Seleccionar categoría...</option>';
             cats.forEach(c => {
-                const id = c.Id_categoria;  // API usa Id_categoria con mayúscula
-                const nombre = c.Nombre_Categoria;  // API usa Nombre_Categoria con mayúscula
+                const id = c.Id_categoria;
+                const nombre = c.Nombre_Categoria;
                 if (id && nombre) {
                     sel.innerHTML += `<option value="${id}">${nombre}</option>`;
                 }
@@ -280,8 +444,8 @@ async function loadProveedores() {
         if (sel) {
             sel.innerHTML = '<option value="">Seleccionar proveedor...</option>';
             prov.forEach(p => {
-                const id = p.Id_proveedor;  // API usa Id_proveedor con mayúscula
-                const nombre = p.nombre_proveedor;  // API usa nombre_proveedor
+                const id = p.Id_proveedor;
+                const nombre = p.nombre_proveedor;
                 if (id && nombre) {
                     sel.innerHTML += `<option value="${id}">${nombre}</option>`;
                 }
@@ -299,7 +463,6 @@ async function loadProductos() {
         document.getElementById('loadingMessage').style.display = 'block';
         const response = await window.api.productos.listar();
         
-        // La API ya retorna un array gracias a api.js
         let prods = Array.isArray(response) ? response : [];
         
         if (!Array.isArray(prods)) {
@@ -330,13 +493,16 @@ document.getElementById('btnSaveProd').addEventListener('click', async () => {
         return;
     }
     
+    // Determinar qué imagen usar (prioridad: Cloudinary > URL)
+    let imagenFinal = cloudinaryUrl || document.getElementById('prodImagen').value.trim();
+    
     const body = {
         nombre_producto: nombre,
         precio: Number(precio),
         stock: Number(stock),
         categoria_id: categoria || null,
         proveedor_id: document.getElementById('prodProveedor').value || null,
-        image_url: document.getElementById('prodImagen').value || '',
+        image_url: imagenFinal,
         activo_producto: document.getElementById('prodActivo').value === 'true' ? 1 : 0
     };
     
@@ -371,6 +537,8 @@ document.getElementById('btnReset').addEventListener('click', () => {
     document.getElementById('imagePreview').style.display = 'none';
     document.getElementById('formTitle').textContent = 'Agregar Nuevo Producto';
     document.getElementById('btnCancelEdit').style.display = 'none';
+    cloudinaryUrl = ''; // Limpiar URL de Cloudinary
+    ocultarProgresoSubida();
 });
 
 document.getElementById('btnCancelEdit').addEventListener('click', () => {
@@ -418,5 +586,7 @@ function configurarBusquedaProductos() {
     await loadProveedores();
     await loadProductos();
     configurarBusquedaProductos();
+    configurarSubidaImagen();
+    inicializarCloudinary();
     console.log('Inventario inicializado');
 })();
