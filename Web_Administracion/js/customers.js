@@ -1,11 +1,11 @@
-// frontend/js/customers.js - Versión corregida y funcional
+// frontend/js/customers.js - Versión simplificada para mostrar clientes desde BD
+let clientesData = [];
+
 document.addEventListener('DOMContentLoaded', function() {
     const btnAddClient = document.getElementById('btnAddClient');
-    const clientesKey = 'minisuper_clientes_local';
-    let clientesData = [];
 
     // Cargar clientes al iniciar
-    cargarClientes();
+    loadClientes();
 
     // Agregar nuevo cliente
     btnAddClient.addEventListener('click', async function() {
@@ -46,22 +46,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await window.api.auth.register(clienteData);
             
             if (response.success) {
-                // Guardar en localStorage para mostrar en la tabla
-                const list = JSON.parse(localStorage.getItem(clientesKey) || '[]');
-                const nuevoCliente = {
-                    usuario_id: response.data?.usuario_id || Date.now(),
-                    nombre_usuario: nombre,
-                    telefono: tel,
-                    rol: 'cliente',
-                    estado: 'activo',
-                    creado_en: new Date().toISOString()
-                };
-                list.unshift(nuevoCliente);
-                localStorage.setItem(clientesKey, JSON.stringify(list));
-                
                 alert('Cliente registrado correctamente');
                 limpiarFormularioCliente();
-                cargarClientes();
+                loadClientes();
             } else {
                 alert('Error al registrar cliente: ' + (response.message || 'Error desconocido'));
             }
@@ -78,83 +65,72 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('regTel').value = '';
     }
 
-    // Cargar lista de clientes
-    async function cargarClientes() {
+    // Cargar lista de clientes desde la API
+    async function loadClientes() {
         try {
-            // Obtener clientes del localStorage
-            const clientesLocal = JSON.parse(localStorage.getItem(clientesKey) || '[]');
+            console.log('Cargando clientes desde la API...');
             
-            // También intentar obtener de la API si existe endpoint
-            let clientesAPI = [];
-            try {
-                // Si tienes endpoint para listar clientes, puedes usarlo aquí
-                const apiResponse = await window.api.clientes.listar();
-                if (apiResponse.success && Array.isArray(apiResponse.data)) {
-                    clientesAPI = apiResponse.data;
-                } else if (Array.isArray(apiResponse)) {
-                    clientesAPI = apiResponse;
-                }
-            } catch (apiError) {
-                console.log('No se pudo cargar clientes desde API, usando localStorage:', apiError);
+            // Obtener todos los usuarios desde la API
+            const response = await window.api.empleados.getAll();
+            
+            // Manejar diferentes formatos de respuesta
+            let usuariosArray = [];
+            
+            if (response?.data && Array.isArray(response.data)) {
+                usuariosArray = response.data;
+            } else if (Array.isArray(response)) {
+                usuariosArray = response;
+            } else {
+                console.error('La respuesta de usuarios no es un array:', response);
+                usuariosArray = [];
             }
-
-            // Combinar datos (priorizar localStorage para consistencia)
-            clientesData = [...clientesLocal, ...clientesAPI.filter(apiCli => 
-                !clientesLocal.some(localCli => localCli.usuario_id === apiCli.usuario_id)
-            )];
-
-            const tbody = document.querySelector('#clientesTable tbody');
-            tbody.innerHTML = '';
-
-            if (clientesData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay clientes registrados</td></tr>';
-                return;
-            }
-
-            clientesData.forEach(cliente => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${cliente.nombre_usuario || ''}</td>
-                    <td>${cliente.telefono || 'No especificado'}</td>
-                    <td>
-                        <button class="btn small danger" onclick="eliminarCliente(${cliente.usuario_id})">Eliminar</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            
+            console.log('Usuarios cargados:', usuariosArray);
+            
+            // Filtrar solo los clientes (rol = 'cliente')
+            clientesData = usuariosArray.filter(usuario => 
+                (usuario.rol || '').toLowerCase() === 'cliente'
+            );
+            
+            console.log('Clientes filtrados:', clientesData);
+            renderizarClientesTabla(clientesData);
+            
         } catch (error) {
-            console.error('Error al cargar clientes:', error);
+            console.error('Error cargando clientes:', error);
             const tbody = document.querySelector('#clientesTable tbody');
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Error al cargar clientes</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="2" style="text-align: center;">Error al cargar clientes</td></tr>';
         }
     }
 
-    // Eliminar cliente
-    window.eliminarCliente = async function(id) {
-        const confirmacion = confirm('¿Estás seguro de que deseas eliminar este cliente?');
-        
-        if (confirmacion) {
-            try {
-                // Eliminar de localStorage
-                const list = JSON.parse(localStorage.getItem(clientesKey) || '[]');
-                const nuevosClientes = list.filter(cli => cli.usuario_id != id);
-                localStorage.setItem(clientesKey, JSON.stringify(nuevosClientes));
-                
-                // También intentar eliminar de la API si existe endpoint
-                try {
-                    await window.api.clientes.eliminar({ usuario_id: id });
-                } catch (apiError) {
-                    console.log('No se pudo eliminar cliente de API:', apiError);
-                }
-                
-                alert('Cliente eliminado correctamente');
-                cargarClientes();
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error al eliminar cliente: ' + (error.message || 'Error desconocido'));
-            }
+    // Función para renderizar la tabla de clientes
+    function renderizarClientesTabla(clientes) {
+        if (!Array.isArray(clientes)) {
+            console.error('renderizarClientesTabla: clientes no es un array:', clientes);
+            clientes = [];
         }
-    };
+        
+        const tbody = document.querySelector('#clientesTable tbody');
+        if (!tbody) {
+            console.error('No se encontró el elemento #clientesTable tbody');
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        if (clientes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="2" style="text-align: center;">No hay clientes registrados</td></tr>';
+            return;
+        }
+        
+        clientes.forEach(cliente => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${cliente.nombre_usuario || ''}</td>
+                <td>${cliente.telefono || 'No especificado'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
 
     // Validación de teléfono en tiempo real
     const telefonoInput = document.getElementById('regTel');
@@ -163,21 +139,4 @@ document.addEventListener('DOMContentLoaded', function() {
             this.value = this.value.replace(/\D/g, '').substring(0, 10);
         });
     }
-
-    // Buscar clientes
-    window.buscarClientes = function() {
-        const termino = document.getElementById('buscarCliente').value.toLowerCase().trim();
-        const filas = document.querySelectorAll('#clientesTable tbody tr');
-        
-        filas.forEach(fila => {
-            const nombre = fila.cells[0].textContent.toLowerCase();
-            const telefono = fila.cells[1].textContent.toLowerCase();
-            
-            if (nombre.includes(termino) || telefono.includes(termino)) {
-                fila.style.display = '';
-            } else {
-                fila.style.display = 'none';
-            }
-        });
-    };
 });

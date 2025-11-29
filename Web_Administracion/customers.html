@@ -2,76 +2,42 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Clientes - Minisúper</title>
 <link rel="stylesheet" href="css/styles.css?v=3">
 </head>
 <body>
   <div class="sidebar">
-    <div class="header">
-      <i class="fas fa-store"></i>
-      <h2 style="margin-left:6px">Minisuper System</h2>
-</div>
-    <ul>
-      <script>
-      if (window.location.pathname.includes('dashboard.html')) {
-        if (!window.authManager.hasRole('admin')) {
-            window.authManager.redirectToUnauthorized();
-        }
-    }</script>
-      <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
-      <li><a href="pos.html"><i class="fas fa-cash-register"></i><span>Punto de Venta</span></a></li>
-      <li><a href="inventory.html"><i class="fas fa-boxes"></i><span>Inventario</span></a></li>
-      <li><a href="reports.html"><i class="fas fa-chart-bar"></i><span>Reportes</span></a></li>
-      <li><a href="customers.html"><i class="fas fa-users"></i><span>Clientes</span></a></li>
-      <li><a href="proveedores.html"><i class="fas fa-truck"></i><span>Proveedores</span></a></li>
-      <li><a href="categoria.html"><i class="fas fa-tags"></i><span>Categorías</span></a></li>
-      <li><a href="signup_workers.html"><i class="fas fa-user-tie"></i><span>Empleados</span></a></li>
-    </ul>
+  <div class="header">
+    <i class="fas fa-store"></i>
+    <h2 style="margin-left:6px">Minisuper System</h2>
   </div>
+  <ul>
+    <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+    <li><a href="pos.html"><i class="fas fa-cash-register"></i><span>Punto de Venta</span></a></li>
+    <li><a href="inventory.html"><i class="fas fa-boxes"></i><span>Inventario</span></a></li>
+    <li><a href="reports.html"><i class="fas fa-chart-bar"></i><span>Reportes</span></a></li>
+    <li><a href="customers.html"><i class="fas fa-users"></i><span>Clientes</span></a></li>
+    <li><a href="proveedores.html"><i class="fas fa-truck"></i><span>Proveedores</span></a></li>
+    <li><a href="categoria.html"><i class="fas fa-tags"></i><span>Categorías</span></a></li>
+  </ul>
+</div>
 
   <div class="main">
-    <div class="header-top">
-      <h1>Clientes</h1>
-      <div class="user"><div class="avatar">JD</div></div>
-    </div>
+    <div class="header-top"><h1>Clientes</h1><div class="user"><div class="avatar">JD</div></div></div>
 
     <div class="form-card">
       <h3>Agregar Cliente</h3>
-      <div class="form-group">
-        <label>Nombre de usuario *</label>
-        <input id="regNombre" placeholder="Ingrese nombre de usuario">
-      </div>
-      <div class="form-group">
-        <label>Password *</label>
-        <input id="regPass" type="password" placeholder="Mínimo 8 caracteres">
-      </div>
-      <div class="form-group">
-        <label>Teléfono</label>
-        <input id="regTel" placeholder="10 dígitos (opcional)">
-      </div>
-      <div>
-        <button id="btnAddClient" class="btn primary">Registrar Cliente</button>
-      </div>
+      <div class="form-group"><label>Nombre de usuario</label><input id="regNombre" ></div>
+      <div class="form-group"><label>Password</label><input id="regPass" type="password"></div>
+      <div class="form-group"><label>Teléfono</label><input id="regTel"></div>
+      <div><button id="btnAddClient" class="btn primary">Registrar Cliente</button></div>
     </div>
 
     <div class="table-card">
-      <div class="table-header">
-        <h3>Lista de Clientes</h3>
-        <div class="search-box">
-          <input type="text" id="buscarCliente" placeholder="Buscar cliente..." onkeyup="buscarClientes()">
-          <i class="fas fa-search"></i>
-        </div>
-      </div>
+      <h3>Clientes agregados (local)</h3>
       <table id="clientesTable">
-        <thead>
-          <tr>
-            <th>Usuario</th>
-            <th>Teléfono</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Usuario</th><th>Teléfono</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>

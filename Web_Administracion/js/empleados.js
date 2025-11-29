@@ -1,14 +1,16 @@
-// js/empleados.js - Versión corregida basada en proveedores.js
+// js/empleados.js - Versión corregida basada en inventory.js con filtro de cajeros
+let empleadosOriginales = [];
+let empleadosFiltrados = [];
+
 document.addEventListener('DOMContentLoaded', function() {
     const btnAddEmpleado = document.getElementById('btnAddEmpleado');
     const btnUpdateEmpleado = document.getElementById('btnUpdateEmpleado');
     const modal = document.getElementById('editEmpleadoModal');
     const closeBtn = document.querySelector('.close');
     let empleadoEditId = null;
-    let empleadosData = []; // Almacenar datos de empleados
 
     // Cargar empleados al iniciar
-    cargarEmpleados();
+    loadEmpleados();
 
     // Agregar nuevo empleado
     btnAddEmpleado.addEventListener('click', async function() {
@@ -52,26 +54,13 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         try {
-            // Registrar en la API de auth (igual que clientes)
+            // Registrar en la API de auth
             const response = await window.api.auth.register(empleadoData);
             
             if (response.success) {
-                // Guardar en localStorage para mostrar en la tabla
-                const list = JSON.parse(localStorage.getItem('minisuper_empleados') || '[]');
-                const nuevoEmpleado = {
-                    usuario_id: Date.now(), // ID temporal
-                    nombre_usuario: nombre,
-                    telefono: telefono,
-                    rol: rol,
-                    estado: 'activo',
-                    creado_en: new Date().toISOString()
-                };
-                list.unshift(nuevoEmpleado);
-                localStorage.setItem('minisuper_empleados', JSON.stringify(list));
-                
                 alert('Empleado registrado correctamente');
                 limpiarFormularioEmpleado();
-                cargarEmpleados();
+                await loadEmpleados(); // Recargar la lista desde la base de datos
             } else {
                 alert('Error al registrar empleado: ' + (response.message || 'Error desconocido'));
             }
@@ -90,66 +79,87 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('rolEmpleado').value = '';
     }
 
-    // Cargar lista de empleados
-    async function cargarEmpleados() {
+    // Cargar lista de empleados desde la API
+    async function loadEmpleados() {
         try {
+            console.log('Cargando empleados desde la API...');
+            
             const response = await window.api.empleados.getAll();
-
-            const tbody = document.querySelector('#empleadosTable tbody');
-            tbody.innerHTML = '';
-
-            // Manejar diferentes formatos de respuesta y quedarnos sólo con cajeros
+            
+            // Manejar diferentes formatos de respuesta como en inventory.js
             let empleadosArray = [];
-
+            
             if (response?.data && Array.isArray(response.data)) {
                 empleadosArray = response.data;
             } else if (Array.isArray(response)) {
                 empleadosArray = response;
+            } else {
+                console.error('La respuesta de empleados no es un array:', response);
+                empleadosArray = [];
             }
-
-            // Filtrar sólo empleados con rol cajero
-            empleadosArray = empleadosArray.filter(e => (e.rol || '').toLowerCase() === 'cajero');
-
-            // Guardar datos para usar en otras funciones
-            empleadosData = empleadosArray;
-
-            if (empleadosArray.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay empleados registrados</td></tr>';
-                return;
-            }
-
-            empleadosArray.forEach(empleado => {
-                const isActive = empleado.estado !== 'inactivo';
-                const fechaRegistro = empleado.creado_en ? 
-                    new Date(empleado.creado_en).toLocaleDateString('es-ES') : 
-                    'No especificado';
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${empleado.usuario_id || ''}</td>
-                    <td>${empleado.nombre_usuario || ''}</td>
-                    <td>${empleado.telefono || 'No especificado'}</td>
-                    <td>
-                        <span class="badge ${getBadgeClass(empleado.rol)}">
-                            ${empleado.rol || 'No especificado'}
-                        </span>
-                    </td>
-                    <td>${fechaRegistro}</td>
-                    <td><span class="status ${isActive ? 'active' : 'inactive'}">${isActive ? 'Activo' : 'Inactivo'}</span></td>
-                    <td>
-                        <button class="btn small" onclick="editarEmpleado(${empleado.usuario_id})">Editar</button>
-                        <button class="btn small ${isActive ? 'danger' : 'success'}" onclick="cambiarEstadoEmpleado(${empleado.usuario_id}, ${isActive})">
-                            ${isActive ? 'Desactivar' : 'Activar'}
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            
+            console.log('Empleados cargados:', empleadosArray);
+            empleadosOriginales = empleadosArray;
+            
+            // Aplicar filtro para mostrar solo cajeros
+            aplicarFiltroCajeros();
+            
         } catch (error) {
-            console.error('Error al cargar empleados:', error);
+            console.error('Error cargando empleados:', error);
             const tbody = document.querySelector('#empleadosTable tbody');
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Error al cargar empleados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Error al cargar empleados</td></tr>';
         }
+    }
+
+    // Función para filtrar solo cajeros (similar a aplicarFiltros en inventory.js)
+    function aplicarFiltroCajeros() {
+        empleadosFiltrados = empleadosOriginales.filter(empleado => 
+            (empleado.rol || '').toLowerCase() === 'cajero'
+        );
+        
+        console.log('Cajeros filtrados:', empleadosFiltrados);
+        renderizarEmpleadosTabla(empleadosFiltrados);
+    }
+
+    // Función para renderizar la tabla de empleados (similar a inventory.js)
+    function renderizarEmpleadosTabla(empleados) {
+        if (!Array.isArray(empleados)) {
+            console.error('renderizarEmpleadosTabla: empleados no es un array:', empleados);
+            empleados = [];
+        }
+        
+        const tbody = document.querySelector('#empleadosTable tbody');
+        if (!tbody) {
+            console.error('No se encontró el elemento #empleadosTable tbody');
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        
+        if (empleados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay cajeros registrados</td></tr>';
+            return;
+        }
+        
+        empleados.forEach(empleado => {
+            const tr = document.createElement('tr');
+            const fechaRegistro = empleado.creado_en ? 
+                new Date(empleado.creado_en).toLocaleDateString('es-ES') : 
+                'No especificado';
+            
+            tr.innerHTML = `
+                <td>${empleado.usuario_id || ''}</td>
+                <td>${empleado.nombre_usuario || ''}</td>
+                <td>${empleado.telefono || 'No especificado'}</td>
+                <td>
+                    <span class="badge ${getBadgeClass(empleado.rol)}">
+                        ${empleado.rol || 'No especificado'}
+                    </span>
+                </td>
+                <td>${fechaRegistro}</td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
     // Función para obtener clase del badge según el rol
@@ -163,22 +173,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Editar empleado
-    window.editarEmpleado = async function(id) {
-        try {
-            const empleado = empleadosData.find(p => p.usuario_id == id);
-            if (empleado) {
-                document.getElementById('editNombreUsuario').value = empleado.nombre_usuario || '';
-                document.getElementById('editTelefonoEmpleado').value = empleado.telefono || '';
-                document.getElementById('editRolEmpleado').value = empleado.rol || '';
-                document.getElementById('editEstadoEmpleado').value = empleado.estado === 'inactivo' ? 'inactivo' : 'activo';
-                empleadoEditId = id;
-                modal.style.display = 'block';
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Error al cargar datos del empleado');
-        }
-    };
+    function editarEmpleado(empleado) {
+        document.getElementById('editNombreUsuario').value = empleado.nombre_usuario || '';
+        document.getElementById('editTelefonoEmpleado').value = empleado.telefono || '';
+        document.getElementById('editRolEmpleado').value = empleado.rol || '';
+        document.getElementById('editEstadoEmpleado').value = empleado.estado === 'inactivo' ? 'inactivo' : 'activo';
+        empleadoEditId = empleado.usuario_id;
+        modal.style.display = 'block';
+    }
 
     // Actualizar empleado
     btnUpdateEmpleado.addEventListener('click', async function() {
@@ -211,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (response.success) {
                 alert('Empleado actualizado correctamente');
                 modal.style.display = 'none';
-                cargarEmpleados();
+                await loadEmpleados(); // Recargar desde la base de datos
             } else {
                 alert('Error al actualizar empleado: ' + (response.message || 'Error desconocido'));
             }
@@ -220,33 +222,6 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Error al actualizar empleado: ' + (error.message || 'Error desconocido'));
         }
     });
-
-    // Cambiar estado del empleado (Activar/Desactivar)
-    window.cambiarEstadoEmpleado = async function(id, estaActivo) {
-        const accion = estaActivo ? 'desactivar' : 'activar';
-        const confirmacion = confirm(`¿Estás seguro de que deseas ${accion} este empleado?`);
-        
-        if (confirmacion) {
-            try {
-                const empleadoData = {
-                    usuario_id: id,
-                    estado: estaActivo ? 'inactivo' : 'activo'
-                };
-
-                const response = await window.api.empleados.update(empleadoData);
-
-                if (response.success) {
-                    alert(`Empleado ${accion}do correctamente`);
-                    cargarEmpleados();
-                } else {
-                    alert(`Error al ${accion} empleado: ` + (response.message || 'Error desconocido'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert(`Error al ${accion} empleado: ` + (error.message || 'Error desconocido'));
-            }
-        }
-    };
 
     // Cerrar modal
     closeBtn.addEventListener('click', function() {
