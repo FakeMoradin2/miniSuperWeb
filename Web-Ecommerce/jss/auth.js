@@ -130,11 +130,11 @@ redirectByRole(role) {
     switch(roleLower) {
         case 'admin':
             // Redirigir al dashboard de administración
-            window.location.href = '../Web_Administracion/dashboard.html';
+            window.location.href = 'Web_Administracion/dashboard.html';
             break;
         case 'cajero':
             // Redirigir al POS del cajero
-            window.location.href = '../Web_Administracion/pos.html';
+            window.location.href = 'Web_Administracion/pos.html';
             break;
         case 'cliente':
         default:

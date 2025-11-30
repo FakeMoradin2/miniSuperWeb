@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MiniSuper</title>
+    <link rel="stylesheet" href="css/styles_login.css">
+</head>
+<body>
+    <div class="container">
+        <div class="corner-image" aria-hidden="true">
+            <img src="WhatsApp Image 2025-10-12 at 12.46.25_976f73b5.jpg" alt="Logo MiniSuper">
+        </div>  
+
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Sign in to your account to continue shopping</p>
+
+        <form id="loginForm" novalidate>
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" 
+                       pattern="[0-9]{10}" title="Please enter a 10-digit phone number" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+                <div class="show-password">
+                    <input type="checkbox" id="showPassword">
+                    <label for="showPassword">Show Password</label>
+                </div>
+            </div>
+            
+            <button type="submit" class="signin-btn" id="loginButton">
+                <span class="button-text">Login</span>
+                <span class="button-loading" style="display: none;">Loading...</span>
+            </button>
+        </form>
+
+        <!-- JavaScript para el login -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const loginForm = document.getElementById('loginForm');
+                const showPasswordCheckbox = document.getElementById('showPassword');
+                const passwordInput = document.getElementById('password');
+                const loginButton = document.getElementById('loginButton');
+                
+                // Mostrar/ocultar contraseña
+                showPasswordCheckbox.addEventListener('change', function() {
+                    passwordInput.type = this.checked ? 'text' : 'password';
+                });
+                
+                // Manejar envío del formulario
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const phone = document.getElementById('phone').value.trim();
+                    const password = passwordInput.value;
+                    
+                    // Validación básica
+                    if (!phone || !password) {
+                        alert('Please enter both phone number and password');
+                        return;
+                    }
+                    
+                    // Validar formato de teléfono (10 dígitos)
+                    const phoneRegex = /^[0-9]{10}$/;
+                    if (!phoneRegex.test(phone)) {
+                        alert('Please enter a valid 10-digit phone number');
+                        return;
+                    }
+                    
+                    // Mostrar loading
+                    loginButton.querySelector('.button-text').style.display = 'none';
+                    loginButton.querySelector('.button-loading').style.display = 'inline';
+                    loginButton.disabled = true;
+                    
+                    try {
+                        console.log('📞 Attempting login with phone:', phone);
+                        
+                        // Llamar a la API real de login
+                        const response = await window.api.auth.login({
+                            telefono: phone,
+                            password: password
+                        });
+                        
+                        console.log('✅ Login response:', response);
+                        
+                        if (response.success) {
+                            // Usar el método processLoginResponse del AuthManager
+                            const processedData = window.authManager.processLoginResponse(response);
+                            
+                            console.log('👤 Processed user data:', processedData.userData);
+                            
+                            // Hacer login con los datos procesados
+                            const loginSuccess = window.authManager.login(
+                                processedData.userData, 
+                                processedData.token
+                            );
+                            
+                            if (loginSuccess) {
+                                console.log('🎉 Login successful, redirecting...');
+                                // Redirigir explícitamente después del login
+                                setTimeout(() => {
+                                    window.authManager.redirectToHome();
+                                }, 500);
+                            } else {
+                                alert('Error al iniciar sesión. Por favor, intenta nuevamente.');
+                            }
+                        } else {
+                            alert(response.message || 'Login failed. Please check your credentials.');
+                        }
+                    } catch (error) {
+                        console.error('❌ Login error:', error);
+                        alert('Error during login: ' + (error.message || 'Please try again.'));
+                    } finally {
+                        // Restaurar botón
+                        loginButton.querySelector('.button-text').style.display = 'inline';
+                        loginButton.querySelector('.button-loading').style.display = 'none';
+                        loginButton.disabled = false;
+                    }
+                });
+
+                // Auto-redirección si ya está loggeado
+                if (window.authManager.checkAuthentication()) {
+                    console.log('🔄 User already authenticated, redirecting...');
+                    setTimeout(() => {
+                        window.authManager.redirectToHome();
+                    }, 500);
+                }
+            });
+        </script>
+
+        <!-- Auth Manager -->
+        <script src="js/auth.js"></script>
+        <!-- API -->
+        <script src="js/api.js"></script>
+    </div>
+</body>
+</html>

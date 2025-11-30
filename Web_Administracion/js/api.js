@@ -52,6 +52,7 @@ async function fetchJSON(url, opts = {}) {
     throw error;
   }
 }
+
 /* Autenticación */
 const auth = {
   login: (body) => fetchJSON(`${API_BASE}/api/auth/login.php`, {

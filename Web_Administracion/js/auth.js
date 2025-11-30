@@ -17,14 +17,16 @@ class AuthManager {
     loadUserFromStorage() {
         try {
             const userData = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
             const isLoggedIn = localStorage.getItem('isLoggedIn');
             
-            if (userData && isLoggedIn === 'true') {
+            if (userData && token && isLoggedIn === 'true') {
                 this.currentUser = JSON.parse(userData);
                 this.isAuthenticated = true;
                 console.log('✅ User loaded from storage:', this.currentUser);
             } else {
                 console.log('ℹ️ No user found in storage');
+                this.clearStorage();
             }
         } catch (error) {
             console.error('❌ Error loading user from storage:', error);
@@ -32,14 +34,26 @@ class AuthManager {
         }
     }
 
+    clearStorage() {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('carrito');
+    }
+
     checkAuthentication() {
-        const isAuth = this.isAuthenticated && this.currentUser;
+        const token = localStorage.getItem('token');
+        const isAuth = this.isAuthenticated && this.currentUser && token;
         console.log('🔐 Authentication check:', isAuth);
         return isAuth;
     }
 
     getUser() {
         return this.currentUser;
+    }
+
+    getToken() {
+        return localStorage.getItem('token');
     }
 
     getRole() {
@@ -58,18 +72,26 @@ class AuthManager {
         );
     }
 
-    login(userData) {
+    login(userData, token) {
         try {
+            // Validar datos del usuario
+            if (!userData || !token) {
+                throw new Error('Datos de usuario o token inválidos');
+            }
+
             this.currentUser = userData;
             this.isAuthenticated = true;
             
+            // Guardar en localStorage
             localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('token', token);
             localStorage.setItem('isLoggedIn', 'true');
             
             console.log('✅ User logged in:', userData);
             return true;
         } catch (error) {
             console.error('❌ Login error:', error);
+            this.logout();
             return false;
         }
     }
@@ -78,14 +100,14 @@ class AuthManager {
         console.log('🚪 Logging out user:', this.currentUser);
         this.currentUser = null;
         this.isAuthenticated = false;
-        localStorage.removeItem('user');
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('carrito');
+        this.clearStorage();
         
         // Redirigir al login
-        if (!window.location.href.includes('login.html')) {
-            window.location.href = 'login.html';
-        }
+        setTimeout(() => {
+            if (!window.location.href.includes('login.html')) {
+                window.location.href = 'login.html';
+            }
+        }, 500);
     }
 
     requireAuth(requiredRoles = []) {
@@ -113,7 +135,8 @@ class AuthManager {
     }
 
     redirectToUnauthorized() {
-        alert('You do not have permission to access this page.');
+        console.warn('⚠️ Unauthorized access attempt by user:', this.currentUser);
+        alert('No tienes permisos para acceder a esta página.');
         this.redirectToHome();
     }
 
@@ -126,22 +149,74 @@ class AuthManager {
     redirectByRole(role) {
         const roleLower = role ? role.toLowerCase() : 'cliente';
         console.log('🎯 Redirecting by role:', roleLower);
+        console.log('📍 Current URL:', window.location.href);
         
-        switch(roleLower) {
-            case 'admin':
-                window.location.href = '../admin/dashboard.html';
-                break;
-            case 'cajero':
-                window.location.href = '../cajero/pos.html';
-                break;
-            case 'cliente':
-            default:
-                window.location.href = 'principal.html';
-                break;
+        const routes = {
+            'admin': 'dashboard.html',
+            'cajero': 'pos.html',
+            'cliente': 'principal.html'
+        };
+
+        const targetRoute = routes[roleLower] || routes['cliente'];
+        
+        console.log('🎯 Target route:', targetRoute);
+        
+        // Prevenir redirección innecesaria si ya está en la página correcta
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes(targetRoute)) {
+            console.log('🔄 Performing redirect to:', targetRoute);
+            setTimeout(() => {
+                window.location.href = targetRoute;
+            }, 100);
+        } else {
+            console.log('ℹ️ Already on correct page, no redirect needed');
         }
+    }
+
+    // Método para procesar la respuesta del login del API
+    processLoginResponse(apiResponse) {
+        if (!apiResponse.success || !apiResponse.usuario || !apiResponse.token) {
+            throw new Error('Respuesta del servidor inválida');
+        }
+
+        const userData = {
+            id: apiResponse.usuario.id,
+            phone: apiResponse.usuario.telefono,
+            role: apiResponse.usuario.rol,
+            name: apiResponse.usuario.nombre_usuario,
+            email: apiResponse.usuario.email || ''
+        };
+
+        return {
+            userData: userData,
+            token: apiResponse.token
+        };
+    }
+
+    // Validar sesión en cada carga de página
+    validateSession() {
+        if (!this.checkAuthentication()) {
+            console.log('🕒 Session expired or invalid');
+            this.logout();
+            return false;
+        }
+        return true;
     }
 }
 
-// Instancia global
+// Instancia global con manejo de errores
 console.log('🔄 Initializing AuthManager...');
-window.authManager = new AuthManager();
+try {
+    window.authManager = new AuthManager();
+    
+    // Validar sesión al cargar la página (excepto en login)
+    if (!window.location.href.includes('login.html')) {
+        setTimeout(() => {
+            window.authManager.validateSession();
+        }, 100);
+    }
+} catch (error) {
+    console.error('💥 Error initializing AuthManager:', error);
+    // Forzar logout en caso de error crítico
+    localStorage.clear();
+}
