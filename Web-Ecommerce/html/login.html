@@ -136,30 +136,44 @@
             }
 
             // Función para obtener datos del usuario
+            // Genera un ID consistente basado en el nombre de usuario (hash simple)
+            function generateUserId(username) {
+                let hash = 0;
+                for (let i = 0; i < username.length; i++) {
+                    const char = username.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convertir a entero de 32 bits
+                }
+                return Math.abs(hash);
+            }
+            
             function getUserData(username, role, registeredUsers) {
                 const registeredUser = registeredUsers.find(user => 
                     user.nombre_usuario === username
                 );
                 
+                // Generar ID consistente basado en el nombre de usuario
+                const userId = generateUserId(username);
+                
                 if (registeredUser) {
                     return {
-                        id: Date.now(),
+                        id: userId,
                         name: registeredUser.name || username,
                         username: username,
                         role: role,
-                        email: `${username}@minisuper.com`,
-                        token: 'simulated_token_' + Date.now()
+                        email: `${username}@minisuper.com`
+                        // No usar token, solo ID del usuario según requerimiento
                     };
                 }
                 
                 // Usuario no registrado (login básico)
                 return {
-                    id: Date.now(),
+                    id: userId,
                     name: username,
                     username: username,
                     role: role,
-                    email: `${username}@minisuper.com`,
-                    token: 'simulated_token_' + Date.now()
+                    email: `${username}@minisuper.com`
+                    // No usar token, solo ID del usuario según requerimiento
                 };
             }
 
