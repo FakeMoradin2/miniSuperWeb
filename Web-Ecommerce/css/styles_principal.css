@@ -10,6 +10,18 @@ body {
     color: #333;
 }
 
+/* Estado de blur global cuando se muestra el modal de autenticación */
+body.show-auth-modal .navbar,
+body.show-auth-modal .categories,
+body.show-auth-modal .featured-products,
+body.show-auth-modal .special-offers,
+body.show-auth-modal footer {
+    filter: blur(4px);
+    pointer-events: none;
+    user-select: none;
+}
+body.show-auth-modal { overflow: hidden; }
+
 .container {
     max-width: 1200px;
     margin: 0 auto;

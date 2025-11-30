@@ -641,6 +641,25 @@ function limpiarBusqueda() {
 
 // Cart Integration
 function agregarAlCarritoDesdePrincipal(productoId) {
+    // Verificar autenticación antes de continuar
+    try {
+        const isAuth = window.authManager && window.authManager.checkAuthentication();
+        if (!isAuth) {
+            if (typeof window.mostrarAuthModal === 'function') {
+                window.mostrarAuthModal();
+            }
+            mostrarNotificacion('Necesitas iniciar sesión para agregar productos', 'error');
+            return;
+        }
+    } catch (e) {
+        console.warn('⚠️ No se pudo verificar autenticación:', e);
+        mostrarNotificacion('Error de autenticación. Intenta iniciar sesión.', 'error');
+        if (typeof window.mostrarAuthModal === 'function') {
+            window.mostrarAuthModal();
+        }
+        return;
+    }
+
     let producto = productosGlobal.find(p => p.id === productoId);
     
     if (!producto) {
