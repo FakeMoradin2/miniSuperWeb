@@ -143,29 +143,23 @@ function renderizarControlesPaginacion() {
     }
     
     let paginationHTML = `
-        <div class="pagination-info">
-            Page ${paginaActual} of ${totalPaginas}
-        </div>
         <div class="pagination">
-    `;
-    
-    // Previous Button
-    paginationHTML += `
-        <button onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}>
-            Previous
-        </button>
+            <button class="pagination-btn" onclick="cambiarPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}>
+                Previous
+            </button>
+            <div class="pagination-numbers">
     `;
     
     // Page Numbers
     const paginasMostrar = generarNumerosPagina(paginaActual, totalPaginas);
     paginasMostrar.forEach(numero => {
         if (numero === '...') {
-            paginationHTML += `<span>...</span>`;
+            paginationHTML += `<span class="page-number ellipsis">…</span>`;
         } else {
             paginationHTML += `
                 <button 
-                    onclick="cambiarPagina(${numero})" 
-                    class="${numero === paginaActual ? 'active' : ''}"
+                    class="page-number ${numero === paginaActual ? 'active' : ''}"
+                    onclick="cambiarPagina(${numero})"
                 >
                     ${numero}
                 </button>
@@ -173,14 +167,17 @@ function renderizarControlesPaginacion() {
         }
     });
     
-    // Next Button
+    // Close numbers and add Next button
     paginationHTML += `
-        <button onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>
-            Next
-        </button>
+            </div>
+            <button class="pagination-btn" onclick="cambiarPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>
+                Next
+            </button>
+            <div class="pagination-info">Page ${paginaActual} of ${totalPaginas}</div>
+        </div>
+        <div class="mobile-pagination-info">Page ${paginaActual} of ${totalPaginas}</div>
     `;
     
-    paginationHTML += '</div>';
     paginationContainer.innerHTML = paginationHTML;
 }
 
