@@ -9,6 +9,9 @@
 </head>
 
 <body>
+  <!-- Cargar auth.js primero para mantener la sesión -->
+  <script src="../jss/auth.js"></script>
+  
   <header>
     <nav class="navbar">   
       <div class="main-nav">
@@ -25,8 +28,16 @@
         </div>
 
         <div class="nav-links">
-          <a href="#" class="nav-link">My Account</a>
-          <a href="#" class="nav-link">My Orders</a>
+          <div class="user-menu">
+            <a href="#" class="nav-link user-menu-btn" id="userMenuButton">
+              <span id="userNameDisplay">My Account</span>
+              <span class="dropdown-arrow">▼</span>
+            </a>
+            <div class="user-dropdown" id="userDropdown">
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item logout-btn" onclick="window.authManager.logout()">Logout</a>
+            </div>
+          </div>
           <a href="cart.html" class="nav-link">
             <span class="cart-icon">🛒</span>
             Cart (<span id="cartCount">0</span>)
@@ -88,5 +99,172 @@
   </footer>
 
   <script src="../jss/script_cart.js"></script>
+  
+  <script>
+    // Función para cargar la información del usuario
+    function loadUserInfo() {
+      const user = window.authManager ? window.authManager.getUser() : null;
+      const userNameDisplay = document.getElementById('userNameDisplay');
+      const userMenuButton = document.getElementById('userMenuButton');
+      const userDropdown = document.getElementById('userDropdown');
+      
+      if (user && user.name) {
+        // Usuario autenticado - mostrar nombre y dropdown
+        const displayName = user.name.charAt(0).toUpperCase() + user.name.slice(1);
+        if (userNameDisplay) {
+          userNameDisplay.textContent = displayName;
+        }
+        
+        // Cambiar el href para evitar redirección
+        if (userMenuButton) {
+          userMenuButton.href = "#";
+          userMenuButton.onclick = null;
+        }
+        
+        console.log('👤 User loaded:', user);
+        console.log('👤 ID del usuario:', user.id);
+      } else {
+        // Usuario NO autenticado - configurar para redirigir al login
+        if (userNameDisplay) {
+          userNameDisplay.textContent = "My Account";
+        }
+        if (userMenuButton) {
+          userMenuButton.href = "login.html";
+          userMenuButton.onclick = null;
+        }
+        
+        console.log('🔐 User not authenticated - My Account will redirect to login');
+      }
+    }
+
+    // Función para inicializar el dropdown del usuario (solo para usuarios autenticados)
+    function initUserDropdown() {
+      const user = window.authManager ? window.authManager.getUser() : null;
+      const userMenuButton = document.getElementById('userMenuButton');
+      const userDropdown = document.getElementById('userDropdown');
+
+      // Solo inicializar dropdown si el usuario está autenticado
+      if (user && userMenuButton && userDropdown) {
+        userMenuButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          userDropdown.classList.toggle('show');
+        });
+
+        // Cerrar dropdown al hacer clic fuera
+        document.addEventListener('click', function() {
+          userDropdown.classList.remove('show');
+        });
+
+        // Prevenir que el dropdown se cierre al hacer clic dentro
+        userDropdown.addEventListener('click', function(e) {
+          e.stopPropagation();
+        });
+        
+        console.log('🎯 User dropdown initialized for authenticated user');
+      } else {
+        // Ocultar dropdown si no hay usuario autenticado
+        if (userDropdown) {
+          userDropdown.style.display = 'none';
+        }
+      }
+    }
+
+    // Verificar autenticación al cargar el carrito
+    document.addEventListener('DOMContentLoaded', function() {
+      // Esperar a que AuthManager esté inicializado
+      setTimeout(function() {
+        const user = window.authManager ? window.authManager.getUser() : null;
+        
+        if (!user) {
+          console.log('🔐 Usuario no autenticado, redirigiendo al login...');
+          alert('Por favor, inicia sesión para acceder al carrito.');
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        console.log('✅ Usuario autenticado en carrito:', user);
+        console.log('👤 ID del usuario:', user.id);
+        
+        // Cargar información del usuario
+        loadUserInfo();
+        initUserDropdown();
+      }, 100);
+    });
+  </script>
+  
+  <style>
+    /* Estilos para el menú de usuario */
+    .user-menu {
+      position: relative;
+      display: inline-block;
+    }
+
+    .user-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .dropdown-arrow {
+      font-size: 10px;
+      transition: transform 0.3s ease;
+      margin-left: 2px;
+    }
+
+    .user-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      min-width: 160px;
+      z-index: 1000;
+      display: none;
+      margin-top: 5px;
+    }
+
+    .user-dropdown.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: block;
+      padding: 10px 16px;
+      text-decoration: none;
+      color: #333;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      font-size: 14px;
+    }
+
+    .dropdown-item:hover {
+      background: #f8f9fa;
+      color: #3B82F6;
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: #e2e8f0;
+      margin: 5px 0;
+    }
+
+    .logout-btn {
+      color: #dc3545;
+    }
+
+    .logout-btn:hover {
+      background: #dc3545;
+      color: white;
+    }
+  </style>
 </body>
 </html>
