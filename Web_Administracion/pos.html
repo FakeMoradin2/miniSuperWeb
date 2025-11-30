@@ -33,7 +33,7 @@
       <li class="logout-item">
         <a href="#" id="logoutBtn" style="color: #ff6b6b;">
           <i class="fas fa-sign-out-alt"></i>
-          <span>Cerrar Sesión</span>
+          <span>Logout</span>
     </ul>
   </div>
 
@@ -91,6 +91,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <script src="js/api.js"></script>
   <script src="js/pos.js"></script>
+  <script src="js/logout.js"></script>
   <!-- Modal Recibo -->
   <div id="receiptModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:10px;max-width:520px;width:92%;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.25)">
@@ -109,24 +110,7 @@
   </script>
   <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const logoutBtn = document.getElementById('logoutBtn');
-    
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
-                // Limpiar datos de sesión del localStorage
-                localStorage.removeItem('userToken');
-                localStorage.removeItem('userRole');
-                localStorage.removeItem('userData');
-                localStorage.removeItem('minisuper_user_session');
-                
-                // Redirigir a la página de login
-                window.location.href = 'login.html';
-            }
-        });
-    }
+  // handler centralizado en js/logout.js
 });
 </script>
 </body>
