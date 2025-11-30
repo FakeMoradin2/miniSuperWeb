@@ -165,9 +165,8 @@ class AuthManager {
         console.log('📍 Current URL:', window.location.href);
         
         const routes = {
-            'admin': 'Web_Administracion/dashboard.html',
-            'cajero': 'Web_Administracion/pos.html',
-            'cliente': 'principal.html'
+            'admin': 'dashboard.html',
+            'cajero': 'pos.html',
         };
 
         const targetRoute = routes[roleLower] || routes['cliente'];

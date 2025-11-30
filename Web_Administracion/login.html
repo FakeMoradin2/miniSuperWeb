@@ -122,9 +122,10 @@
                     }
                 });
 
-                // Auto-redirección si ya está loggeado
-                if (window.authManager.checkAuthentication()) {
-                    console.log('🔄 User already authenticated, redirecting...');
+                // SOLUCIÓN: Solo redirigir si NO estamos en la página de login
+                // y si hay una sesión activa
+                if (window.authManager.checkAuthentication() && !window.location.pathname.includes('login.html')) {
+                    console.log('🔄 User already authenticated, redirecting from non-login page...');
                     setTimeout(() => {
                         window.authManager.redirectToHome();
                     }, 500);

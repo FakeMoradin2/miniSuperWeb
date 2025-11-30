@@ -28,6 +28,12 @@
       <li><a href="proveedores.html"><i class="fas fa-truck"></i><span>Proveedores</span></a></li>
       <li><a href="categoria.html"><i class="fas fa-tags"></i><span>Categorías</span></a></li>
       <li><a href="signup_workers.html"><i class="fas fa-user-tie"></i><span>Empleados</span></a></li>
+
+            <!-- Botón de Cerrar Sesión -->
+      <li class="logout-item">
+        <a href="#" id="logoutBtn" style="color: #ff6b6b;">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Cerrar Sesión</span>
     </ul>
   </div>
 
@@ -102,5 +108,27 @@
     // Inicializar cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', init);
   </script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+                // Limpiar datos de sesión del localStorage
+                localStorage.removeItem('userToken');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userData');
+                localStorage.removeItem('minisuper_user_session');
+                
+                // Redirigir a la página de login
+                window.location.href = 'login.html';
+            }
+        });
+    }
+});
+</script>
 </body>
 </html>
