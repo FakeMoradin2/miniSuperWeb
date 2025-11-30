@@ -104,10 +104,23 @@ class AuthManager {
         
         // Redirigir al login
         setTimeout(() => {
-            if (!window.location.href.includes('login.html')) {
-                window.location.href = 'login.html';
-            }
+            window.location.href = 'login.html';
         }, 500);
+    }
+
+    async logoutWithAPI() {
+        try {
+            // Llamar al API para cerrar sesión en el servidor
+            if (this.getToken()) {
+                await window.api.auth.logout();
+            }
+        } catch (error) {
+            console.error('❌ Error calling logout API:', error);
+            // Continuar con el logout local aunque falle el API
+        } finally {
+            // Siempre hacer logout local
+            this.logout();
+        }
     }
 
     requireAuth(requiredRoles = []) {
@@ -152,8 +165,8 @@ class AuthManager {
         console.log('📍 Current URL:', window.location.href);
         
         const routes = {
-            'admin': 'dashboard.html',
-            'cajero': 'pos.html',
+            'admin': 'Web_Administracion/dashboard.html',
+            'cajero': 'Web_Administracion/pos.html',
             'cliente': 'principal.html'
         };
 
@@ -201,6 +214,65 @@ class AuthManager {
             return false;
         }
         return true;
+    }
+
+    // Crear botón de cerrar sesión dinámicamente
+    createLogoutButton(container = 'body') {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.id = 'logoutButton';
+        logoutBtn.className = 'logout-btn';
+        logoutBtn.innerHTML = `
+            <span>🚪 Cerrar Sesión</span>
+            <span class="logout-loading" style="display: none;">Cerrando...</span>
+        `;
+        
+        logoutBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            const buttonText = logoutBtn.querySelector('span:first-child');
+            const loadingText = logoutBtn.querySelector('.logout-loading');
+            
+            buttonText.style.display = 'none';
+            loadingText.style.display = 'inline';
+            logoutBtn.disabled = true;
+            
+            try {
+                await this.logoutWithAPI();
+            } catch (error) {
+                console.error('Error during logout:', error);
+                // Forzar logout local si hay error
+                this.logout();
+            }
+        });
+
+        const target = document.querySelector(container);
+        if (target) {
+            target.appendChild(logoutBtn);
+        }
+        
+        return logoutBtn;
+    }
+
+    // Mostrar información del usuario
+    createUserInfo(container = 'body') {
+        if (!this.currentUser) return null;
+        
+        const userInfo = document.createElement('div');
+        userInfo.className = 'user-info';
+        userInfo.innerHTML = `
+            <div class="user-details">
+                <strong>👤 ${this.currentUser.name}</strong>
+                <span>(${this.currentUser.role})</span>
+                <small>📞 ${this.currentUser.phone}</small>
+            </div>
+        `;
+        
+        const target = document.querySelector(container);
+        if (target) {
+            target.appendChild(userInfo);
+        }
+        
+        return userInfo;
     }
 }
 
