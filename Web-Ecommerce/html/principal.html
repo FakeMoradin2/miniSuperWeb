@@ -131,9 +131,10 @@
         const userNameDisplay = document.getElementById('userNameDisplay');
         const userMenuButton = document.getElementById('userMenuButton');
         
-        if (user && user.name) {
+        if (user && (user.name || user.username)) {
             // Usuario autenticado - mostrar nombre y dropdown
-            const displayName = user.name.charAt(0).toUpperCase() + user.name.slice(1);
+            const userName = user.name || user.username;
+            const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
             userNameDisplay.textContent = displayName;
             
             // Cambiar el href para evitar redirección

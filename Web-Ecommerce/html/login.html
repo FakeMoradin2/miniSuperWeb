@@ -19,8 +19,9 @@
 
         <form id="loginForm" novalidate>
             <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                <label for="phone">Phone number</label>
+                <input type="text" id="phone" name="phone" placeholder="Enter your phone number" required
+                       pattern="[0-9]+" title="Please enter only numbers">
             </div>
 
             <div class="form-group">
@@ -43,41 +44,30 @@
             </button>
             
             <div class="signup">Don't have an account? <a href="signup.html">Sign up</a></div>
+            
+            <!-- Nuevo campo para empleados -->
+            <div class="employee-login">
+                <hr class="divider">
+                <p class="employee-text">Are you an employee?</p>
+                <a href="../../Web_Administracion/login.html" class="employee-link">Go to Admin Login</a>
+            </div>
+            
         </form>
 
         <!-- Mensaje de error -->
         <div id="errorMessage" class="error-message" style="display: none;"></div>
 
-        <!-- Información de usuarios de prueba -->
-        <div class="test-users-info" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; font-size: 12px; color: #666;">
-            <strong>Usuarios de prueba:</strong><br>
-            • Admin: admin01 / password123<br>
-            • Cajero: cajero01 / password123<br>
-            • Cliente: cliente01 / password123
-        </div>
-    </div>
-
     <!-- Incluir el AuthManager -->
+    <script src="../jss/api.js"></script>
     <script src="../jss/auth.js"></script>
 
     <script>
         (function() {
-            // Crear usuarios de prueba para testing
-            const testUsers = [
-                { nombre_usuario: 'admin01', password: 'password123', role: 'admin', name: 'Administrador Principal' },
-                { nombre_usuario: 'cajero01', password: 'password123', role: 'cajero', name: 'Cajero Principal' },
-                { nombre_usuario: 'cliente01', password: 'password123', role: 'cliente', name: 'Cliente Ejemplo' }
-            ];
-
-            // Guardar usuarios de prueba en localStorage si no existen
-            if (!localStorage.getItem('registeredUsers')) {
-                localStorage.setItem('registeredUsers', JSON.stringify(testUsers));
-                console.log('✅ Usuarios de prueba creados:', testUsers);
-            }
 
             const form = document.getElementById('loginForm');
             const toggle = document.getElementById('showPassword');
             const pwd = document.getElementById('password');
+            const phoneInput = document.getElementById('phone');
             const loginButton = document.getElementById('loginButton');
             const errorMessage = document.getElementById('errorMessage');
 
@@ -106,6 +96,24 @@
                 }
             }
 
+            // Validar que solo se ingresen números en el campo de teléfono
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    // Remover cualquier carácter que no sea número
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+                
+                phoneInput.addEventListener('keypress', function(e) {
+                    // Solo permitir teclas numéricas
+                    const charCode = e.which ? e.which : e.keyCode;
+                    if (charCode < 48 || charCode > 57) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    return true;
+                });
+            }
+
             // Toggle para mostrar contraseña
             if (toggle && pwd) {
                 toggle.addEventListener('change', function() {
@@ -114,66 +122,66 @@
             }
 
             // Función para determinar el rol basado en el usuario
-            function determineUserRole(username, registeredUsers) {
+            function determineUserRole(phoneNumber, registeredUsers) {
                 // Buscar en usuarios registrados
                 const registeredUser = registeredUsers.find(user => 
-                    user.nombre_usuario === username
+                    user.phone === phoneNumber || user.nombre_usuario === phoneNumber
                 );
                 
                 if (registeredUser) {
                     return registeredUser.role;
                 }
                 
-                // Si no está registrado, determinar por el nombre de usuario
-                const usernameLower = username.toLowerCase();
-                if (usernameLower.includes('admin')) {
+                // Si no está registrado, determinar por el número de teléfono
+                // (puedes ajustar esta lógica según tus necesidades)
+                const phoneStr = phoneNumber.toString();
+                if (phoneStr.includes('999') || phoneStr.startsWith('99')) {
                     return 'admin';
-                } else if (usernameLower.includes('cajero') || usernameLower.includes('cashier')) {
+                } else if (phoneStr.includes('888') || phoneStr.startsWith('88')) {
                     return 'cajero';
                 } else {
                     return 'cliente';
                 }
             }
 
-            // Función para obtener datos del usuario
-            // Genera un ID consistente basado en el nombre de usuario (hash simple)
-            function generateUserId(username) {
+            // Genera un ID consistente basado en el teléfono
+            function generateUserId(phoneNumber) {
                 let hash = 0;
-                for (let i = 0; i < username.length; i++) {
-                    const char = username.charCodeAt(i);
+                for (let i = 0; i < phoneNumber.length; i++) {
+                    const char = phoneNumber.charCodeAt(i);
                     hash = ((hash << 5) - hash) + char;
                     hash = hash & hash; // Convertir a entero de 32 bits
                 }
                 return Math.abs(hash);
             }
             
-            function getUserData(username, role, registeredUsers) {
+            function getUserData(phoneNumber, role, registeredUsers) {
                 const registeredUser = registeredUsers.find(user => 
-                    user.nombre_usuario === username
+                    user.telefono === phoneNumber || user.nombre_usuario === phoneNumber
                 );
                 
-                // Generar ID consistente basado en el nombre de usuario
-                const userId = generateUserId(username);
+                // Generar ID consistente basado en el teléfono
+                const userId = generateUserId(phoneNumber);
                 
                 if (registeredUser) {
                     return {
                         id: userId,
-                        name: registeredUser.name || username,
-                        username: username,
+                        name: registeredUser.nombre_usuario || registeredUser.name || `User ${phoneNumber}`,
+                        username: registeredUser.nombre_usuario || phoneNumber,
+                        phone: registeredUser.telefono || phoneNumber,
                         role: role,
-                        email: `${username}@minisuper.com`
-                        // No usar token, solo ID del usuario según requerimiento
+                        email: registeredUser.email || `${phoneNumber}@minisuper.com`
                     };
                 }
                 
                 // Usuario no registrado (login básico)
                 return {
                     id: userId,
-                    name: username,
-                    username: username,
+                    name: `User ${phoneNumber}`,
+                    username: phoneNumber,
+                    phone: phoneNumber,
                     role: role,
-                    email: `${username}@minisuper.com`
-                    // No usar token, solo ID del usuario según requerimiento
+                    email: `${phoneNumber}@minisuper.com`
                 };
             }
 
@@ -183,12 +191,23 @@
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
-                const username = form.username.value.trim();
+                const phoneNumber = form.phone.value.trim();
                 const password = form.password.value;
 
                 // Validaciones básicas
-                if (!username || !password) {
+                if (!phoneNumber || !password) {
                     showError('Please complete all fields.');
+                    return;
+                }
+
+                // Validar que sea solo números
+                if (!/^\d+$/.test(phoneNumber)) {
+                    showError('Phone number must contain only numbers.');
+                    return;
+                }
+
+                if (phoneNumber.length < 8) {
+                    showError('Phone number must be at least 8 digits.');
                     return;
                 }
 
@@ -200,41 +219,92 @@
                 try {
                     setLoading(true);
                     
-                    // SIMULACIÓN DE LOGIN - SIN DEPENDER DEL BACKEND
-                    console.log('🔐 Attempting login with:', { username, password });
+                    console.log('🔐 Attempting login with:', { phoneNumber });
                     
-                    // Simular delay de red
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Intentar login con la API primero
+                    try {
+                        const response = await window.api.auth.login({
+                            telefono: phoneNumber,
+                            password: password
+                        });
+                        
+                        console.log('📡 API Response:', response);
+                        
+                        // Verificar si el login fue exitoso (la API puede devolver response.usuario o response.data)
+                        if (response.success && (response.usuario || response.data)) {
+                            // Login exitoso con API
+                            const apiUser = response.usuario || response.data;
+                            const userData = {
+                                id: apiUser.id || apiUser.Id_usuario || generateUserId(phoneNumber),
+                                name: apiUser.nombre_usuario || apiUser.name || `User ${phoneNumber}`,
+                                username: apiUser.nombre_usuario || phoneNumber,
+                                phone: apiUser.telefono || phoneNumber,
+                                role: apiUser.rol || apiUser.role || 'cliente',
+                                email: apiUser.email || `${phoneNumber}@minisuper.com`,
+                                token: response.token // Guardar el token si existe
+                            };
+                            
+                            // Guardar en localStorage para uso local
+                            const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                            const existingIndex = registeredUsers.findIndex(u => 
+                                u.telefono === phoneNumber || u.nombre_usuario === apiUser.nombre_usuario
+                            );
+                            
+                            if (existingIndex === -1) {
+                                registeredUsers.push({
+                                    nombre_usuario: userData.username,
+                                    telefono: userData.phone,
+                                    password: password,
+                                    rol: userData.role,
+                                    email: userData.email
+                                });
+                                localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+                            }
+                            
+                            // Guardar el token si existe
+                            if (userData.token) {
+                                localStorage.setItem('authToken', userData.token);
+                            }
+                            
+                            // Usar el AuthManager para el login
+                            const loginSuccess = window.authManager.login(userData);
+                            
+                            if (loginSuccess) {
+                                console.log('✅ Login successful via API:', userData);
+                                console.log('🎯 Redirecting to role:', userData.role);
+                                window.authManager.redirectByRole(userData.role);
+                            }
+                            return;
+                        }
+                    } catch (apiError) {
+                        console.log('⚠️ API login failed, trying localStorage:', apiError.message);
+                    }
                     
-                    // Verificar si el usuario existe en localStorage (de registro previo)
+                    // Fallback: Verificar en localStorage
                     const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-                    const userExists = registeredUsers.some(user => 
-                        user.nombre_usuario === username && user.password === password
+                    const userExists = registeredUsers.find(user => 
+                        (user.telefono === phoneNumber || user.nombre_usuario === phoneNumber) && 
+                        user.password === password
                     );
 
-                    // Permitir login también con cualquier usuario que cumpla requisitos básicos
-                    if (userExists || (username && password.length >= 8)) {
+                    if (userExists) {
                         // Determinar el rol del usuario
-                        const userRole = determineUserRole(username, registeredUsers);
+                        const userRole = userExists.rol || 'cliente';
                         
                         // Obtener datos del usuario
-                        const userData = getUserData(username, userRole, registeredUsers);
+                        const userData = getUserData(phoneNumber, userRole, registeredUsers);
                         
                         // Usar el AuthManager para el login
                         const loginSuccess = window.authManager.login(userData);
                         
                         if (loginSuccess) {
-                            console.log('✅ Login successful:', userData);
-                            console.log('🎯 User role:', userRole);
-                            
-                            // Redirigir según el rol usando el AuthManager
+                            console.log('✅ Login successful via localStorage:', userData);
                             window.authManager.redirectByRole(userRole);
                         } else {
                             showError('Error during login process. Please try again.');
                         }
-                        
                     } else {
-                        showError('Invalid username or password. Please try again or sign up.');
+                        showError('Invalid phone number or password. Please try again or sign up.');
                     }
                     
                 } catch (error) {
@@ -336,6 +406,55 @@
             text-align: center;
             border: 1px solid #f5c6cb;
         }
+        
+        /* Estilos para la sección de empleado */
+        .employee-login {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .divider {
+            border: none;
+            height: 1px;
+            background-color: #ddd;
+            margin: 20px 0;
+        }
+        
+        .employee-text {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .employee-link {
+            display: inline-block;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            padding: 8px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            border: 1px solid #dee2e6;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .employee-link:hover {
+            background-color: #e9ecef;
+            color: #495057;
+            text-decoration: none;
+            border-color: #ced4da;
+        }
+        
+        /* Estilo para el input de teléfono */
+        input[type="tel"] {
+            font-family: monospace;
+        }
+        
+        input[type="tel"]::placeholder {
+            font-family: inherit;
+        }
     </style>
 </body>
-</html>    
+</html>

@@ -213,6 +213,103 @@ class ListaCarrito {
 // Global Cart Instance
 const carrito = new ListaCarrito();
 
+// --- Backend sync helpers ---
+function getCurrentUser() {
+    return window.authManager ? window.authManager.getUser() : null;
+}
+
+function ventaKeyForUser(user) {
+    return user ? `venta_id_user_${user.id}` : null;
+}
+
+async function getOrCreateVentaId() {
+    const user = getCurrentUser();
+    if (!user || !user.id) {
+        alert('Debes iniciar sesión para usar el carrito.');
+        return null;
+    }
+    const key = ventaKeyForUser(user);
+    let ventaId = key ? localStorage.getItem(key) : null;
+    if (ventaId) return parseInt(ventaId, 10);
+
+    try {
+        const res = await window.api.ventas.crear({ comprador_id: user.id, vendedor_id: user.id });
+        if (res && res.success && res.venta_id) {
+            localStorage.setItem(key, String(res.venta_id));
+            return res.venta_id;
+        } else {
+            console.error('Error creando/obteniendo carrito:', res);
+            alert(res && res.message ? res.message : 'No se pudo crear el carrito.');
+            return null;
+        }
+    } catch (err) {
+        console.error('Error API crear carrito:', err);
+        alert('Error al conectar con el servidor para crear el carrito.');
+        return null;
+    }
+}
+
+async function apiAgregarProducto(productoId, cantidad) {
+    const ventaId = await getOrCreateVentaId();
+    if (!ventaId) return false;
+    try {
+        const res = await window.api.ventas.agregarProducto({
+            venta_id: ventaId,
+            producto_id: productoId,
+            cantidad: cantidad
+        });
+        if (res && res.success) return true;
+        console.warn('No se pudo agregar producto:', res);
+        alert(res && res.message ? res.message : 'No se pudo agregar el producto.');
+        return false;
+    } catch (err) {
+        console.error('Error API agregarProducto:', err);
+        alert('Error al conectar con el servidor para agregar producto.');
+        return false;
+    }
+}
+
+async function apiEliminarOActualizarProducto(productoId, cantidad) {
+    const ventaId = await getOrCreateVentaId();
+    if (!ventaId) return false;
+    try {
+        const res = await window.api.ventas.eliminarProducto({
+            venta_id: ventaId,
+            producto_id: productoId,
+            cantidad: cantidad
+        });
+        if (res && res.success) return true;
+        console.warn('No se pudo actualizar/eliminar producto:', res);
+        alert(res && res.message ? res.message : 'No se pudo actualizar/eliminar el producto.');
+        return false;
+    } catch (err) {
+        console.error('Error API eliminarProducto:', err);
+        alert('Error al conectar con el servidor para actualizar/eliminar producto.');
+        return false;
+    }
+}
+
+async function apiCancelarCarrito() {
+    const user = getCurrentUser();
+    const key = ventaKeyForUser(user);
+    const ventaId = key ? localStorage.getItem(key) : null;
+    if (!ventaId) return true; // nada que cancelar
+    try {
+        const res = await window.api.ventas.cancelar({ venta_id: parseInt(ventaId, 10) });
+        if (res && res.success) {
+            localStorage.removeItem(key);
+            return true;
+        }
+        console.warn('No se pudo cancelar carrito:', res);
+        alert(res && res.message ? res.message : 'No se pudo cancelar el carrito.');
+        return false;
+    } catch (err) {
+        console.error('Error API cancelar:', err);
+        alert('Error al conectar con el servidor para cancelar el carrito.');
+        return false;
+    }
+}
+
 // UI Functions
 function renderizarCarrito() {
     const container = document.getElementById('cartContainer');
@@ -271,28 +368,57 @@ function renderizarCarrito() {
 }
 
 function actualizarCantidad(productoId, nuevaCantidad) {
-    carrito.actualizarCantidad(productoId, nuevaCantidad);
-    renderizarCarrito();
+    (async () => {
+        // Si nuevaCantidad <= 0, elimina
+        if (nuevaCantidad <= 0) {
+            const ok = await apiEliminarOActualizarProducto(productoId, nuevaCantidad);
+            if (ok) {
+                carrito.actualizarCantidad(productoId, nuevaCantidad);
+                renderizarCarrito();
+            }
+            return;
+        }
+        // Para actualizar cantidad, usamos endpoint eliminar/actualizar según especificación
+        const ok = await apiEliminarOActualizarProducto(productoId, nuevaCantidad);
+        if (ok) {
+            carrito.actualizarCantidad(productoId, nuevaCantidad);
+            renderizarCarrito();
+        }
+    })();
 }
 
 function eliminarDelCarrito(productoId) {
     if (confirm('¿Estás seguro de que quieres eliminar este producto del carrito?')) {
-        carrito.eliminar(productoId);
-        renderizarCarrito();
+        (async () => {
+            const ok = await apiEliminarOActualizarProducto(productoId, Number.MAX_SAFE_INTEGER);
+            if (ok) {
+                carrito.eliminar(productoId);
+                renderizarCarrito();
+            }
+        })();
     }
 }
 
 function vaciarCarrito() {
     if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
-        carrito.vaciar();
-        renderizarCarrito();
+        (async () => {
+            // Cancela en backend y limpia local
+            const ok = await apiCancelarCarrito();
+            if (ok) {
+                carrito.vaciar();
+                renderizarCarrito();
+            }
+        })();
     }
 }
 
 // Add to Cart Function
 function agregarAlCarrito(producto) {
-    carrito.agregar(producto);
-    renderizarCarrito();
+    (async () => {
+        const ok = await apiAgregarProducto(producto.id, 1);
+        if (!ok) return;
+        carrito.agregar(producto);
+        renderizarCarrito();
     
     const notification = document.createElement('div');
     notification.style.cssText = `
@@ -316,6 +442,7 @@ function agregarAlCarrito(producto) {
             document.body.removeChild(notification);
         }, 300);
     }, 3000);
+    })();
 }
 
 // Initialization

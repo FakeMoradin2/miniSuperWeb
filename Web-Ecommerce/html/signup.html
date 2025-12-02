@@ -255,6 +255,17 @@
                     console.log('✅ Registration response:', response);
                     
                     if (response.success) {
+                        // Guardar también en localStorage para fallback
+                        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                        registeredUsers.push({
+                            nombre_usuario: nombre_usuario,
+                            telefono: telefono,
+                            password: contraseña,
+                            rol: 'cliente',
+                            email: `${telefono}@minisuper.com`
+                        });
+                        localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+                        
                         showMessage(successMessage, 'Account created successfully! Redirecting to login...', false);
                         
                         // Redirigir al login después de 2 segundos
@@ -277,7 +288,39 @@
                     
                 } catch (error) {
                     console.error('❌ Registration error:', error);
-                    showMessage(errorMessage, 'Registration error: ' + (error.message || 'Please try again later.'));
+                    
+                    // Si la API falla, guardar en localStorage como fallback
+                    console.log('⚠️ API failed, saving to localStorage as fallback');
+                    try {
+                        const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+                        
+                        // Verificar si el usuario ya existe
+                        const userExists = registeredUsers.some(user => 
+                            user.nombre_usuario === nombre_usuario || user.telefono === telefono
+                        );
+                        
+                        if (userExists) {
+                            showMessage(errorMessage, 'Username or phone number already exists');
+                        } else {
+                            registeredUsers.push({
+                                nombre_usuario: nombre_usuario,
+                                telefono: telefono,
+                                password: contraseña,
+                                rol: 'cliente',
+                                email: `${telefono}@minisuper.com`
+                            });
+                            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+                            
+                            showMessage(successMessage, 'Account created successfully (offline mode)! Redirecting to login...', false);
+                            
+                            setTimeout(() => {
+                                window.location.href = 'login.html';
+                            }, 2000);
+                        }
+                    } catch (localError) {
+                        console.error('❌ localStorage error:', localError);
+                        showMessage(errorMessage, 'Registration error: ' + (error.message || 'Please try again later.'));
+                    }
                 } finally {
                     setLoading(false);
                 }
