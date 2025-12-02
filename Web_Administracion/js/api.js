@@ -8,6 +8,10 @@ async function fetchJSON(url, opts = {}) {
       'Accept': 'application/json'
     };
     
+    // Adjuntar token si existe
+    const token = localStorage.getItem('token');
+    const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
+
     const config = {
       method: opts.method || 'GET',
       mode: 'cors',
@@ -15,6 +19,7 @@ async function fetchJSON(url, opts = {}) {
       credentials: 'omit',
       headers: {
         ...defaultHeaders,
+        ...authHeaders,
         ...(opts.headers || {})
       },
       ...opts

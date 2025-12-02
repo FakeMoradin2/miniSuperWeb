@@ -23,8 +23,17 @@ class RoleProtection {
                         return;
                     }
                     
-                    // Verificar acceso a la página específica
-                    if (!window.authManager.checkPageAccess()) {
+                    // Verificar acceso a la página específica por rol
+                    const role = window.authManager.getRole();
+                    const roleLower = role ? role.toLowerCase() : '';
+                    const accessMap = {
+                        admin: new Set(['dashboard.html','inventory.html','reports.html','customers.html','proveedores.html','categoria.html','signup_workers.html','pos.html']),
+                        cajero: new Set(['pos.html'])
+                    };
+                    const allowed = accessMap[roleLower] || new Set();
+                    if (!allowed.has(currentPage)) {
+                        console.warn('⛔ Page not allowed for role:', roleLower, currentPage);
+                        window.authManager.redirectToUnauthorized();
                         return;
                     }
                     
@@ -43,9 +52,12 @@ class RoleProtection {
         
         if (userRole === 'cajero') {
             // Ocultar todas las opciones excepto POS y Logout
-            const menuItems = document.querySelectorAll('.sidebar ul li:not(:has(a[href="pos.html"])):not(.logout-item)');
-            menuItems.forEach(item => {
-                item.style.display = 'none';
+            const items = document.querySelectorAll('.sidebar ul li');
+            items.forEach(item => {
+                const link = item.querySelector('a');
+                const isPos = link && link.getAttribute('href') === 'pos.html';
+                const isLogout = item.classList.contains('logout-item');
+                item.style.display = (isPos || isLogout) ? 'block' : 'none';
             });
             console.log('📱 Menu hidden for cajero - only POS visible');
         }

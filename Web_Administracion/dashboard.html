@@ -14,11 +14,27 @@
 </div>
     <ul>
       <script>
-      if (window.location.pathname.includes('dashboard.html')) {
-        if (!window.authManager.hasRole('admin')) {
-            window.authManager.redirectToUnauthorized();
+      (function(){
+        try {
+          if (window.location.pathname.includes('dashboard.html')) {
+            // Esperar a que authManager exista
+            const guard = () => {
+              if (window.authManager && typeof window.authManager.hasRole === 'function') {
+                if (!window.authManager.hasRole('admin')) {
+                  window.authManager.redirectToUnauthorized();
+                }
+              } else {
+                // reintentar brevemente hasta que cargue auth.js
+                setTimeout(guard, 100);
+              }
+            };
+            guard();
+          }
+        } catch (e) {
+          console.warn('Role guard deferred:', e);
         }
-    }</script>
+      })();
+      </script>
       <li><a href="dashboard.html" class="active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
       <li><a href="pos.html"><i class="fas fa-cash-register"></i><span>Punto de Venta</span></a></li>
       <li><a href="inventory.html"><i class="fas fa-boxes"></i><span>Inventario</span></a></li>
@@ -81,11 +97,30 @@
         <tbody></tbody>
       </table>
     </div>
+
+    <div class="table-card">
+      <h3>Top 10 productos más vendidos</h3>
+      <table id="topProductosTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Producto</th>
+            <th>Cantidad vendida</th>
+            <th>Ingresos</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- icons -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/role_protection.js"></script>
+  <script src="js/menu_manager.js"></script>
+  <script src="js/user_header.js"></script>
   <script src="js/dashboard.js"></script>
   <script src="js/logout.js"></script>
 </body>
