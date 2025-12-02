@@ -298,45 +298,55 @@ async function cargarProductosDesdeBD() {
         productosGlobal = productosArray.map((item, index) => {
             console.log(`📊 Producto ${index}:`, item);
             
-            let nombre = `Producto ${index + 1}`;
-            const posiblesNombres = Object.entries(item)
-                .filter(([key, value]) => 
-                    typeof value === 'string' && 
-                    value.length > 2 && 
-                    value.length < 50 &&
-                    !key.toLowerCase().includes('id') &&
-                    !key.toLowerCase().includes('precio') &&
-                    !key.toLowerCase().includes('imagen') &&
-                    !key.toLowerCase().includes('descripcion') &&
-                    !key.toLowerCase().includes('categoria') &&
-                    !key.toLowerCase().includes('stock')
-                )
-                .map(([key, value]) => ({ key, value }));
-            
-            if (posiblesNombres.length > 0) {
-                const nombrePreferido = posiblesNombres.find(p => 
-                    p.key.toLowerCase().includes('nombre') || 
-                    p.key.toLowerCase().includes('name')
-                );
-                nombre = nombrePreferido ? nombrePreferido.value : posiblesNombres[0].value;
+            // Convertir ID a número para compatibilidad con el backend
+            // El backend usa 'producto_id' según la documentación
+            const idRaw = item.producto_id || item.Id_producto || item.id_producto || item.ID || item.id;
+            const id = idRaw ? parseInt(idRaw, 10) : null;
+            if (!id || isNaN(id)) {
+                console.warn('Producto sin ID válido, omitiendo:', item);
+                return null; // Retornar null para filtrar después
             }
             
-            const id = item.Id_producto?.toString() || 
-                      item.id_producto?.toString() || 
-                      item.ID?.toString() || 
-                      item.id?.toString() || 
-                      `prod-${Date.now()}-${index}`;
+            // Buscar nombre del producto
+            let nombre = item.nombre_producto || item.nombre || item.name || `Producto ${index + 1}`;
+            
+            // Si no se encontró nombre en campos comunes, buscar en otros campos
+            if (nombre === `Producto ${index + 1}`) {
+                const posiblesNombres = Object.entries(item)
+                    .filter(([key, value]) => 
+                        typeof value === 'string' && 
+                        value.length > 2 && 
+                        value.length < 50 &&
+                        !key.toLowerCase().includes('id') &&
+                        !key.toLowerCase().includes('precio') &&
+                        !key.toLowerCase().includes('imagen') &&
+                        !key.toLowerCase().includes('descripcion') &&
+                        !key.toLowerCase().includes('categoria') &&
+                        !key.toLowerCase().includes('stock')
+                    )
+                    .map(([key, value]) => ({ key, value }));
+                
+                if (posiblesNombres.length > 0) {
+                    const nombrePreferido = posiblesNombres.find(p => 
+                        p.key.toLowerCase().includes('nombre') || 
+                        p.key.toLowerCase().includes('name')
+                    );
+                    nombre = nombrePreferido ? nombrePreferido.value : posiblesNombres[0].value;
+                }
+            }
             
             const precio = encontrarPrecio(item);
             const categoria = encontrarCategoria(item);
             const imagen = encontrarImagen(item);
+            const stock = item.stock || item.Stock || 0;
             
             console.log('✅ Producto extraído:', { 
                 id, 
                 nombre, 
                 precio, 
                 categoria,
-                imagen
+                imagen,
+                stock
             });
             
             return new Producto(
@@ -347,9 +357,9 @@ async function cargarProductosDesdeBD() {
                 imagen,
                 false,
                 null,
-                10
+                stock
             );
-        });
+        }).filter(producto => producto !== null); // Filtrar productos nulos
         
         console.log('🎉 Productos cargados exitosamente:', productosGlobal);
         
@@ -640,7 +650,7 @@ function limpiarBusqueda() {
 }
 
 // Cart Integration
-function agregarAlCarritoDesdePrincipal(productoId) {
+async function agregarAlCarritoDesdePrincipal(productoId) {
     // Verificar autenticación antes de continuar
     try {
         const isAuth = window.authManager && window.authManager.checkAuthentication();
@@ -660,28 +670,81 @@ function agregarAlCarritoDesdePrincipal(productoId) {
         return;
     }
 
-    let producto = productosGlobal.find(p => p.id === productoId);
+    // Convertir productoId a número para comparación
+    const productoIdNum = typeof productoId === 'number' ? productoId : parseInt(productoId, 10);
+    
+    // Buscar producto (comparar como números)
+    let producto = productosGlobal.find(p => {
+        const pId = typeof p.id === 'number' ? p.id : parseInt(p.id, 10);
+        return pId === productoIdNum;
+    });
     
     if (!producto) {
-        producto = productosOfertaGlobal.find(p => p.id === productoId);
+        producto = productosOfertaGlobal.find(p => {
+            const pId = typeof p.id === 'number' ? p.id : parseInt(p.id, 10);
+            return pId === productoIdNum;
+        });
     }
     
-    if (producto) {
-        if (producto.stock === 0) {
-            mostrarNotificacion(`${producto.nombre} is out of stock!`, 'error');
+    if (!producto) {
+        mostrarNotificacion('Producto no encontrado', 'error');
+        return;
+    }
+
+    if (producto.stock === 0) {
+        mostrarNotificacion(`${producto.nombre} is out of stock!`, 'error');
+        return;
+    }
+
+    try {
+        // Obtener o crear venta_id (carrito en backend)
+        const user = window.authManager.getUser();
+        if (!user || !user.id) {
+            mostrarNotificacion('Error: Usuario no válido', 'error');
             return;
         }
-        
+
+        // Obtener o crear venta_id
+        const ventaId = await getOrCreateVentaId();
+        if (!ventaId) {
+            mostrarNotificacion('Error al crear/obtener carrito', 'error');
+            return;
+        }
+
+        // Verificar si el producto ya está en el carrito local
         const carritoActual = JSON.parse(localStorage.getItem('carrito') || '{"items": []}');
-        const itemExistente = carritoActual.items.find(item => item.producto.id === productoId);
+        const itemExistente = carritoActual.items.find(item => {
+            const itemId = typeof item.producto.id === 'number' ? item.producto.id : parseInt(item.producto.id, 10);
+            return itemId === productoIdNum;
+        });
         
+        let cantidadAAgregar = 1;
         if (itemExistente) {
-            if (itemExistente.cantidad >= producto.stock) {
+            // Si ya existe, incrementar cantidad
+            cantidadAAgregar = itemExistente.cantidad + 1;
+            if (cantidadAAgregar > producto.stock) {
                 mostrarNotificacion(`Cannot add more ${producto.nombre}. Only ${producto.stock} available.`, 'error');
                 return;
             }
-            itemExistente.cantidad += 1;
-            itemExistente.subtotal = itemExistente.producto.precio * itemExistente.cantidad;
+        }
+
+        // Agregar producto al backend
+        const respuesta = await window.api.ventas.agregarProducto({
+            venta_id: ventaId,
+            producto_id: productoIdNum,
+            cantidad: cantidadAAgregar
+        });
+
+        if (!respuesta || !respuesta.success) {
+            const mensaje = respuesta?.message || 'Error al agregar producto al carrito';
+            mostrarNotificacion(mensaje, 'error');
+            return;
+        }
+
+        // Si el producto ya existía, actualizar cantidad; si no, agregarlo
+        if (itemExistente) {
+            itemExistente.cantidad = cantidadAAgregar;
+            itemExistente.subtotal = producto.precio * cantidadAAgregar;
         } else {
             carritoActual.items.push({
                 producto: producto,
@@ -695,8 +758,97 @@ function agregarAlCarritoDesdePrincipal(productoId) {
         
         localStorage.setItem('carrito', JSON.stringify(carritoActual));
         
-        mostrarNotificacion(`${producto.nombre} added to cart!`);
+        // Si existe la función del carrito, actualizar también ahí
+        if (typeof window.carrito !== 'undefined' && window.carrito.agregar) {
+            window.carrito.agregar(producto, 1);
+        }
+        
+        mostrarNotificacion(`${producto.nombre} agregado al carrito!`);
         actualizarContadorCarrito();
+        
+    } catch (error) {
+        console.error('Error agregando producto al carrito:', error);
+        mostrarNotificacion('Error al agregar producto: ' + (error.message || 'Error desconocido'), 'error');
+    }
+}
+
+// Función auxiliar para obtener o crear venta_id
+async function getOrCreateVentaId() {
+    const user = window.authManager.getUser();
+    if (!user || !user.id) {
+        console.error('❌ Usuario no válido o sin ID:', user);
+        mostrarNotificacion('Error: Usuario no válido. Por favor, inicia sesión nuevamente.', 'error');
+        return null;
+    }
+
+    // Asegurar que el ID sea un número
+    const userId = typeof user.id === 'number' ? user.id : parseInt(user.id, 10);
+    if (isNaN(userId)) {
+        console.error('❌ ID de usuario inválido:', user.id);
+        mostrarNotificacion('Error: ID de usuario inválido. Por favor, inicia sesión nuevamente.', 'error');
+        return null;
+    }
+
+    // Validar que el ID no sea un hash generado (los hashes son muy grandes)
+    // Los usuario_id reales de la BD suelen ser números pequeños (1, 2, 3, etc.)
+    // Si el ID es mayor a 1000000, probablemente es un hash generado
+    if (userId > 1000000) {
+        console.error('❌ ID parece ser un hash generado, no un usuario_id real:', userId);
+        mostrarNotificacion('Error: Tu sesión no es válida. Por favor, cierra sesión e inicia sesión nuevamente usando tu teléfono y contraseña.', 'error');
+        // Opcional: forzar logout
+        setTimeout(() => {
+            if (confirm('Tu sesión no es válida. ¿Deseas cerrar sesión e iniciar sesión nuevamente?')) {
+                window.authManager.logout();
+            }
+        }, 1000);
+        return null;
+    }
+
+    console.log('🔑 Usando usuario_id:', userId);
+
+    const key = `venta_id_user_${userId}`;
+    let ventaId = localStorage.getItem(key);
+    
+    if (ventaId) {
+        const ventaIdNum = parseInt(ventaId, 10);
+        console.log('✅ Carrito existente encontrado, venta_id:', ventaIdNum);
+        return ventaIdNum;
+    }
+
+    try {
+        console.log('🛒 Creando nuevo carrito para usuario_id:', userId);
+        const respuesta = await window.api.ventas.crear({
+            comprador_id: userId,
+            vendedor_id: userId
+        });
+
+        console.log('📡 Respuesta del backend:', respuesta);
+
+        if (respuesta && respuesta.success && respuesta.venta_id) {
+            localStorage.setItem(key, String(respuesta.venta_id));
+            console.log('✅ Carrito creado exitosamente, venta_id:', respuesta.venta_id);
+            return respuesta.venta_id;
+        } else {
+            console.error('❌ Error creando carrito:', respuesta);
+            const mensaje = respuesta?.message || respuesta?.error || 'Error desconocido al crear carrito';
+            
+            // Si el error es de clave foránea, el usuario no existe en la BD
+            if (mensaje.includes('foreign key constraint') || mensaje.includes('1452')) {
+                mostrarNotificacion('Error: Tu usuario no está registrado en el sistema. Por favor, regístrate primero.', 'error');
+                setTimeout(() => {
+                    if (confirm('Tu usuario no está registrado. ¿Deseas ir a la página de registro?')) {
+                        window.location.href = 'signup.html';
+                    }
+                }, 1000);
+            } else {
+                alert('Error al crear carrito: ' + mensaje);
+            }
+            return null;
+        }
+    } catch (error) {
+        console.error('❌ Error API crear carrito:', error);
+        mostrarNotificacion('Error al conectar con el servidor: ' + (error.message || 'Error desconocido'), 'error');
+        return null;
     }
 }
 

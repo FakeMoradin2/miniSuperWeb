@@ -234,8 +234,19 @@
                         if (response.success && (response.usuario || response.data)) {
                             // Login exitoso con API
                             const apiUser = response.usuario || response.data;
+                            
+                            // IMPORTANTE: Usar el usuario_id que viene del backend, no generar uno
+                            // El backend devuelve 'id' que contiene el 'usuario_id' de la BD
+                            const userId = apiUser.id || apiUser.usuario_id || apiUser.Id_usuario;
+                            
+                            if (!userId) {
+                                console.error('❌ No se recibió usuario_id del backend');
+                                showError('Error: No se pudo obtener el ID del usuario. Intenta de nuevo.');
+                                return;
+                            }
+                            
                             const userData = {
-                                id: apiUser.id || apiUser.Id_usuario || generateUserId(phoneNumber),
+                                id: parseInt(userId, 10), // Asegurar que sea un número
                                 name: apiUser.nombre_usuario || apiUser.name || `User ${phoneNumber}`,
                                 username: apiUser.nombre_usuario || phoneNumber,
                                 phone: apiUser.telefono || phoneNumber,
@@ -243,6 +254,9 @@
                                 email: apiUser.email || `${phoneNumber}@minisuper.com`,
                                 token: response.token // Guardar el token si existe
                             };
+                            
+                            console.log('✅ User data from API:', userData);
+                            console.log('🔑 User ID (usuario_id):', userData.id);
                             
                             // Guardar en localStorage para uso local
                             const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
@@ -277,35 +291,14 @@
                             return;
                         }
                     } catch (apiError) {
-                        console.log('⚠️ API login failed, trying localStorage:', apiError.message);
+                        console.error('❌ API login failed:', apiError);
+                        showError('Error al conectar con el servidor. Por favor, verifica tu conexión e intenta de nuevo.');
+                        return;
                     }
                     
-                    // Fallback: Verificar en localStorage
-                    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-                    const userExists = registeredUsers.find(user => 
-                        (user.telefono === phoneNumber || user.nombre_usuario === phoneNumber) && 
-                        user.password === password
-                    );
-
-                    if (userExists) {
-                        // Determinar el rol del usuario
-                        const userRole = userExists.rol || 'cliente';
-                        
-                        // Obtener datos del usuario
-                        const userData = getUserData(phoneNumber, userRole, registeredUsers);
-                        
-                        // Usar el AuthManager para el login
-                        const loginSuccess = window.authManager.login(userData);
-                        
-                        if (loginSuccess) {
-                            console.log('✅ Login successful via localStorage:', userData);
-                            window.authManager.redirectByRole(userRole);
-                        } else {
-                            showError('Error during login process. Please try again.');
-                        }
-                    } else {
-                        showError('Invalid phone number or password. Please try again or sign up.');
-                    }
+                    // Si llegamos aquí, el login de la API falló
+                    // NO usar fallback de localStorage porque los IDs generados no existen en la BD
+                    showError('Usuario o contraseña incorrectos. Por favor, regístrate si no tienes cuenta.');
                     
                 } catch (error) {
                     console.error('❌ Login error:', error);

@@ -89,6 +89,9 @@ function renderizarProductosPagina(productosPagina) {
         
         const stockInfo = producto.stock < 5 ? `<div class="low-stock">Only ${producto.stock} left!</div>` : '';
         
+        // Asegurar que el ID sea un número para pasarlo correctamente
+        const productoId = typeof producto.id === 'number' ? producto.id : parseInt(producto.id, 10);
+        
         return `
         <div class="product-card">
             <div class="product-image">
@@ -105,7 +108,7 @@ function renderizarProductosPagina(productosPagina) {
                         : `$${producto.precio.toFixed(2)}`
                     }
                 </div>
-                <button class="${buttonClass}" onclick="agregarAlCarritoDesdePrincipal('${producto.id}')" ${producto.stock === 0 ? 'disabled' : ''}>
+                <button class="${buttonClass}" onclick="agregarAlCarritoDesdePrincipal(${productoId})" ${producto.stock === 0 ? 'disabled' : ''}>
                     ${producto.stock === 0 ? 'Out of Stock' : buttonText}
                 </button>
             </div>

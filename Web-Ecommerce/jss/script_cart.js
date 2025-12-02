@@ -225,66 +225,170 @@ function ventaKeyForUser(user) {
 async function getOrCreateVentaId() {
     const user = getCurrentUser();
     if (!user || !user.id) {
+        console.error('❌ Usuario no válido o sin ID:', user);
         alert('Debes iniciar sesión para usar el carrito.');
         return null;
     }
+
+    // Asegurar que el ID sea un número
+    const userId = typeof user.id === 'number' ? user.id : parseInt(user.id, 10);
+    if (isNaN(userId)) {
+        console.error('❌ ID de usuario inválido:', user.id);
+        alert('Error: ID de usuario inválido. Por favor, inicia sesión nuevamente.');
+        return null;
+    }
+
+    console.log('🔑 Usando usuario_id:', userId);
+
     const key = ventaKeyForUser(user);
     let ventaId = key ? localStorage.getItem(key) : null;
-    if (ventaId) return parseInt(ventaId, 10);
+    if (ventaId) {
+        const ventaIdNum = parseInt(ventaId, 10);
+        console.log('✅ Carrito existente encontrado, venta_id:', ventaIdNum);
+        return ventaIdNum;
+    }
 
     try {
-        const res = await window.api.ventas.crear({ comprador_id: user.id, vendedor_id: user.id });
+        console.log('🛒 Creando nuevo carrito para usuario_id:', userId);
+        const res = await window.api.ventas.crear({ 
+            comprador_id: userId, 
+            vendedor_id: userId 
+        });
+        
+        console.log('📡 Respuesta del backend:', res);
+        
         if (res && res.success && res.venta_id) {
             localStorage.setItem(key, String(res.venta_id));
+            console.log('✅ Carrito creado exitosamente, venta_id:', res.venta_id);
             return res.venta_id;
         } else {
-            console.error('Error creando/obteniendo carrito:', res);
-            alert(res && res.message ? res.message : 'No se pudo crear el carrito.');
+            console.error('❌ Error creando/obteniendo carrito:', res);
+            const mensaje = res?.message || res?.error || 'Error desconocido al crear carrito';
+            alert('Error al crear carrito: ' + mensaje);
             return null;
         }
     } catch (err) {
-        console.error('Error API crear carrito:', err);
-        alert('Error al conectar con el servidor para crear el carrito.');
+        console.error('❌ Error API crear carrito:', err);
+        alert('Error al conectar con el servidor: ' + (err.message || 'Error desconocido'));
         return null;
     }
 }
 
 async function apiAgregarProducto(productoId, cantidad) {
+    // Verificar que window.api esté disponible
+    if (!window.api || !window.api.ventas) {
+        console.error('❌ window.api.ventas no está disponible. Asegúrate de que api.js se cargue antes de script_cart.js');
+        alert('Error: La API no está disponible. Por favor, recarga la página.');
+        return false;
+    }
+
     const ventaId = await getOrCreateVentaId();
     if (!ventaId) return false;
     try {
+        const productoIdNum = parseInt(productoId, 10);
+        if (isNaN(productoIdNum)) {
+            console.error('ID de producto inválido:', productoId);
+            return false;
+        }
+
+        console.log('➕ Agregando producto:', { venta_id: ventaId, producto_id: productoIdNum, cantidad });
         const res = await window.api.ventas.agregarProducto({
             venta_id: ventaId,
-            producto_id: productoId,
+            producto_id: productoIdNum,
             cantidad: cantidad
         });
-        if (res && res.success) return true;
+        
+        console.log('📡 Respuesta del backend:', res);
+        
+        if (res && res.success) {
+            console.log('✅ Producto agregado exitosamente');
+            return true;
+        }
         console.warn('No se pudo agregar producto:', res);
         alert(res && res.message ? res.message : 'No se pudo agregar el producto.');
         return false;
     } catch (err) {
-        console.error('Error API agregarProducto:', err);
-        alert('Error al conectar con el servidor para agregar producto.');
+        console.error('❌ Error API agregarProducto:', err);
+        alert('Error al conectar con el servidor para agregar producto: ' + (err.message || 'Error desconocido'));
         return false;
     }
 }
 
-async function apiEliminarOActualizarProducto(productoId, cantidad) {
+async function apiActualizarProducto(productoId, cantidad) {
+    // Verificar que window.api esté disponible
+    if (!window.api || !window.api.ventas) {
+        console.error('❌ window.api.ventas no está disponible. Asegúrate de que api.js se cargue antes de script_cart.js');
+        alert('Error: La API no está disponible. Por favor, recarga la página.');
+        return false;
+    }
+
     const ventaId = await getOrCreateVentaId();
     if (!ventaId) return false;
     try {
-        const res = await window.api.ventas.eliminarProducto({
+        const productoIdNum = parseInt(productoId, 10);
+        if (isNaN(productoIdNum)) {
+            console.error('ID de producto inválido:', productoId);
+            return false;
+        }
+
+        console.log('🔄 Actualizando cantidad:', { venta_id: ventaId, producto_id: productoIdNum, cantidad });
+        const res = await window.api.ventas.actualizarProducto({
             venta_id: ventaId,
-            producto_id: productoId,
+            producto_id: productoIdNum,
             cantidad: cantidad
         });
-        if (res && res.success) return true;
-        console.warn('No se pudo actualizar/eliminar producto:', res);
-        alert(res && res.message ? res.message : 'No se pudo actualizar/eliminar el producto.');
+        
+        console.log('📡 Respuesta del backend:', res);
+        
+        if (res && res.success) {
+            console.log('✅ Cantidad actualizada exitosamente');
+            return true;
+        }
+        console.warn('No se pudo actualizar producto:', res);
+        alert(res && res.message ? res.message : 'No se pudo actualizar el producto.');
         return false;
     } catch (err) {
-        console.error('Error API eliminarProducto:', err);
-        alert('Error al conectar con el servidor para actualizar/eliminar producto.');
+        console.error('❌ Error API actualizarProducto:', err);
+        alert('Error al conectar con el servidor para actualizar producto: ' + (err.message || 'Error desconocido'));
+        return false;
+    }
+}
+
+async function apiEliminarProducto(productoId) {
+    // Verificar que window.api esté disponible
+    if (!window.api || !window.api.ventas) {
+        console.error('❌ window.api.ventas no está disponible. Asegúrate de que api.js se cargue antes de script_cart.js');
+        alert('Error: La API no está disponible. Por favor, recarga la página.');
+        return false;
+    }
+
+    const ventaId = await getOrCreateVentaId();
+    if (!ventaId) return false;
+    try {
+        const productoIdNum = parseInt(productoId, 10);
+        if (isNaN(productoIdNum)) {
+            console.error('ID de producto inválido:', productoId);
+            return false;
+        }
+
+        console.log('🗑️ Eliminando producto:', { venta_id: ventaId, producto_id: productoIdNum });
+        const res = await window.api.ventas.eliminarProducto({
+            venta_id: ventaId,
+            producto_id: productoIdNum
+        });
+        
+        console.log('📡 Respuesta del backend:', res);
+        
+        if (res && res.success) {
+            console.log('✅ Producto eliminado exitosamente');
+            return true;
+        }
+        console.warn('No se pudo eliminar producto:', res);
+        alert(res && res.message ? res.message : 'No se pudo eliminar el producto.');
+        return false;
+    } catch (err) {
+        console.error('❌ Error API eliminarProducto:', err);
+        alert('Error al conectar con el servidor para eliminar producto: ' + (err.message || 'Error desconocido'));
         return false;
     }
 }
@@ -334,8 +438,11 @@ function renderizarCarrito() {
         return;
     }
 
-    container.innerHTML = items.map(item => `
-        <div class="cart-item" data-product-id="${item.producto.id}">
+    container.innerHTML = items.map(item => {
+        // Asegurar que el ID sea un número para pasarlo correctamente
+        const productoId = typeof item.producto.id === 'number' ? item.producto.id : parseInt(item.producto.id, 10);
+        return `
+        <div class="cart-item" data-product-id="${productoId}">
             <div class="item-info">
                 <div class="item-image">
                     ${item.producto.imagen ? `<img src="${item.producto.imagen}" alt="${item.producto.nombre}">` : '📦'}
@@ -348,54 +455,68 @@ function renderizarCarrito() {
             </div>
             <div class="item-controls">
                 <div class="quantity-controls">
-                    <button class="btn-quantity minus" onclick="actualizarCantidad('${item.producto.id}', ${item.cantidad - 1})">-</button>
+                    <button class="btn-quantity minus" onclick="actualizarCantidad(${productoId}, ${item.cantidad - 1})">-</button>
                     <span class="quantity">${item.cantidad}</span>
-                    <button class="btn-quantity plus" onclick="actualizarCantidad('${item.producto.id}', ${item.cantidad + 1})">+</button>
+                    <button class="btn-quantity plus" onclick="actualizarCantidad(${productoId}, ${item.cantidad + 1})">+</button>
                 </div>
                 <div class="item-subtotal">
                     $${item.subtotal.toFixed(2)}
                 </div>
-                <button class="btn-remove" onclick="eliminarDelCarrito('${item.producto.id}')" title="Eliminar producto">
+                <button class="btn-remove" onclick="eliminarDelCarrito(${productoId})" title="Eliminar producto">
                     🗑️
                 </button>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     if (totalElement) totalElement.textContent = carrito.total.toFixed(2);
     if (productsTotalElement) productsTotalElement.textContent = carrito.total.toFixed(2);
     if (cartCountElement) cartCountElement.textContent = carrito.contadorItems;
 }
 
-function actualizarCantidad(productoId, nuevaCantidad) {
-    (async () => {
-        // Si nuevaCantidad <= 0, elimina
-        if (nuevaCantidad <= 0) {
-            const ok = await apiEliminarOActualizarProducto(productoId, nuevaCantidad);
-            if (ok) {
-                carrito.actualizarCantidad(productoId, nuevaCantidad);
-                renderizarCarrito();
-            }
-            return;
-        }
-        // Para actualizar cantidad, usamos endpoint eliminar/actualizar según especificación
-        const ok = await apiEliminarOActualizarProducto(productoId, nuevaCantidad);
+async function actualizarCantidad(productoId, nuevaCantidad) {
+    // Convertir productoId a número si es necesario
+    const productoIdNum = typeof productoId === 'number' ? productoId : parseInt(productoId, 10);
+    if (isNaN(productoIdNum)) {
+        console.error('ID de producto inválido:', productoId);
+        alert('Error: ID de producto inválido');
+        return;
+    }
+
+    // Si nuevaCantidad <= 0, elimina
+    if (nuevaCantidad <= 0) {
+        const ok = await apiEliminarProducto(productoIdNum);
         if (ok) {
-            carrito.actualizarCantidad(productoId, nuevaCantidad);
+            carrito.eliminar(productoIdNum);
             renderizarCarrito();
         }
-    })();
+        return;
+    }
+    
+    // Actualizar cantidad en el backend
+    const ok = await apiActualizarProducto(productoIdNum, nuevaCantidad);
+    if (ok) {
+        carrito.actualizarCantidad(productoIdNum, nuevaCantidad);
+        renderizarCarrito();
+    }
 }
 
-function eliminarDelCarrito(productoId) {
+async function eliminarDelCarrito(productoId) {
+    // Convertir productoId a número si es necesario
+    const productoIdNum = typeof productoId === 'number' ? productoId : parseInt(productoId, 10);
+    if (isNaN(productoIdNum)) {
+        console.error('ID de producto inválido:', productoId);
+        alert('Error: ID de producto inválido');
+        return;
+    }
+
     if (confirm('¿Estás seguro de que quieres eliminar este producto del carrito?')) {
-        (async () => {
-            const ok = await apiEliminarOActualizarProducto(productoId, Number.MAX_SAFE_INTEGER);
-            if (ok) {
-                carrito.eliminar(productoId);
-                renderizarCarrito();
-            }
-        })();
+        const ok = await apiEliminarProducto(productoIdNum);
+        if (ok) {
+            carrito.eliminar(productoIdNum);
+            renderizarCarrito();
+        }
     }
 }
 
@@ -413,13 +534,21 @@ function vaciarCarrito() {
 }
 
 // Add to Cart Function
-function agregarAlCarrito(producto) {
-    (async () => {
-        const ok = await apiAgregarProducto(producto.id, 1);
-        if (!ok) return;
-        carrito.agregar(producto);
-        renderizarCarrito();
+async function agregarAlCarrito(producto) {
+    // Asegurar que el ID sea un número
+    const productoId = typeof producto.id === 'number' ? producto.id : parseInt(producto.id, 10);
+    if (isNaN(productoId)) {
+        console.error('ID de producto inválido:', producto.id);
+        alert('Error: ID de producto inválido');
+        return;
+    }
+
+    const ok = await apiAgregarProducto(productoId, 1);
+    if (!ok) return;
     
+    carrito.agregar(producto);
+    renderizarCarrito();
+
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
@@ -439,15 +568,56 @@ function agregarAlCarrito(producto) {
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
-            document.body.removeChild(notification);
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
         }, 300);
     }, 3000);
-    })();
+}
+
+// Función para sincronizar el carrito desde el backend
+async function sincronizarCarritoDesdeBackend() {
+    const user = getCurrentUser();
+    if (!user || !user.id) {
+        console.log('Usuario no autenticado, usando carrito local');
+        return;
+    }
+
+    try {
+        const ventaId = await getOrCreateVentaId();
+        if (!ventaId) {
+            console.log('No se pudo obtener venta_id, usando carrito local');
+            return;
+        }
+
+        // Intentar obtener la venta desde el backend
+        // Nota: Si no existe un endpoint obtener.php, esta parte fallará silenciosamente
+        // y se usará el carrito local
+        try {
+            const ventaData = await window.api.ventas.obtenerPorId(ventaId);
+            if (ventaData && ventaData.success && ventaData.data) {
+                // Si el backend devuelve los productos del carrito, sincronizar
+                // Por ahora, solo verificamos que la venta exista
+                console.log('Carrito sincronizado con backend, venta_id:', ventaId);
+            }
+        } catch (err) {
+            // Si no existe el endpoint, continuar con localStorage
+            console.log('No se pudo obtener carrito del backend, usando local:', err.message);
+        }
+    } catch (error) {
+        console.error('Error sincronizando carrito:', error);
+    }
 }
 
 // Initialization
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Cargar carrito desde localStorage primero
     carrito.cargarDesdeLocalStorage();
+    
+    // Intentar sincronizar con el backend
+    await sincronizarCarritoDesdeBackend();
+    
+    // Renderizar el carrito
     renderizarCarrito();
 
     const clearCartBtn = document.getElementById('clearCartBtn');
