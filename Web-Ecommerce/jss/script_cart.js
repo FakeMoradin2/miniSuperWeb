@@ -315,41 +315,58 @@ async function apiAgregarProducto(productoId, cantidad) {
 }
 
 async function apiActualizarProducto(productoId, cantidad) {
-    // Verificar que window.api esté disponible
+    // WORKAROUND: El endpoint actualizarProducto.php tiene un bug con la columna generada 'subtotal'
+    // Solución: Eliminamos el producto y lo volvemos a agregar con la nueva cantidad
+    
     if (!window.api || !window.api.ventas) {
-        console.error('❌ window.api.ventas no está disponible. Asegúrate de que api.js se cargue antes de script_cart.js');
-        alert('Error: La API no está disponible. Por favor, recarga la página.');
+        console.error('❌ window.api.ventas no está disponible');
         return false;
     }
 
     const ventaId = await getOrCreateVentaId();
     if (!ventaId) return false;
+    
     try {
         const productoIdNum = parseInt(productoId, 10);
-        if (isNaN(productoIdNum)) {
-            console.error('ID de producto inválido:', productoId);
+        const cantidadNum = parseInt(cantidad, 10);
+        
+        if (isNaN(productoIdNum) || isNaN(cantidadNum)) {
+            console.error('ID de producto o cantidad inválida');
             return false;
         }
 
-        console.log('🔄 Actualizando cantidad:', { venta_id: ventaId, producto_id: productoIdNum, cantidad });
-        const res = await window.api.ventas.actualizarProducto({
-            venta_id: ventaId,
-            producto_id: productoIdNum,
-            cantidad: cantidad
+        console.log('🔄 Actualizando cantidad (eliminar + agregar):', { venta_id: ventaId, producto_id: productoIdNum, cantidad: cantidadNum });
+        
+        // Paso 1: Eliminar el producto del carrito
+        const resEliminar = await window.api.ventas.eliminarProducto({
+            venta_id: parseInt(ventaId, 10),
+            producto_id: productoIdNum
         });
         
-        console.log('📡 Respuesta del backend:', res);
+        if (!resEliminar || !resEliminar.success) {
+            console.warn('No se pudo eliminar producto para actualizar:', resEliminar);
+            return false;
+        }
         
-        if (res && res.success) {
+        // Paso 2: Agregar el producto con la nueva cantidad
+        const resAgregar = await window.api.ventas.agregarProducto({
+            venta_id: parseInt(ventaId, 10),
+            producto_id: productoIdNum,
+            cantidad: cantidadNum
+        });
+        
+        console.log('📡 Respuesta agregar:', resAgregar);
+        
+        if (resAgregar && resAgregar.success) {
             console.log('✅ Cantidad actualizada exitosamente');
             return true;
         }
-        console.warn('No se pudo actualizar producto:', res);
-        alert(res && res.message ? res.message : 'No se pudo actualizar el producto.');
+        
+        console.warn('No se pudo agregar producto después de eliminar:', resAgregar);
         return false;
+        
     } catch (err) {
         console.error('❌ Error API actualizarProducto:', err);
-        alert('Error al conectar con el servidor para actualizar producto: ' + (err.message || 'Error desconocido'));
         return false;
     }
 }
@@ -590,20 +607,10 @@ async function sincronizarCarritoDesdeBackend() {
             return;
         }
 
-        // Intentar obtener la venta desde el backend
-        // Nota: Si no existe un endpoint obtener.php, esta parte fallará silenciosamente
-        // y se usará el carrito local
-        try {
-            const ventaData = await window.api.ventas.obtenerPorId(ventaId);
-            if (ventaData && ventaData.success && ventaData.data) {
-                // Si el backend devuelve los productos del carrito, sincronizar
-                // Por ahora, solo verificamos que la venta exista
-                console.log('Carrito sincronizado con backend, venta_id:', ventaId);
-            }
-        } catch (err) {
-            // Si no existe el endpoint, continuar con localStorage
-            console.log('No se pudo obtener carrito del backend, usando local:', err.message);
-        }
+        // El carrito se sincroniza automáticamente al agregar/actualizar/eliminar productos
+        // No es necesario obtener la venta completa desde el backend
+        console.log('Carrito listo con venta_id:', ventaId);
+        
     } catch (error) {
         console.error('Error sincronizando carrito:', error);
     }
