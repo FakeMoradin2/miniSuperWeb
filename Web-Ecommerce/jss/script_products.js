@@ -860,14 +860,15 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
     notification.style.cssText = `
         position: fixed;
         top: 20px;
-        right: 20px;
+        left: 50%;
+        transform: translateX(-50%);
         background: ${backgroundColor};
         color: white;
         padding: 12px 20px;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         z-index: 1000;
-        animation: slideIn 0.3s ease;
+        animation: fadeIn 0.2s ease;
     `;
     notification.textContent = mensaje;
     document.body.appendChild(notification);
