@@ -176,6 +176,11 @@ const ventas = {
     confirmar: (body) => fetchJSON(`${API_BASE}/api/ventas/confirmar.php`, {
         method: 'PUT',
         body: JSON.stringify(body)
+    }),
+    
+    obtenerCarrito: (venta_id) => fetchJSON(`${API_BASE}/api/ventas/obtenerCarrito.php?venta_id=${venta_id}`, {
+        method: 'GET',
+        headers: {'Accept':'application/json'}
     })
 };
 

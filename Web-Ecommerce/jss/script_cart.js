@@ -239,6 +239,51 @@ function getCurrentUser() {
     return window.authManager ? window.authManager.getUser() : null;
 }
 
+// Función para procesar URLs de imágenes (compatible con Google Drive, rutas relativas, etc.)
+function procesarUrlImagen(url) {
+    if (!url || typeof url !== 'string' || url.trim().length === 0) {
+        return null;
+    }
+    
+    const imagenUrl = url.trim();
+    
+    // CASO 1: Google Drive link - CONVERTIR a URL directa
+    if (imagenUrl.includes('drive.google.com')) {
+        try {
+            const match = imagenUrl.match(/\/d\/([^\/]+)/);
+            if (match && match[1]) {
+                const fileId = match[1];
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+            }
+        } catch (error) {
+            console.error('Error convirtiendo Google Drive URL:', error);
+        }
+    }
+    
+    // CASO 2: Ya es URL completa (http://... o https://...)
+    if (imagenUrl.startsWith('http://') || imagenUrl.startsWith('https://')) {
+        return imagenUrl;
+    }
+    
+    // CASO 3: Es imagen en base64 (data:image...)
+    if (imagenUrl.startsWith('data:')) {
+        return imagenUrl;
+    }
+    
+    // CASO 4: Ruta absoluta (/uploads/imagen.jpg)
+    if (imagenUrl.startsWith('/')) {
+        return `http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com${imagenUrl}`;
+    }
+    
+    // CASO 5: Ruta relativa (productos/leche.jpg)
+    if (!imagenUrl.startsWith('../') && !imagenUrl.startsWith('./')) {
+        return `http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com/uploads/${imagenUrl}`;
+    }
+    
+    // CASO 6: Ruta local (../images/producto.jpg) - usar directamente
+    return imagenUrl;
+}
+
 function ventaKeyForUser(user) {
     return user ? `venta_id_user_${user.id}` : null;
 }
@@ -265,8 +310,34 @@ async function getOrCreateVentaId() {
     let ventaId = key ? localStorage.getItem(key) : null;
     if (ventaId) {
         const ventaIdNum = parseInt(ventaId, 10);
-        console.log('✅ Carrito existente encontrado, venta_id:', ventaIdNum);
-        return ventaIdNum;
+        
+        // Verificar que el carrito todavía exista y esté en estado "carrito"
+        // Si la verificación falla, simplemente continuar para crear un nuevo carrito
+        try {
+            const carritoBackend = await obtenerCarritoDesdeBackend(ventaIdNum);
+            if (carritoBackend && carritoBackend.success && carritoBackend.venta) {
+                // Si el carrito está en estado "carrito" (vacío o con productos), usarlo
+                if (carritoBackend.venta.estado_venta === 'carrito') {
+                    console.log('✅ Carrito existente válido encontrado, venta_id:', ventaIdNum, '(productos:', (carritoBackend.productos?.length || 0) + ')');
+                    return ventaIdNum;
+                } else {
+                    // Si el carrito ya fue procesado (completada, cancelada, etc.), limpiar y crear uno nuevo
+                    console.log('⚠️ Carrito anterior ya fue procesado (estado: ' + carritoBackend.venta.estado_venta + '), creando nuevo carrito...');
+                    if (key) localStorage.removeItem(key);
+                    // Continuar para crear un nuevo carrito
+                }
+            } else {
+                // Si el carrito no existe o no está en estado "carrito", limpiar y crear uno nuevo
+                console.log('⚠️ Carrito anterior no válido o no existe, creando nuevo carrito...');
+                if (key) localStorage.removeItem(key);
+                // Continuar para crear un nuevo carrito
+            }
+        } catch (error) {
+            // Si hay un error al verificar, limpiar y crear uno nuevo
+            console.log('⚠️ Error verificando carrito anterior, creando nuevo carrito...', error.message || error);
+            if (key) localStorage.removeItem(key);
+            // Continuar para crear un nuevo carrito
+        }
     }
 
     try {
@@ -571,6 +642,41 @@ function vaciarCarrito() {
     }
 }
 
+// Función auxiliar para limpiar completamente todo el carrito (usado cuando fue confirmado)
+function limpiarTodoElCarrito(user) {
+    // Limpiar el carrito local
+    carrito.vaciar();
+    
+    // Limpiar localStorage del carrito
+    if (user && user.id) {
+        const userId = typeof user.id === 'number' ? user.id : parseInt(user.id, 10);
+        if (!isNaN(userId)) {
+            localStorage.removeItem(`carrito_user_${userId}`);
+        }
+        const key = ventaKeyForUser(user);
+        if (key) {
+            localStorage.removeItem(key);
+        }
+    }
+    // Limpiar carrito general también
+    localStorage.removeItem('carrito');
+    
+    // Renderizar carrito vacío
+    renderizarCarrito();
+}
+
+// Función para limpiar solo la vista local (carrito permanece en backend para procesar en POS)
+function limpiarVistaLocalCarrito() {
+    // Limpiar solo el carrito local y localStorage visual
+    // NO cancelamos el carrito en el backend - debe quedar en estado "carrito" para el POS
+    carrito.vaciar();
+    renderizarCarrito();
+    
+    // El venta_id se mantiene en localStorage por si el usuario quiere ver el estado
+    // Pero el carrito visual se limpia para que no se muestren los productos
+    console.log('✅ Vista local limpiada. El carrito permanece en estado "carrito" en el backend para procesar en caja.');
+}
+
 // Add to Cart Function
 async function agregarAlCarrito(producto) {
     // Asegurar que el ID sea un número
@@ -622,28 +728,170 @@ async function sincronizarCarritoDesdeBackend() {
     }
 
     try {
+        // Primero verificar si hay un venta_id guardado
+        const key = ventaKeyForUser(user);
+        const ventaIdGuardado = key ? localStorage.getItem(key) : null;
+        
+        // Si hay un venta_id guardado, verificar su estado primero
+        if (ventaIdGuardado) {
+            const ventaIdNum = parseInt(ventaIdGuardado, 10);
+            try {
+                const carritoBackend = await obtenerCarritoDesdeBackend(ventaIdNum);
+                
+                // Si no se puede obtener o el estado no es "carrito", el carrito fue procesado
+                if (!carritoBackend || !carritoBackend.success || 
+                    (carritoBackend.venta && carritoBackend.venta.estado_venta !== 'carrito')) {
+                    console.log('⚠️ Carrito guardado ya fue procesado, limpiando completamente...');
+                    limpiarTodoElCarrito(user);
+                    // Continuar para obtener o crear un nuevo carrito
+                }
+            } catch (error) {
+                // Si hay error al obtener, probablemente fue procesado o no existe
+                console.log('⚠️ Error verificando carrito guardado, limpiando...');
+                limpiarTodoElCarrito(user);
+            }
+        }
+        
+        // Ahora obtener o crear un venta_id válido
         const ventaId = await getOrCreateVentaId();
         if (!ventaId) {
             console.log('No se pudo obtener venta_id, usando carrito local');
             return;
         }
 
-        // El carrito se sincroniza automáticamente al agregar/actualizar/eliminar productos
-        // No es necesario obtener la venta completa desde el backend
-        console.log('Carrito listo con venta_id:', ventaId);
+        // Verificar si el carrito existe en el backend y cargar sus productos
+        try {
+            // Intentar obtener el carrito desde el backend
+            const carritoBackend = await obtenerCarritoDesdeBackend(ventaId);
+            
+            if (carritoBackend && carritoBackend.success && carritoBackend.venta) {
+                // Verificar que el carrito esté en estado "carrito"
+                if (carritoBackend.venta.estado_venta === 'carrito') {
+                    // Si el carrito tiene productos, cargarlos en la vista local
+                    if (carritoBackend.productos && carritoBackend.productos.length > 0) {
+                        carrito.vaciar();
+                        carritoBackend.productos.forEach(item => {
+                            // Procesar la imagen del producto
+                            let imagen = null;
+                            const imagenUrl = item.image_url || item.imagen_url || item.imagen;
+                            
+                            if (imagenUrl) {
+                                imagen = procesarUrlImagen(imagenUrl);
+                            }
+                            
+                            carrito.agregar({
+                                id: item.producto_id,
+                                nombre: item.nombre_producto,
+                                precio: parseFloat(item.precio_unitario),
+                                categoria: item.categoria || 'Producto',
+                                imagen: imagen
+                            }, parseInt(item.cantidad));
+                        });
+                        renderizarCarrito();
+                        console.log('✅ Carrito sincronizado desde el backend (estado: carrito)');
+                    } else {
+                        // Carrito está vacío pero en estado carrito, solo limpiar la vista local
+                        // Esto permite que el usuario empiece a agregar productos nuevamente
+                        carrito.vaciar();
+                        renderizarCarrito();
+                        console.log('✅ Carrito vacío en backend, lista para agregar productos');
+                    }
+                } else {
+                    // Si el carrito ya fue confirmado o cancelado, limpiar TODO
+                    console.log('⚠️ Carrito ya fue procesado (estado: ' + carritoBackend.venta.estado_venta + '), limpiando completamente...');
+                    const userForCleanup = getCurrentUser();
+                    limpiarTodoElCarrito(userForCleanup);
+                    console.log('🧹 Carrito completamente limpiado porque ya fue procesado');
+                }
+            }
+        } catch (error) {
+            // Si hay error al obtener el carrito, puede que ya fue procesado o no existe
+            console.log('⚠️ El carrito no existe en el backend o ya fue procesado, limpiando carrito local...');
+            const user = getCurrentUser();
+            limpiarTodoElCarrito(user);
+        }
         
     } catch (error) {
         console.error('Error sincronizando carrito:', error);
     }
 }
 
+// Función para obtener el carrito desde el backend
+async function obtenerCarritoDesdeBackend(ventaId) {
+    if (!window.api || !window.api.ventas || !window.api.ventas.obtenerCarrito) {
+        return null;
+    }
+    
+    try {
+        const data = await window.api.ventas.obtenerCarrito(ventaId);
+        return data;
+    } catch (error) {
+        console.error('Error obteniendo carrito desde backend:', error);
+        return null;
+    }
+}
+
+// Variable global para el timeout del modal de checkout
+let checkoutModalTimeout = null;
+
+// Funciones para el modal de checkout
+function mostrarCheckoutModal(total) {
+    // Cancelar timeout anterior si existe
+    if (checkoutModalTimeout) {
+        clearTimeout(checkoutModalTimeout);
+        checkoutModalTimeout = null;
+    }
+    
+    document.body.classList.add('show-checkout-modal');
+    const modal = document.getElementById('checkoutModal');
+    const totalElement = document.getElementById('checkoutTotalAmount');
+    
+    if (modal) {
+        if (totalElement) {
+            totalElement.textContent = `$${total}`;
+        }
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+        
+        // Cerrar automáticamente después de 6 segundos
+        checkoutModalTimeout = setTimeout(async () => {
+            // Limpiar solo la vista local cuando se cierre automáticamente
+            await ocultarCheckoutModal(true); // true = limpiar vista local
+            checkoutModalTimeout = null;
+        }, 6000); // 6 segundos
+    }
+}
+
+async function ocultarCheckoutModal(limpiarVistaLocal = true) {
+    // Cancelar el timeout si el usuario cierra manualmente
+    if (checkoutModalTimeout) {
+        clearTimeout(checkoutModalTimeout);
+        checkoutModalTimeout = null;
+    }
+    
+    document.body.classList.remove('show-checkout-modal');
+    const modal = document.getElementById('checkoutModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+    
+    // Limpiar solo la vista local si se solicita (NO cancelar en backend)
+    if (limpiarVistaLocal) {
+        limpiarVistaLocalCarrito();
+    }
+}
+
 // Initialization
 document.addEventListener('DOMContentLoaded', async function() {
-    // Cargar carrito desde localStorage primero
-    carrito.cargarDesdeLocalStorage();
-    
-    // Intentar sincronizar con el backend
+    // Primero verificar y sincronizar con el backend (esto limpiará si fue confirmado)
     await sincronizarCarritoDesdeBackend();
+    
+    // Después cargar desde localStorage solo si no hay productos del backend
+    // (Esto es para productos que puedan estar solo en localStorage temporalmente)
+    if (carrito.contadorItems === 0) {
+        carrito.cargarDesdeLocalStorage();
+    }
     
     // Renderizar el carrito
     renderizarCarrito();
@@ -657,12 +905,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     if (payBtn) {
-        payBtn.addEventListener('click', function() {
+        payBtn.addEventListener('click', async function() {
             if (carrito.contadorItems === 0) {
                 alert('Tu carrito está vacío');
                 return;
             }
-            alert(`Procesando pago por $${carrito.total.toFixed(2)}`);
+            
+            // Mostrar modal bonito de pasar a caja
+            mostrarCheckoutModal(carrito.total.toFixed(2));
         });
     }
 
@@ -676,6 +926,24 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             alert(`Cupón "${couponInput.value}" aplicado (simulado)`);
             couponInput.value = '';
+        });
+    }
+
+    // Event listener para cerrar el modal de checkout
+    const closeCheckoutBtn = document.getElementById('closeCheckoutModal');
+    if (closeCheckoutBtn) {
+        closeCheckoutBtn.addEventListener('click', async function() {
+            await ocultarCheckoutModal(true); // true = limpiar vista local
+        });
+    }
+
+    // Cerrar modal al hacer clic fuera de él
+    const checkoutModal = document.getElementById('checkoutModal');
+    if (checkoutModal) {
+        checkoutModal.addEventListener('click', async function(e) {
+            if (e.target === checkoutModal) {
+                await ocultarCheckoutModal(true); // true = limpiar vista local
+            }
         });
     }
 });

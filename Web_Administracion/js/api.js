@@ -203,6 +203,14 @@ const ventasAPI = {
     method: 'PUT',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(body)
+  }),
+  listarCarritos: () => fetchJSON(`${API_BASE}/api/ventas/listarCarritos.php`, {
+    method: 'GET',
+    headers: {'Accept':'application/json'}
+  }),
+  obtenerCarrito: (venta_id) => fetchJSON(`${API_BASE}/api/ventas/obtenerCarrito.php?venta_id=${venta_id}`, {
+    method: 'GET',
+    headers: {'Accept':'application/json'}
   })
 };
 

@@ -234,34 +234,39 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     // Usar ID del cliente_general_pos (ID: 18)
     const userId = 18;
     
-    // Paso 1: Crear venta básica
-    const crearResp = await window.api.ventasAPI.crear({
-      comprador_id: userId,
-      vendedor_id: userId,
-      estado: 'pendiente'
-    });
-    
-    console.log('Respuesta crear venta:', crearResp);
-    currentVentaId = safeExtractId(crearResp);
-    
+    // Si ya hay un currentVentaId, significa que estamos confirmando un carrito existente
     if(!currentVentaId){
-      console.error('No se obtuvo ID de venta. Respuesta completa:', crearResp);
-      throw new Error('No se pudo crear la venta en el servidor');
-    }
-    
-    console.log('Venta creada con ID:', currentVentaId);
-    
-    // Paso 2: Agregar cada producto a la venta
-    for(const item of cart){
-      console.log('Agregando producto:', item.nombre_producto);
-      await window.api.ventasAPI.agregarProducto({
-        venta_id: currentVentaId,
-        producto_id: item.producto_id,
-        cantidad: item.cantidad
+      // Paso 1: Crear venta básica
+      const crearResp = await window.api.ventasAPI.crear({
+        comprador_id: userId,
+        vendedor_id: userId,
+        estado: 'pendiente'
       });
+      
+      console.log('Respuesta crear venta:', crearResp);
+      currentVentaId = safeExtractId(crearResp);
+      
+      if(!currentVentaId){
+        console.error('No se obtuvo ID de venta. Respuesta completa:', crearResp);
+        throw new Error('No se pudo crear la venta en el servidor');
+      }
+      
+      console.log('Venta creada con ID:', currentVentaId);
+      
+      // Paso 2: Agregar cada producto a la venta
+      for(const item of cart){
+        console.log('Agregando producto:', item.nombre_producto);
+        await window.api.ventasAPI.agregarProducto({
+          venta_id: currentVentaId,
+          producto_id: item.producto_id,
+          cantidad: item.cantidad
+        });
+      }
+      
+      console.log('Todos los productos agregados');
+    } else {
+      console.log('Confirmando carrito existente #' + currentVentaId);
     }
-    
-    console.log('Todos los productos agregados');
     
     // Paso 3: Confirmar la venta con nombre del cliente
     const confirmResp = await window.api.ventasAPI.confirmar({
@@ -271,6 +276,11 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     });
     
     console.log('Respuesta de confirmar venta:', confirmResp);
+    
+    if(!confirmResp.success){
+      throw new Error(confirmResp.message || 'Error al confirmar la venta');
+    }
+    
     console.log('Venta confirmada exitosamente con ID:', currentVentaId);
 
     // Guardar venta en localStorage para reportes
@@ -280,7 +290,8 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     const yyyy = hoy.getFullYear();
     const mm = String(hoy.getMonth()+1).padStart(2,'0');
     const dd = String(hoy.getDate()).padStart(2,'0');
-    const total = cart.reduce((s,i)=> s + i.precio*i.cantidad, 0);
+    // Usar el total de la respuesta si está disponible, si no calcular del carrito
+    const total = confirmResp.total ? parseFloat(confirmResp.total) : cart.reduce((s,i)=> s + i.precio*i.cantidad, 0);
     
     // Guardar en localStorage
     const ventaLocal = {
@@ -347,6 +358,9 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     document.getElementById('searchInput').value = '';
     document.getElementById('searchResults').innerHTML = '';
     renderCart();
+    
+    // Recargar lista de carritos pendientes
+    await cargarCarritosPendientes();
   }catch(err){
     console.error('Error en confirmación:', err);
     // Si ya se creó la venta pero algo falló, intentar cancelar
@@ -389,9 +403,229 @@ document.getElementById('searchInput').addEventListener('keypress', (e)=>{
   }
 });
 
+// Funciones para carritos pendientes
+async function cargarCarritosPendientes(mostrarLista = false){
+  try{
+    const response = await window.api.ventasAPI.listarCarritos();
+    console.log('Carritos pendientes:', response);
+    
+    const container = document.getElementById('pendingCartsList');
+    const btnNewCart = document.getElementById('btnNewCart');
+    
+    if(response.success && response.data && response.data.length > 0){
+      mostrarCarritosPendientes(response.data);
+      if(mostrarLista) {
+        container.style.display = 'block';
+        btnNewCart.style.display = 'block';
+      }
+    } else {
+      container.innerHTML = '<p style="color:var(--gray);padding:12px;text-align:center">No hay carritos pendientes en este momento</p>';
+      if(mostrarLista) {
+        container.style.display = 'block';
+        btnNewCart.style.display = 'block';
+      }
+    }
+  }catch(err){
+    console.error('Error cargando carritos pendientes:', err);
+    const container = document.getElementById('pendingCartsList');
+    container.innerHTML = '<p style="color:#dc3545;padding:12px;text-align:center">Error al cargar carritos: ' + err.message + '</p>';
+  }
+}
+
+function mostrarCarritosPendientes(carritos){
+  const container = document.getElementById('pendingCartsList');
+  if(!container) return;
+  
+  if(carritos.length === 0){
+    container.innerHTML = '<p style="color:var(--gray);padding:12px;text-align:center">No hay carritos pendientes en este momento</p>';
+    return;
+  }
+  
+  container.innerHTML = carritos.map(carrito => {
+    const fecha = new Date(carrito.creada_en_venta || Date.now()).toLocaleString('es-MX');
+    const total = parseFloat(carrito.total_calculado || 0).toFixed(2);
+    const cliente = carrito.nombre_cliente || 'Cliente';
+    const cantidad = carrito.cantidad_productos || 0;
+    
+    return `
+      <div class="cart-item-pending" style="padding:12px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:8px;background:#f8f9fa;cursor:pointer;transition:all 0.2s" 
+           data-venta-id="${carrito.id_venta}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:600;color:var(--text-dark)">Carrito #${carrito.id_venta}</div>
+            <div style="font-size:0.9rem;color:var(--gray);margin-top:4px">
+              <span>Cliente: </span><span style="font-weight:900">${cliente}</span> • <span>${cantidad} productos</span> • <span>${fecha}</span>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;color:var(--primary);font-size:1.1rem">$${total}</div>
+            <button class="btn primary btn-select-cart" style="padding:6px 12px;margin-top:4px" data-venta-id="${carrito.id_venta}">
+              Seleccionar
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Agregar event listeners
+  container.querySelectorAll('.btn-select-cart').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const ventaId = parseInt(e.target.dataset.ventaId);
+      await seleccionarCarrito(ventaId);
+    });
+  });
+  
+  // Hacer click en todo el item para seleccionar
+  container.querySelectorAll('.cart-item-pending').forEach(item => {
+    item.addEventListener('click', async (e) => {
+      if(e.target.classList.contains('btn-select-cart')) return;
+      const ventaId = parseInt(item.dataset.ventaId);
+      await seleccionarCarrito(ventaId);
+    });
+  });
+}
+
+async function seleccionarCarrito(ventaId){
+  try{
+    console.log('Seleccionando carrito:', ventaId);
+    const response = await window.api.ventasAPI.obtenerCarrito(ventaId);
+    
+    if(!response.success || !response.venta){
+      alert('Error al cargar el carrito: ' + (response.message || 'Carrito no encontrado'));
+      return;
+    }
+    
+    // Cargar productos al carrito local
+    cart = response.productos.map(p => ({
+      producto_id: p.producto_id,
+      nombre_producto: p.nombre_producto,
+      precio: parseFloat(p.precio_unitario),
+      cantidad: parseInt(p.cantidad)
+    }));
+    
+    currentVentaId = ventaId;
+    
+    // Actualizar información del cliente si existe
+    if(response.venta.nombre_cliente){
+      document.getElementById('clienteInput').value = response.venta.nombre_cliente;
+    }
+    
+    // Renderizar carrito
+    renderCart();
+    
+    // Ocultar lista de carritos pendientes pero mantener la sección visible
+    document.getElementById('pendingCartsList').style.display = 'none';
+    document.getElementById('btnNewCart').style.display = 'none';
+    
+    // Mostrar modal bonito de confirmación
+    mostrarModalConfirmacionCarrito(ventaId, response.total.toFixed(2));
+    
+  }catch(err){
+    console.error('Error seleccionando carrito:', err);
+    alert('Error al cargar el carrito: ' + err.message);
+  }
+}
+
+// Funciones para el modal de confirmación de carrito
+function mostrarModalConfirmacionCarrito(ventaId, total) {
+    document.body.classList.add('show-cart-confirm');
+    const modal = document.getElementById('cartConfirmModal');
+    const idElement = document.getElementById('cartConfirmId');
+    const totalElement = document.getElementById('cartConfirmTotal');
+    
+    if (modal) {
+        if (idElement) {
+            idElement.textContent = `#${ventaId}`;
+        }
+        if (totalElement) {
+            totalElement.textContent = `$${total}`;
+        }
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+}
+
+function ocultarModalConfirmacionCarrito() {
+    document.body.classList.remove('show-cart-confirm');
+    const modal = document.getElementById('cartConfirmModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+}
+
+// Modificar la función de confirmar para que funcione con carritos seleccionados
+const originalConfirmHandler = document.getElementById('btnConfirm')?.onclick;
+
 // Inicializar
 async function init(){
   console.log('Inicializando POS...');
   await cargarProductos();
+  await cargarCarritosPendientes();
   renderCart();
+  
+  // Event listener para mostrar/ocultar carritos
+  const btnToggleCarts = document.getElementById('btnToggleCarts');
+  if(btnToggleCarts){
+    let listaVisible = false;
+    btnToggleCarts.addEventListener('click', async () => {
+      listaVisible = !listaVisible;
+      const container = document.getElementById('pendingCartsList');
+      const btnNewCart = document.getElementById('btnNewCart');
+      
+      if(listaVisible){
+        btnToggleCarts.textContent = 'Ocultar Carritos';
+        await cargarCarritosPendientes(true);
+      } else {
+        btnToggleCarts.textContent = 'Ver Carritos';
+        container.style.display = 'none';
+        btnNewCart.style.display = 'none';
+      }
+    });
+  }
+  
+  // Event listener para actualizar carritos
+  const btnRefreshCarts = document.getElementById('btnRefreshCarts');
+  if(btnRefreshCarts){
+    btnRefreshCarts.addEventListener('click', async () => {
+      await cargarCarritosPendientes(true);
+      document.getElementById('pendingCartsList').style.display = 'block';
+      document.getElementById('btnNewCart').style.display = 'block';
+    });
+  }
+  
+  // Event listener para nueva venta
+  const btnNewCart = document.getElementById('btnNewCart');
+  if(btnNewCart){
+    btnNewCart.addEventListener('click', () => {
+      cart = [];
+      currentVentaId = null;
+      document.getElementById('clienteInput').value = '';
+      document.getElementById('metodoPago').value = 'Efectivo';
+      document.getElementById('searchInput').value = '';
+      document.getElementById('searchResults').innerHTML = '';
+      renderCart();
+      document.getElementById('pendingCartsList').style.display = 'none';
+      document.getElementById('btnNewCart').style.display = 'none';
+      cargarCarritosPendientes();
+    });
+  }
+  
+  // Event listener para cerrar el modal de confirmación
+  const closeCartConfirmBtn = document.getElementById('closeCartConfirmModal');
+  if (closeCartConfirmBtn) {
+    closeCartConfirmBtn.addEventListener('click', ocultarModalConfirmacionCarrito);
+  }
+  
+  // Cerrar modal al hacer clic fuera de él
+  const cartConfirmModal = document.getElementById('cartConfirmModal');
+  if (cartConfirmModal) {
+    cartConfirmModal.addEventListener('click', function(e) {
+      if (e.target === cartConfirmModal) {
+        ocultarModalConfirmacionCarrito();
+      }
+    });
+  }
 }
