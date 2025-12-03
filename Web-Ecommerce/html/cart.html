@@ -13,40 +13,39 @@
   <script src="../jss/api.js"></script>
   <script src="../jss/auth.js"></script>
   
-  <header>
-    <nav class="navbar">   
-      <div class="main-nav">
-        <a href="principal.html" class="corner-image">
-            <img class="corner-image" src="../iconmini.png" alt="Logo Minisuper Market">
-            <span>Minisuper Market</span>
-        </a>  
-        
-        <div class="search-container">
-          <form class="search-form" action="#" method="get">
-            <input type="search" class="search-input" placeholder="Buscar productos...">
-            <button type="submit" class="search-button">🔍</button>
-          </form>
-        </div>
-
-        <div class="nav-links">
-          <div class="user-menu">
-            <a href="#" class="nav-link user-menu-btn" id="userMenuButton">
-              <span id="userNameDisplay">My Account</span>
-              <span class="dropdown-arrow">▼</span>
-            </a>
-            <div class="user-dropdown" id="userDropdown">
-              <div class="dropdown-divider"></div>
-              <a href="#" class="dropdown-item logout-btn" onclick="window.authManager.logout()">Logout</a>
-            </div>
-          </div>
-          <a href="cart.html" class="nav-link">
-            <span class="cart-icon">🛒</span>
-            Cart (<span id="cartCount">0</span>)
-          </a>
-        </div>
+  <nav class="navbar">   
+    <div class="main-nav">
+      <a href="principal.html" class="corner-image">
+          <img class="corner-image" src="../iconmini.png" alt="Logo Minisuper Market">
+          <span>Minisuper Market</span>
+      </a>  
+      
+      <div class="search-container">
+        <form class="search-form" action="#" method="get">
+          <input type="search" class="search-input" placeholder="Buscar productos...">
+          <button type="submit" class="search-button">🔍</button>
+        </form>
       </div>
-    </nav>
-  </header>
+
+      <div class="nav-links">
+        <div class="user-menu">
+          <a href="#" class="nav-link user-menu-btn" id="userMenuButton">
+            <span id="userNameDisplay">My Account</span>
+            <span class="dropdown-arrow">▼</span>
+          </a>
+          <div class="user-dropdown" id="userDropdown">
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item logout-btn" onclick="window.authManager.logout()">Logout</a>
+          </div>
+        </div>
+        <a href="cart.html" class="nav-link">
+          <span class="cart-icon">🛒</span>
+          Cart
+          <span id="cartCount" class="cart-count">0</span>
+        </a>
+      </div>
+    </div>
+  </nav>
 
   <main>
     <h1>Your Shopping Cart</h1>
@@ -360,7 +359,7 @@
     .signup-btn { background:#f1f5f9; color:#1e293b; border-color:#e2e8f0; }
     .signup-btn:hover { background:#e2e8f0; }
     @keyframes modalFadeIn { from {opacity:0; transform:translateY(14px);} to {opacity:1; transform:translateY(0);} }
-    body.show-auth-modal header,
+    body.show-auth-modal .navbar,
     body.show-auth-modal main,
     body.show-auth-modal footer { filter: blur(4px); pointer-events: none; user-select: none; }
     body.show-auth-modal { overflow:hidden; }

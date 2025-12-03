@@ -1,8 +1,16 @@
 /* Cart Layout */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 main {
+  flex: 1;
   max-width: 1200px;
   margin: 40px auto;
   padding: 20px;
+  width: 100%;
 }
 
 /* Blur global cuando modal auth visible */
