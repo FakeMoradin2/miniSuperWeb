@@ -68,6 +68,11 @@ function renderCart(){
   });
   document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
 
+  // Actualizar cambio visual cuando cambie el carrito
+  if (typeof actualizarCambioVisual === 'function') {
+    actualizarCambioVisual();
+  }
+
   // add listeners para cantidad
   document.querySelectorAll('.qinput').forEach(inp => {
     inp.addEventListener('change', (e)=>{
@@ -105,6 +110,30 @@ function renderCart(){
       renderCart();
     });
   });
+}
+
+// Calcula y muestra el cambio en base al efectivo recibido y al total actual
+function actualizarCambioVisual(){
+  const efectivoInput = document.getElementById('efectivoRecibidoInput');
+  const cambioLabel = document.getElementById('cambioLabel');
+  if (!efectivoInput || !cambioLabel) return;
+
+  const efectivoStr = efectivoInput.value.trim();
+  const total = cart.reduce((s, i) => s + (i.precio * i.cantidad), 0);
+
+  if (!efectivoStr) {
+    cambioLabel.textContent = '$0.00';
+    return;
+  }
+
+  const efectivo = parseFloat(efectivoStr);
+  if (isNaN(efectivo) || efectivo < 0 || total <= 0) {
+    cambioLabel.textContent = '$0.00';
+    return;
+  }
+
+  const cambio = efectivo - total;
+  cambioLabel.textContent = `$${cambio.toFixed(2)}`;
 }
 
 async function searchProducts(query){
@@ -482,6 +511,14 @@ document.getElementById('searchInput').addEventListener('keypress', (e)=>{
     document.getElementById('btnSearch').click();
   }
 });
+
+// Actualizar cambio en tiempo real cuando el usuario escribe el efectivo recibido
+const efectivoInputGlobal = document.getElementById('efectivoRecibidoInput');
+if (efectivoInputGlobal) {
+  efectivoInputGlobal.addEventListener('input', () => {
+    actualizarCambioVisual();
+  });
+}
 
 // Búsqueda por teléfono
 document.getElementById('btnBuscarTelefono').addEventListener('click', async ()=>{
