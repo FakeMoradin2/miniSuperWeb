@@ -1,5 +1,7 @@
 // frontend/js/api.js
-const API_BASE = "http://backendminisuper-env.eba-mfmvebct.us-east-2.elasticbeanstalk.com";
+// En producción (Netlify) usamos un proxy /api configurado en _redirects.
+// En desarrollo local puedes cambiar esto temporalmente al backend completo.
+const API_BASE = "/api";
 
 async function fetchJSON(url, opts = {}) {
   try {
