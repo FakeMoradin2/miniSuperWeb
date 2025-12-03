@@ -256,7 +256,7 @@ function procesarUrlImagen(url) {
                 return `https://drive.google.com/uc?export=view&id=${fileId}`;
             }
         } catch (error) {
-            console.error('Error convirtiendo Google Drive URL:', error);
+            // Error al convertir URL de Google Drive
         }
     }
     
@@ -291,7 +291,6 @@ function ventaKeyForUser(user) {
 async function getOrCreateVentaId() {
     const user = getCurrentUser();
     if (!user || !user.id) {
-        console.error('❌ Usuario no válido o sin ID:', user);
         alert('Debes iniciar sesión para usar el carrito.');
         return null;
     }
@@ -299,12 +298,9 @@ async function getOrCreateVentaId() {
     // Asegurar que el ID sea un número
     const userId = typeof user.id === 'number' ? user.id : parseInt(user.id, 10);
     if (isNaN(userId)) {
-        console.error('❌ ID de usuario inválido:', user.id);
         alert('Error: ID de usuario inválido. Por favor, inicia sesión nuevamente.');
         return null;
     }
-
-    console.log('🔑 Usando usuario_id:', userId);
 
     const key = ventaKeyForUser(user);
     let ventaId = key ? localStorage.getItem(key) : null;
@@ -318,49 +314,39 @@ async function getOrCreateVentaId() {
             if (carritoBackend && carritoBackend.success && carritoBackend.venta) {
                 // Si el carrito está en estado "carrito" (vacío o con productos), usarlo
                 if (carritoBackend.venta.estado_venta === 'carrito') {
-                    console.log('✅ Carrito existente válido encontrado, venta_id:', ventaIdNum, '(productos:', (carritoBackend.productos?.length || 0) + ')');
                     return ventaIdNum;
                 } else {
                     // Si el carrito ya fue procesado (completada, cancelada, etc.), limpiar y crear uno nuevo
-                    console.log('⚠️ Carrito anterior ya fue procesado (estado: ' + carritoBackend.venta.estado_venta + '), creando nuevo carrito...');
                     if (key) localStorage.removeItem(key);
                     // Continuar para crear un nuevo carrito
                 }
             } else {
                 // Si el carrito no existe o no está en estado "carrito", limpiar y crear uno nuevo
-                console.log('⚠️ Carrito anterior no válido o no existe, creando nuevo carrito...');
                 if (key) localStorage.removeItem(key);
                 // Continuar para crear un nuevo carrito
             }
         } catch (error) {
             // Si hay un error al verificar, limpiar y crear uno nuevo
-            console.log('⚠️ Error verificando carrito anterior, creando nuevo carrito...', error.message || error);
             if (key) localStorage.removeItem(key);
             // Continuar para crear un nuevo carrito
         }
     }
 
     try {
-        console.log('🛒 Creando nuevo carrito para usuario_id:', userId);
         const res = await window.api.ventas.crear({ 
             comprador_id: userId, 
             vendedor_id: userId 
         });
         
-        console.log('📡 Respuesta del backend:', res);
-        
         if (res && res.success && res.venta_id) {
             localStorage.setItem(key, String(res.venta_id));
-            console.log('✅ Carrito creado exitosamente, venta_id:', res.venta_id);
             return res.venta_id;
         } else {
-            console.error('❌ Error creando/obteniendo carrito:', res);
             const mensaje = res?.message || res?.error || 'Error desconocido al crear carrito';
             alert('Error al crear carrito: ' + mensaje);
             return null;
         }
     } catch (err) {
-        console.error('❌ Error API crear carrito:', err);
         alert('Error al conectar con el servidor: ' + (err.message || 'Error desconocido'));
         return null;
     }
@@ -369,7 +355,6 @@ async function getOrCreateVentaId() {
 async function apiAgregarProducto(productoId, cantidad) {
     // Verificar que window.api esté disponible
     if (!window.api || !window.api.ventas) {
-        console.error('❌ window.api.ventas no está disponible. Asegúrate de que api.js se cargue antes de script_cart.js');
         alert('Error: La API no está disponible. Por favor, recarga la página.');
         return false;
     }
@@ -379,28 +364,21 @@ async function apiAgregarProducto(productoId, cantidad) {
     try {
         const productoIdNum = parseInt(productoId, 10);
         if (isNaN(productoIdNum)) {
-            console.error('ID de producto inválido:', productoId);
             return false;
         }
 
-        console.log('➕ Agregando producto:', { venta_id: ventaId, producto_id: productoIdNum, cantidad });
         const res = await window.api.ventas.agregarProducto({
             venta_id: ventaId,
             producto_id: productoIdNum,
             cantidad: cantidad
         });
         
-        console.log('📡 Respuesta del backend:', res);
-        
         if (res && res.success) {
-            console.log('✅ Producto agregado exitosamente');
             return true;
         }
-        console.warn('No se pudo agregar producto:', res);
         alert(res && res.message ? res.message : 'No se pudo agregar el producto.');
         return false;
     } catch (err) {
-        console.error('❌ Error API agregarProducto:', err);
         alert('Error al conectar con el servidor para agregar producto: ' + (err.message || 'Error desconocido'));
         return false;
     }
@@ -411,7 +389,6 @@ async function apiActualizarProducto(productoId, cantidad) {
     // Solución: Eliminamos el producto y lo volvemos a agregar con la nueva cantidad
     
     if (!window.api || !window.api.ventas) {
-        console.error('❌ window.api.ventas no está disponible');
         return false;
     }
 
@@ -423,11 +400,8 @@ async function apiActualizarProducto(productoId, cantidad) {
         const cantidadNum = parseInt(cantidad, 10);
         
         if (isNaN(productoIdNum) || isNaN(cantidadNum)) {
-            console.error('ID de producto o cantidad inválida');
             return false;
         }
-
-        console.log('🔄 Actualizando cantidad (eliminar + agregar):', { venta_id: ventaId, producto_id: productoIdNum, cantidad: cantidadNum });
         
         // Paso 1: Eliminar el producto del carrito
         const resEliminar = await window.api.ventas.eliminarProducto({
@@ -436,7 +410,6 @@ async function apiActualizarProducto(productoId, cantidad) {
         });
         
         if (!resEliminar || !resEliminar.success) {
-            console.warn('No se pudo eliminar producto para actualizar:', resEliminar);
             return false;
         }
         
@@ -447,18 +420,13 @@ async function apiActualizarProducto(productoId, cantidad) {
             cantidad: cantidadNum
         });
         
-        console.log('📡 Respuesta agregar:', resAgregar);
-        
         if (resAgregar && resAgregar.success) {
-            console.log('✅ Cantidad actualizada exitosamente');
             return true;
         }
         
-        console.warn('No se pudo agregar producto después de eliminar:', resAgregar);
         return false;
         
     } catch (err) {
-        console.error('❌ Error API actualizarProducto:', err);
         return false;
     }
 }
@@ -466,7 +434,6 @@ async function apiActualizarProducto(productoId, cantidad) {
 async function apiEliminarProducto(productoId) {
     // Verificar que window.api esté disponible
     if (!window.api || !window.api.ventas) {
-        console.error('❌ window.api.ventas no está disponible. Asegúrate de que api.js se cargue antes de script_cart.js');
         alert('Error: La API no está disponible. Por favor, recarga la página.');
         return false;
     }
@@ -476,27 +443,20 @@ async function apiEliminarProducto(productoId) {
     try {
         const productoIdNum = parseInt(productoId, 10);
         if (isNaN(productoIdNum)) {
-            console.error('ID de producto inválido:', productoId);
             return false;
         }
 
-        console.log('🗑️ Eliminando producto:', { venta_id: ventaId, producto_id: productoIdNum });
         const res = await window.api.ventas.eliminarProducto({
             venta_id: ventaId,
             producto_id: productoIdNum
         });
         
-        console.log('📡 Respuesta del backend:', res);
-        
         if (res && res.success) {
-            console.log('✅ Producto eliminado exitosamente');
             return true;
         }
-        console.warn('No se pudo eliminar producto:', res);
         alert(res && res.message ? res.message : 'No se pudo eliminar el producto.');
         return false;
     } catch (err) {
-        console.error('❌ Error API eliminarProducto:', err);
         alert('Error al conectar con el servidor para eliminar producto: ' + (err.message || 'Error desconocido'));
         return false;
     }
@@ -513,11 +473,9 @@ async function apiCancelarCarrito() {
             localStorage.removeItem(key);
             return true;
         }
-        console.warn('No se pudo cancelar carrito:', res);
         alert(res && res.message ? res.message : 'No se pudo cancelar el carrito.');
         return false;
     } catch (err) {
-        console.error('Error API cancelar:', err);
         alert('Error al conectar con el servidor para cancelar el carrito.');
         return false;
     }
@@ -588,7 +546,6 @@ async function actualizarCantidad(productoId, nuevaCantidad) {
     // Convertir productoId a número si es necesario
     const productoIdNum = typeof productoId === 'number' ? productoId : parseInt(productoId, 10);
     if (isNaN(productoIdNum)) {
-        console.error('ID de producto inválido:', productoId);
         alert('Error: ID de producto inválido');
         return;
     }
@@ -615,7 +572,6 @@ async function eliminarDelCarrito(productoId) {
     // Convertir productoId a número si es necesario
     const productoIdNum = typeof productoId === 'number' ? productoId : parseInt(productoId, 10);
     if (isNaN(productoIdNum)) {
-        console.error('ID de producto inválido:', productoId);
         alert('Error: ID de producto inválido');
         return;
     }
@@ -674,7 +630,6 @@ function limpiarVistaLocalCarrito() {
     
     // El venta_id se mantiene en localStorage por si el usuario quiere ver el estado
     // Pero el carrito visual se limpia para que no se muestren los productos
-    console.log('✅ Vista local limpiada. El carrito permanece en estado "carrito" en el backend para procesar en caja.');
 }
 
 // Add to Cart Function
@@ -682,7 +637,6 @@ async function agregarAlCarrito(producto) {
     // Asegurar que el ID sea un número
     const productoId = typeof producto.id === 'number' ? producto.id : parseInt(producto.id, 10);
     if (isNaN(productoId)) {
-        console.error('ID de producto inválido:', producto.id);
         alert('Error: ID de producto inválido');
         return;
     }
@@ -723,7 +677,6 @@ async function agregarAlCarrito(producto) {
 async function sincronizarCarritoDesdeBackend() {
     const user = getCurrentUser();
     if (!user || !user.id) {
-        console.log('Usuario no autenticado, usando carrito local');
         return;
     }
 
@@ -741,13 +694,11 @@ async function sincronizarCarritoDesdeBackend() {
                 // Si no se puede obtener o el estado no es "carrito", el carrito fue procesado
                 if (!carritoBackend || !carritoBackend.success || 
                     (carritoBackend.venta && carritoBackend.venta.estado_venta !== 'carrito')) {
-                    console.log('⚠️ Carrito guardado ya fue procesado, limpiando completamente...');
                     limpiarTodoElCarrito(user);
                     // Continuar para obtener o crear un nuevo carrito
                 }
             } catch (error) {
                 // Si hay error al obtener, probablemente fue procesado o no existe
-                console.log('⚠️ Error verificando carrito guardado, limpiando...');
                 limpiarTodoElCarrito(user);
             }
         }
@@ -755,7 +706,6 @@ async function sincronizarCarritoDesdeBackend() {
         // Ahora obtener o crear un venta_id válido
         const ventaId = await getOrCreateVentaId();
         if (!ventaId) {
-            console.log('No se pudo obtener venta_id, usando carrito local');
             return;
         }
 
@@ -788,31 +738,26 @@ async function sincronizarCarritoDesdeBackend() {
                             }, parseInt(item.cantidad));
                         });
                         renderizarCarrito();
-                        console.log('✅ Carrito sincronizado desde el backend (estado: carrito)');
                     } else {
                         // Carrito está vacío pero en estado carrito, solo limpiar la vista local
                         // Esto permite que el usuario empiece a agregar productos nuevamente
                         carrito.vaciar();
                         renderizarCarrito();
-                        console.log('✅ Carrito vacío en backend, lista para agregar productos');
                     }
                 } else {
                     // Si el carrito ya fue confirmado o cancelado, limpiar TODO
-                    console.log('⚠️ Carrito ya fue procesado (estado: ' + carritoBackend.venta.estado_venta + '), limpiando completamente...');
                     const userForCleanup = getCurrentUser();
                     limpiarTodoElCarrito(userForCleanup);
-                    console.log('🧹 Carrito completamente limpiado porque ya fue procesado');
                 }
             }
         } catch (error) {
             // Si hay error al obtener el carrito, puede que ya fue procesado o no existe
-            console.log('⚠️ El carrito no existe en el backend o ya fue procesado, limpiando carrito local...');
             const user = getCurrentUser();
             limpiarTodoElCarrito(user);
         }
         
     } catch (error) {
-        console.error('Error sincronizando carrito:', error);
+        // Error sincronizando carrito
     }
 }
 
@@ -826,7 +771,6 @@ async function obtenerCarritoDesdeBackend(ventaId) {
         const data = await window.api.ventas.obtenerCarrito(ventaId);
         return data;
     } catch (error) {
-        console.error('Error obteniendo carrito desde backend:', error);
         return null;
     }
 }
