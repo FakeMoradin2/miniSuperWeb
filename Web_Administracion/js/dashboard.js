@@ -271,12 +271,19 @@ async function loadVentasRecientes() {
       
       // Formatear fecha
       let fechaFormateada = '';
-      if (venta.fecha || venta.fecha_hora || venta.creado_en) {
-        const fecha = new Date(venta.fecha || venta.fecha_hora || venta.creado_en);
-        fechaFormateada = fecha.toLocaleDateString('es-ES') + ' ' + fecha.toLocaleTimeString('es-ES', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        });
+      if (venta.fecha || venta.fecha_hora || venta.creado_en || venta.creada_en_venta) {
+        let fechaStr = (venta.fecha || venta.fecha_hora || venta.creado_en || venta.creada_en_venta).toString();
+        // Si no tiene 'T', agregarlo para que JavaScript lo interprete como hora local
+        if (!fechaStr.includes('T') && !fechaStr.includes('Z')) {
+          fechaStr = fechaStr.replace(' ', 'T');
+        }
+        const fecha = new Date(fechaStr);
+        if (!isNaN(fecha.getTime())) {
+          fechaFormateada = fecha.toLocaleDateString('es-ES') + ' ' + fecha.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+        }
       }
       
       // Determinar estado

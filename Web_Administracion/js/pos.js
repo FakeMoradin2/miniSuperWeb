@@ -8,7 +8,7 @@
 // - window.api.ventasAPI.agregarProducto({venta_id, producto_id, cantidad})
 // - window.api.ventasAPI.actualizarProducto({venta_id, producto_id, cantidad})
 // - window.api.ventasAPI.eliminarProducto({venta_id, producto_id})
-// - window.api.ventasAPI.confirmar({venta_id, metodo_pago, cliente})
+// - window.api.ventasAPI.confirmar({venta_id, cliente})
 // - window.api.ventasAPI.cancelar({venta_id})
 // - window.api.clientes.listar()                          // Obtener todos los clientes
 // - window.api.clientes.agregar({nombre, email, telefono})
@@ -34,7 +34,6 @@ function safeExtractId(obj){
   for(const key in obj){
     const val = obj[key];
     if(typeof val === 'number' && val > 0 && !key.includes('precio') && !key.includes('total') && !key.includes('cantidad')){
-      console.log(`Usando ${key}=${val} como posible ID`);
       return val;
     }
   }
@@ -46,11 +45,8 @@ function safeExtractId(obj){
 // Cargar productos al iniciar
 async function cargarProductos(){
   try{
-    console.log('Cargando productos...');
     allProducts = await window.api.productos.listar();
-    console.log('Productos cargados:', allProducts.length, allProducts);
   }catch(err){
-    console.error('Error cargando productos:', err);
     allProducts = [];
   }
 }
@@ -84,7 +80,7 @@ function renderCart(){
           venta_id: currentVentaId, 
           producto_id: cart[i].producto_id, 
           cantidad: val
-        }).catch(err => console.error('Error actualizando producto:', err));
+        }).catch(() => {});
       }
       renderCart();
     });
@@ -102,7 +98,7 @@ function renderCart(){
             producto_id: cart[i].producto_id
           });
         }catch(err){ 
-          console.error('Error eliminando producto:', err); 
+          // Error eliminando producto
         }
       }
       cart.splice(i, 1);
@@ -117,11 +113,9 @@ async function searchProducts(query){
     
     // Buscar en servidor
     const results = await window.api.productos.buscar(query);
-    console.log('Búsqueda de:', query, 'Resultados:', results);
     
     return Array.isArray(results) ? results : [];
   }catch(err){
-    console.error('Error buscando productos:', err);
     return [];
   }
 }
@@ -201,41 +195,105 @@ document.getElementById('btnClearSearch').addEventListener('click', ()=>{
 
 async function agregarProductoAlCarrito(prod){
   try{
-    // Operamos localmente; la venta en servidor se creará al confirmar
     const productoId = prod.producto_id ?? prod.id;
     const nombre = prod.nombre_producto || prod.nombre || 'Producto';
     const precio = parseFloat(prod.precio) || 0;
 
     const exists = cart.find(c => String(c.producto_id) === String(productoId));
-    if(exists){
-      exists.cantidad += 1;
+    
+    // Si hay un carrito seleccionado (currentVentaId), sincronizar con el backend
+    if(currentVentaId){
+      try{
+        if(exists){
+          // Si ya existe, incrementar cantidad localmente y actualizar en backend
+          exists.cantidad += 1;
+          await window.api.ventasAPI.actualizarProducto({
+            venta_id: currentVentaId,
+            producto_id: productoId,
+            cantidad: exists.cantidad
+          });
+        } else {
+          // Si no existe, agregar nuevo producto
+          cart.push({ producto_id: productoId, nombre_producto: nombre, precio, cantidad: 1 });
+          await window.api.ventasAPI.agregarProducto({
+            venta_id: currentVentaId,
+            producto_id: productoId,
+            cantidad: 1
+          });
+        }
+      }catch(err){
+        // Si falla al sincronizar, revertir cambio local
+        if(exists){
+          exists.cantidad -= 1;
+          if(exists.cantidad === 0){
+            cart = cart.filter(c => String(c.producto_id) !== String(productoId));
+          }
+        } else {
+          cart = cart.filter(c => String(c.producto_id) !== String(productoId));
+        }
+        throw err;
+      }
     } else {
-      cart.push({ producto_id: productoId, nombre_producto: nombre, precio, cantidad: 1 });
+      // Si no hay carrito seleccionado, solo actualizar localmente
+      if(exists){
+        exists.cantidad += 1;
+      } else {
+        cart.push({ producto_id: productoId, nombre_producto: nombre, precio, cantidad: 1 });
+      }
     }
 
     renderCart();
     document.getElementById('searchInput').value = '';
     document.getElementById('searchResults').innerHTML = '';
   }catch(err){
-    console.error('Error agregando producto al carrito:', err);
     alert('Error: No se pudo agregar el producto. ' + err.message);
   }
 }
 
 document.getElementById('btnConfirm').addEventListener('click', async ()=>{
-  if(cart.length === 0){ alert('El carrito está vacío. Agrega productos primero.'); return; }
-
-  const metodo = document.getElementById('metodoPago').value;
   const clienteNombre = document.getElementById('clienteInput').value.trim() || 'Cliente';
 
   try{
-    console.log('Iniciando proceso de venta...');
-    
     // Usar ID del cliente_general_pos (ID: 18)
     const userId = 18;
+    let ventaIdToConfirm = currentVentaId;
+    let totalVenta = 0;
     
-    // Si ya hay un currentVentaId, significa que estamos confirmando un carrito existente
-    if(!currentVentaId){
+    // Si ya hay un currentVentaId, verificar que tenga productos en el backend
+    if(currentVentaId){
+      try{
+        const carritoBackend = await window.api.ventasAPI.obtenerCarrito(currentVentaId);
+        if(carritoBackend && carritoBackend.success && carritoBackend.productos && carritoBackend.productos.length > 0){
+          // Si hay productos en el backend, usar ese total
+          totalVenta = parseFloat(carritoBackend.total || 0);
+          // Actualizar el carrito local con los productos del backend
+          cart = carritoBackend.productos.map(p => ({
+            producto_id: p.producto_id,
+            nombre_producto: p.nombre_producto,
+            precio: parseFloat(p.precio_unitario),
+            cantidad: parseInt(p.cantidad)
+          }));
+        } else {
+          // Si el carrito está vacío en el backend, verificar el carrito local
+          if(cart.length === 0){
+            alert('El carrito está vacío. Agrega productos primero.');
+            return;
+          }
+        }
+      }catch(err){
+        // Si hay error al obtener el carrito, verificar el carrito local
+        if(cart.length === 0){
+          alert('El carrito está vacío. Agrega productos primero.');
+          return;
+        }
+      }
+    } else {
+      // Si no hay carrito seleccionado, verificar que el carrito local tenga productos
+      if(cart.length === 0){
+        alert('El carrito está vacío. Agrega productos primero.');
+        return;
+      }
+      
       // Paso 1: Crear venta básica
       const crearResp = await window.api.ventasAPI.crear({
         comprador_id: userId,
@@ -243,45 +301,31 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
         estado: 'pendiente'
       });
       
-      console.log('Respuesta crear venta:', crearResp);
-      currentVentaId = safeExtractId(crearResp);
+      ventaIdToConfirm = safeExtractId(crearResp);
       
-      if(!currentVentaId){
-        console.error('No se obtuvo ID de venta. Respuesta completa:', crearResp);
+      if(!ventaIdToConfirm){
         throw new Error('No se pudo crear la venta en el servidor');
       }
       
-      console.log('Venta creada con ID:', currentVentaId);
-      
       // Paso 2: Agregar cada producto a la venta
       for(const item of cart){
-        console.log('Agregando producto:', item.nombre_producto);
         await window.api.ventasAPI.agregarProducto({
-          venta_id: currentVentaId,
+          venta_id: ventaIdToConfirm,
           producto_id: item.producto_id,
           cantidad: item.cantidad
         });
       }
-      
-      console.log('Todos los productos agregados');
-    } else {
-      console.log('Confirmando carrito existente #' + currentVentaId);
     }
     
     // Paso 3: Confirmar la venta con nombre del cliente
     const confirmResp = await window.api.ventasAPI.confirmar({
-      venta_id: currentVentaId,
-      metodo_pago: metodo,
+      venta_id: ventaIdToConfirm,
       cliente: clienteNombre
     });
-    
-    console.log('Respuesta de confirmar venta:', confirmResp);
     
     if(!confirmResp.success){
       throw new Error(confirmResp.message || 'Error al confirmar la venta');
     }
-    
-    console.log('Venta confirmada exitosamente con ID:', currentVentaId);
 
     // Guardar venta en localStorage para reportes
     const fechaIso = new Date();
@@ -291,14 +335,13 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     const mm = String(hoy.getMonth()+1).padStart(2,'0');
     const dd = String(hoy.getDate()).padStart(2,'0');
     // Usar el total de la respuesta si está disponible, si no calcular del carrito
-    const total = confirmResp.total ? parseFloat(confirmResp.total) : cart.reduce((s,i)=> s + i.precio*i.cantidad, 0);
+    const total = confirmResp.total ? parseFloat(confirmResp.total) : (totalVenta > 0 ? totalVenta : cart.reduce((s,i)=> s + i.precio*i.cantidad, 0));
     
     // Guardar en localStorage
     const ventaLocal = {
-      id_venta: currentVentaId,
+      id_venta: ventaIdToConfirm,
       fecha: fechaIso.toISOString(),
       cliente: clienteNombre,
-      metodo_pago: metodo,
       total: total,
       estado: 'confirmada',
       productos: cart.map(item => ({
@@ -313,15 +356,13 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     let ventasGuardadas = JSON.parse(localStorage.getItem('minisuper_ventas') || '[]');
     ventasGuardadas.push(ventaLocal);
     localStorage.setItem('minisuper_ventas', JSON.stringify(ventasGuardadas));
-    console.log('Venta guardada en localStorage:', ventaLocal);
     const reciboHtml = `
       <div style="font-size:14px">
         <div style="display:flex;justify-content:space-between">
           <div><strong>Minisúper</strong><br><span style="color:var(--gray)">Punto de Venta</span></div>
           <div style="text-align:right">
-            <div><strong>Folio:</strong> ${currentVentaId}</div>
+            <div><strong>Folio:</strong> ${ventaIdToConfirm}</div>
             <div><strong>Fecha:</strong> ${fechaStr}</div>
-            <div><strong>Método:</strong> ${metodo}</div>
           </div>
         </div>
         <div style="margin:10px 0"><strong>Cliente:</strong> ${clienteNombre}</div>
@@ -354,7 +395,6 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     // Limpiar UI y estado para nueva venta
     cart = []; currentVentaId = null;
     document.getElementById('clienteInput').value = '';
-    document.getElementById('metodoPago').value = 'Efectivo';
     document.getElementById('searchInput').value = '';
     document.getElementById('searchResults').innerHTML = '';
     renderCart();
@@ -362,7 +402,6 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     // Recargar lista de carritos pendientes
     await cargarCarritosPendientes();
   }catch(err){
-    console.error('Error en confirmación:', err);
     // Si ya se creó la venta pero algo falló, intentar cancelar
     try{ if(currentVentaId) await window.api.ventasAPI.cancelar({venta_id: currentVentaId}); }catch{}
     alert('Error al procesar la venta: ' + (err.message || err));
@@ -391,7 +430,6 @@ document.getElementById('btnCancel').addEventListener('click', async ()=>{
     renderCart();
     alert('✓ Venta cancelada');
   }catch(err){
-    console.error('Error cancelando venta:', err);
     alert('Error al cancelar: ' + err.message);
   }
 });
@@ -403,20 +441,189 @@ document.getElementById('searchInput').addEventListener('keypress', (e)=>{
   }
 });
 
+// Búsqueda por teléfono
+document.getElementById('btnBuscarTelefono').addEventListener('click', async ()=>{
+  const telefono = document.getElementById('telefonoSearchInput').value.trim();
+  const resultsDiv = document.getElementById('telefonoSearchResults');
+  
+  if(!telefono){
+    alert('Por favor ingresa un número de teléfono');
+    return;
+  }
+  
+  // Validar que sea solo números y tenga 10 dígitos
+  if(!/^\d{10}$/.test(telefono)){
+    alert('El teléfono debe tener 10 dígitos');
+    return;
+  }
+  
+  try{
+    const response = await window.api.ventasAPI.buscarPorTelefono(telefono);
+    
+    if(!response.success){
+      throw new Error(response.message || 'Error al buscar tickets');
+    }
+    
+    const ventas = response.data || [];
+    
+    if(ventas.length === 0){
+      resultsDiv.innerHTML = '<div style="padding:12px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;color:#856404;">No se encontraron tickets para este teléfono</div>';
+      resultsDiv.style.display = 'block';
+      return;
+    }
+    
+    // Mostrar los tickets encontrados
+    let html = '<div style="max-height:300px;overflow-y:auto;">';
+    html += '<h4 style="margin:0 0 12px 0;font-size:14px;">Tickets encontrados (' + ventas.length + '):</h4>';
+    
+    ventas.forEach(venta => {
+      const fecha = venta.creada_en_venta ? new Date(venta.creada_en_venta.replace(' ', 'T')).toLocaleString('es-MX', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'N/A';
+      
+      const total = parseFloat(venta.total_calculado || venta.total || 0).toFixed(2);
+      const cantidadProductos = venta.cantidad_productos || 0;
+      
+      html += `
+        <div style="padding:10px;margin-bottom:8px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;cursor:pointer;" 
+             onclick="seleccionarCarrito(${venta.id_venta})">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <strong>Carrito #${venta.id_venta}</strong><br>
+              <small style="color:#666;">Cliente: ${venta.nombre_cliente || 'Cliente General'} • ${cantidadProductos} productos • ${fecha}</small>
+            </div>
+            <div style="text-align:right;">
+              <strong style="color:#28a745;">$${total}</strong><br>
+              <button class="btn primary" style="padding:4px 12px;margin-top:4px;font-size:12px;">Seleccionar</button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    resultsDiv.innerHTML = html;
+    resultsDiv.style.display = 'block';
+    
+  } catch(err){
+    alert('Error al buscar tickets: ' + err.message);
+    resultsDiv.style.display = 'none';
+  }
+});
+
+// Permitir buscar con Enter en el campo de teléfono
+document.getElementById('telefonoSearchInput').addEventListener('keypress', (e)=>{
+  if(e.key === 'Enter'){
+    document.getElementById('btnBuscarTelefono').click();
+  }
+});
+
+// Función para mostrar un ticket completo por ID
+async function mostrarTicketPorId(ventaId){
+  try{
+    const response = await window.api.ventasAPI.obtenerPorId(ventaId);
+    
+    if(!response || !response.success){
+      // Intentar obtener desde obtenerCarrito si es un carrito
+      const carritoResp = await window.api.ventasAPI.obtenerCarrito(ventaId);
+      if(carritoResp && carritoResp.success){
+        mostrarTicketDesdeDatos(carritoResp.data, ventaId);
+        return;
+      }
+      throw new Error('No se pudo obtener la información del ticket');
+    }
+    
+    mostrarTicketDesdeDatos(response.data || response, ventaId);
+    
+  } catch(err){
+    alert('Error al cargar el ticket: ' + err.message);
+  }
+}
+
+// Función auxiliar para mostrar ticket desde datos
+function mostrarTicketDesdeDatos(datos, ventaId){
+  const fecha = datos.creada_en_venta ? new Date(datos.creada_en_venta.replace(' ', 'T')).toLocaleString('es-MX') : new Date().toLocaleString('es-MX');
+  const cliente = datos.nombre_cliente || datos.cliente || 'Cliente General';
+  const total = parseFloat(datos.total || 0).toFixed(2);
+  
+  let productosHtml = '';
+  if(datos.productos && Array.isArray(datos.productos)){
+    productosHtml = datos.productos.map(p => `
+      <tr>
+        <td style="padding:6px;border:1px solid #ddd">${p.nombre_producto || p.nombre || 'N/A'}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right">$${parseFloat(p.precio_unitario || p.precio || 0).toFixed(2)}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right">${p.cantidad || 0}</td>
+        <td style="padding:6px;border:1px solid #ddd;text-align:right">$${parseFloat(p.subtotal || 0).toFixed(2)}</td>
+      </tr>
+    `).join('');
+  }
+  
+  const reciboHtml = `
+    <div style="font-size:14px">
+      <div style="display:flex;justify-content:space-between">
+        <div><strong>Minisúper</strong><br><span style="color:var(--gray)">Punto de Venta</span></div>
+        <div style="text-align:right">
+          <div><strong>Folio:</strong> ${ventaId}</div>
+          <div><strong>Fecha:</strong> ${fecha}</div>
+        </div>
+      </div>
+      <div style="margin:10px 0"><strong>Cliente:</strong> ${cliente}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:#eee"><th style="text-align:left;padding:6px;border:1px solid #ddd">Producto</th><th style="text-align:right;padding:6px;border:1px solid #ddd">Precio</th><th style="text-align:right;padding:6px;border:1px solid #ddd">Cant</th><th style="text-align:right;padding:6px;border:1px solid #ddd">Subtotal</th></tr>
+        </thead>
+        <tbody>
+          ${productosHtml || '<tr><td colspan="4" style="text-align:center;padding:12px">No hay productos</td></tr>'}
+        </tbody>
+      </table>
+      <div style="text-align:right;margin-top:8px;font-size:15px"><strong>Total: $${total}</strong></div>
+    </div>
+  `;
+  
+  document.getElementById('receiptContent').innerHTML = reciboHtml;
+  document.getElementById('receiptModal').style.display = 'flex';
+  
+  // Guardar ventaId para el botón "Ver en Reportes"
+  const btnOpenReports = document.getElementById('btnOpenReports');
+  if(btnOpenReports){
+    btnOpenReports.onclick = () => {
+      window.location.href = 'reports.html';
+    };
+  }
+}
+
 // Funciones para carritos pendientes
 async function cargarCarritosPendientes(mostrarLista = false){
   try{
     const response = await window.api.ventasAPI.listarCarritos();
-    console.log('Carritos pendientes:', response);
     
     const container = document.getElementById('pendingCartsList');
     const btnNewCart = document.getElementById('btnNewCart');
     
     if(response.success && response.data && response.data.length > 0){
-      mostrarCarritosPendientes(response.data);
-      if(mostrarLista) {
-        container.style.display = 'block';
-        btnNewCart.style.display = 'block';
+      // Filtrar carritos vacíos (con 0 productos o total 0)
+      const carritosConProductos = response.data.filter(carrito => {
+        const cantidad = carrito.cantidad_productos || 0;
+        const total = parseFloat(carrito.total_calculado || 0);
+        return cantidad > 0 && total > 0;
+      });
+      
+      if(carritosConProductos.length > 0) {
+        mostrarCarritosPendientes(carritosConProductos);
+        if(mostrarLista) {
+          container.style.display = 'block';
+          btnNewCart.style.display = 'block';
+        }
+      } else {
+        container.innerHTML = '<p style="color:var(--gray);padding:12px;text-align:center">No hay carritos pendientes en este momento</p>';
+        if(mostrarLista) {
+          container.style.display = 'block';
+          btnNewCart.style.display = 'block';
+        }
       }
     } else {
       container.innerHTML = '<p style="color:var(--gray);padding:12px;text-align:center">No hay carritos pendientes en este momento</p>';
@@ -426,7 +633,6 @@ async function cargarCarritosPendientes(mostrarLista = false){
       }
     }
   }catch(err){
-    console.error('Error cargando carritos pendientes:', err);
     const container = document.getElementById('pendingCartsList');
     container.innerHTML = '<p style="color:#dc3545;padding:12px;text-align:center">Error al cargar carritos: ' + err.message + '</p>';
   }
@@ -489,7 +695,6 @@ function mostrarCarritosPendientes(carritos){
 
 async function seleccionarCarrito(ventaId){
   try{
-    console.log('Seleccionando carrito:', ventaId);
     const response = await window.api.ventasAPI.obtenerCarrito(ventaId);
     
     if(!response.success || !response.venta){
@@ -497,13 +702,18 @@ async function seleccionarCarrito(ventaId){
       return;
     }
     
-    // Cargar productos al carrito local
-    cart = response.productos.map(p => ({
-      producto_id: p.producto_id,
-      nombre_producto: p.nombre_producto,
-      precio: parseFloat(p.precio_unitario),
-      cantidad: parseInt(p.cantidad)
-    }));
+    // Cargar productos al carrito local - asegurar que sea un array válido
+    if(response.productos && Array.isArray(response.productos) && response.productos.length > 0){
+      cart = response.productos.map(p => ({
+        producto_id: p.producto_id,
+        nombre_producto: p.nombre_producto,
+        precio: parseFloat(p.precio_unitario),
+        cantidad: parseInt(p.cantidad)
+      }));
+    } else {
+      // Si no hay productos, inicializar array vacío
+      cart = [];
+    }
     
     currentVentaId = ventaId;
     
@@ -519,11 +729,12 @@ async function seleccionarCarrito(ventaId){
     document.getElementById('pendingCartsList').style.display = 'none';
     document.getElementById('btnNewCart').style.display = 'none';
     
-    // Mostrar modal bonito de confirmación
-    mostrarModalConfirmacionCarrito(ventaId, response.total.toFixed(2));
+    // Mostrar modal bonito de confirmación solo si hay productos
+    if(cart.length > 0){
+      mostrarModalConfirmacionCarrito(ventaId, (response.total || 0).toFixed(2));
+    }
     
   }catch(err){
-    console.error('Error seleccionando carrito:', err);
     alert('Error al cargar el carrito: ' + err.message);
   }
 }
@@ -561,7 +772,6 @@ const originalConfirmHandler = document.getElementById('btnConfirm')?.onclick;
 
 // Inicializar
 async function init(){
-  console.log('Inicializando POS...');
   await cargarProductos();
   await cargarCarritosPendientes();
   renderCart();
@@ -603,7 +813,6 @@ async function init(){
       cart = [];
       currentVentaId = null;
       document.getElementById('clienteInput').value = '';
-      document.getElementById('metodoPago').value = 'Efectivo';
       document.getElementById('searchInput').value = '';
       document.getElementById('searchResults').innerHTML = '';
       renderCart();

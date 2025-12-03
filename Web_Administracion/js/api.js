@@ -211,6 +211,10 @@ const ventasAPI = {
   obtenerCarrito: (venta_id) => fetchJSON(`${API_BASE}/api/ventas/obtenerCarrito.php?venta_id=${venta_id}`, {
     method: 'GET',
     headers: {'Accept':'application/json'}
+  }),
+  buscarPorTelefono: (telefono) => fetchJSON(`${API_BASE}/api/ventas/buscarPorTelefono.php?telefono=${encodeURIComponent(telefono)}`, {
+    method: 'GET',
+    headers: {'Accept':'application/json'}
   })
 };
 

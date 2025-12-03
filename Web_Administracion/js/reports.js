@@ -121,13 +121,28 @@ async function cargarReporteRango(inicio, fin){
         
         const folio = venta?.id_venta ?? venta?.venta_id ?? venta?.id ?? 'N/A';
         const fechaVenta = venta?.fecha ?? venta?.creada_en_venta ?? venta?.creada_en ?? null;
-        const fecha = fechaVenta ? new Date(fechaVenta).toLocaleString('es-MX', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        }) : 'N/A';
+        let fecha = 'N/A';
+        if (fechaVenta) {
+          // MySQL devuelve fechas en formato 'YYYY-MM-DD HH:MM:SS' sin zona horaria
+          // JavaScript las interpreta como hora local si no tiene 'Z' o '+/-'
+          // Para asegurar que se interprete como hora local, agregar 'T' y no 'Z'
+          let fechaStr = fechaVenta.toString();
+          // Si no tiene 'T', agregarlo para que JavaScript lo interprete correctamente
+          if (!fechaStr.includes('T') && !fechaStr.includes('Z')) {
+            fechaStr = fechaStr.replace(' ', 'T');
+          }
+          const fechaObj = new Date(fechaStr);
+          // Verificar si la fecha es válida
+          if (!isNaN(fechaObj.getTime())) {
+            fecha = fechaObj.toLocaleString('es-MX', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+          }
+        }
         const cliente = venta?.nombre_cliente ?? venta?.cliente ?? venta?.comprador ?? 'Cliente General';
         const metodoPago = venta?.metodo_pago ?? venta?.metodoPago ?? venta?.forma_pago ?? 'N/A';
         const total = Number(venta?.total ?? venta?.monto_total ?? venta?.precio_total ?? 0);

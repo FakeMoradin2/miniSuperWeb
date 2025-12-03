@@ -43,56 +43,65 @@
       <div class="user"><div class="avatar">JD</div><div><div style="font-weight:700">Juan Delgado</div><div style="color:var(--gray)">Cajero</div></div></div>
     </div>
 
-    <!-- Sección de Carritos Pendientes -->
-    <div id="pendingCartsSection" class="form-card" style="margin-bottom:18px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h3 style="margin:0">🛒 Carritos Pendientes</h3>
-        <div style="display:flex;gap:8px;">
-          <button id="btnToggleCarts" class="btn secondary" style="padding:6px 12px"> Ver Carritos</button>
-          <button id="btnRefreshCarts" class="btn secondary" style="padding:6px 12px"> Actualizar</button>
-        </div>
-      </div>
-      <div id="pendingCartsList" style="display:none;"></div>
-      <button id="btnNewCart" class="btn primary" style="margin-top:12px;width:100%;display:none;">+ Nueva Venta</button>
-    </div>
-
     <div style="display:flex;gap:18px;flex-wrap:wrap">
-      <div style="flex:1;min-width:320px">
-        <div class="form-card">
-          <div class="form-group">
-            <label>Buscar producto (nombre o código)</label>
-            <input id="searchInput" placeholder="Ej: leche">
+      <!-- Sección izquierda: Carritos Pendientes -->
+      <div style="width:380px;max-width:100%">
+        <div id="pendingCartsSection" class="form-card" style="margin-bottom:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <h3 style="margin:0">🛒 Carritos Pendientes</h3>
+            <div style="display:flex;gap:8px;">
+              <button id="btnToggleCarts" class="btn secondary" style="padding:6px 12px"> Ver Carritos</button>
+              <button id="btnRefreshCarts" class="btn secondary" style="padding:6px 12px"> Actualizar</button>
+            </div>
           </div>
-          <div class="form-group" style="display:flex;gap:8px;">
-            <button id="btnSearch" class="btn primary">Buscar</button>
-            <button id="btnClearSearch" class="btn secondary">Limpiar</button>
-          </div>
-          <div id="searchResults"></div>
-        </div>
-
-        <div class="form-card">
-          <div class="form-group"><label>Cliente (opcional)</label><input id="clienteInput" placeholder="Nombre del cliente"></div>
-          <div class="form-group"><label>Método de pago</label>
-            <select id="metodoPago">
-              <option value="Efectivo">Efectivo</option>
-              <option value="Tarjeta">Tarjeta</option>
-            </select>
-          </div>
+          <div id="pendingCartsList" style="display:none;"></div>
+          <button id="btnNewCart" class="btn primary" style="margin-top:12px;width:100%;display:none;">+ Nueva Venta</button>
         </div>
       </div>
 
-      <div style="width:520px;max-width:100%">
-        <div class="table-card">
-          <h3>Carrito</h3>
-          <table id="cartTable">
-            <thead><tr><th>Producto</th><th>Precio</th><th>Cant</th><th>Subtotal</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
-            <div><strong>Total:</strong> <span id="cartTotal">$0.00</span></div>
-            <div>
-              <button id="btnConfirm" class="btn success">Confirmar Venta</button>
-              <button id="btnCancel" class="btn danger">Cancelar</button>
+      <!-- Sección derecha: Búsqueda, Cliente y Carrito -->
+      <div style="flex:1;min-width:320px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;gap:18px;flex-wrap:wrap">
+          <div style="flex:1;min-width:280px">
+            <div class="form-card">
+              <div class="form-group">
+                <label>Buscar producto (nombre o código)</label>
+                <input id="searchInput" placeholder="Ej: leche">
+              </div>
+              <div class="form-group" style="display:flex;gap:8px;">
+                <button id="btnSearch" class="btn primary">Buscar</button>
+                <button id="btnClearSearch" class="btn secondary">Limpiar</button>
+              </div>
+              <div id="searchResults"></div>
+            </div>
+
+            <div class="form-card">
+              <div class="form-group">
+                <label>Buscar ticket por teléfono</label>
+                <div style="display:flex;gap:8px;">
+                  <input id="telefonoSearchInput" placeholder="Ej: 1234567890" style="flex:1">
+                  <button id="btnBuscarTelefono" class="btn primary" style="padding:6px 12px">Buscar</button>
+                </div>
+                <div id="telefonoSearchResults" style="margin-top:12px;display:none;"></div>
+              </div>
+              <div class="form-group"><label>Cliente (opcional)</label><input id="clienteInput" placeholder="Nombre del cliente"></div>
+            </div>
+          </div>
+
+          <div style="width:520px;max-width:100%">
+            <div class="table-card">
+              <h3>Carrito</h3>
+              <table id="cartTable">
+                <thead><tr><th>Producto</th><th>Precio</th><th>Cant</th><th>Subtotal</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+              <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+                <div><strong>Total:</strong> <span id="cartTotal">$0.00</span></div>
+                <div>
+                  <button id="btnConfirm" class="btn success">Confirmar Venta</button>
+                  <button id="btnCancel" class="btn danger">Cancelar</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
