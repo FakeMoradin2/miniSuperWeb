@@ -22,27 +22,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Validaciones
         if (!nombre) {
-            alert('El nombre de usuario es obligatorio');
+            showWarning('El nombre de usuario es obligatorio');
             return;
         }
 
         if (!telefono || telefono.length !== 10) {
-            alert('El teléfono debe tener 10 dígitos');
+            showWarning('El teléfono debe tener 10 dígitos');
             return;
         }
 
         if (!password || password.length < 8) {
-            alert('La contraseña debe tener al menos 8 caracteres');
+            showWarning('La contraseña debe tener al menos 8 caracteres');
             return;
         }
 
         if (password !== confirmPassword) {
-            alert('Las contraseñas no coinciden');
+            showWarning('Las contraseñas no coinciden');
             return;
         }
 
         if (!rol) {
-            alert('Debe seleccionar un rol');
+            showWarning('Debe seleccionar un rol');
             return;
         }
 
@@ -58,15 +58,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await window.api.auth.register(empleadoData);
             
             if (response.success) {
-                alert('Empleado registrado correctamente');
+                showSuccess('Empleado registrado correctamente');
                 limpiarFormularioEmpleado();
                 await loadEmpleados(); // Recargar la lista desde la base de datos
             } else {
-                alert('Error al registrar empleado: ' + (response.message || 'Error desconocido'));
+                showError('Error al registrar empleado.');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al registrar empleado: ' + (error.message || 'Error desconocido'));
+            showError('Error al registrar empleado.');
         }
     });
 
@@ -190,12 +190,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const estado = document.getElementById('editEstadoEmpleado').value;
 
         if (!nombre) {
-            alert('El nombre de usuario es obligatorio');
+            showWarning('El nombre de usuario es obligatorio');
             return;
         }
 
         if (!telefono || telefono.length !== 10) {
-            alert('El teléfono debe tener 10 dígitos');
+            showWarning('El teléfono debe tener 10 dígitos');
             return;
         }
 
@@ -211,15 +211,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await window.api.empleados.update(empleadoData);
             
             if (response.success) {
-                alert('Empleado actualizado correctamente');
+                showSuccess('Empleado actualizado correctamente');
                 modal.style.display = 'none';
                 await loadEmpleados(); // Recargar desde la base de datos
             } else {
-                alert('Error al actualizar empleado: ' + (response.message || 'Error desconocido'));
+                showError('Error al actualizar empleado.');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al actualizar empleado: ' + (error.message || 'Error desconocido'));
+            showError('Error al actualizar empleado.');
         }
     });
 

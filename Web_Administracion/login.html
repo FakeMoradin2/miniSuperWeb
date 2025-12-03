@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - MiniSuper</title>
     <link rel="stylesheet" href="css/styles_login.css">
+    <link rel="stylesheet" href="css/notifications.css">
 </head>
 <body>
     <div class="container">
@@ -60,14 +61,14 @@
                     
                     // Validación básica
                     if (!phone || !password) {
-                        alert('Please enter both phone number and password');
+                        showWarning('Por favor ingresa el número de teléfono y la contraseña');
                         return;
                     }
                     
                     // Validar formato de teléfono (10 dígitos)
                     const phoneRegex = /^[0-9]{10}$/;
                     if (!phoneRegex.test(phone)) {
-                        alert('Please enter a valid 10-digit phone number');
+                        showWarning('Por favor ingresa un número de teléfono válido de 10 dígitos');
                         return;
                     }
                     
@@ -106,14 +107,14 @@
                                     window.authManager.redirectToHome();
                                 }, 500);
                             } else {
-                                alert('Error al iniciar sesión. Por favor, intenta nuevamente.');
+                                showError('Error al iniciar sesión. Por favor, intenta nuevamente.');
                             }
                         } else {
-                            alert(response.message || 'Login failed. Please check your credentials.');
+                            showError(response.message || 'Error al iniciar sesión. Verifica tus credenciales.');
                         }
                     } catch (error) {
                         console.error('❌ Login error:', error);
-                        alert('Error during login: ' + (error.message || 'Please try again.'));
+                        showError('Error al iniciar sesión. Por favor, intenta nuevamente.');
                     } finally {
                         // Restaurar botón
                         loginButton.querySelector('.button-text').style.display = 'inline';
@@ -134,6 +135,7 @@
         </script>
 
         <!-- Auth Manager -->
+        <script src="js/notifications.js"></script>
         <script src="js/auth.js"></script>
         <!-- API -->
         <script src="js/api.js"></script>

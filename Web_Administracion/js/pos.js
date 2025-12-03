@@ -246,7 +246,7 @@ async function agregarProductoAlCarrito(prod){
     document.getElementById('searchInput').value = '';
     document.getElementById('searchResults').innerHTML = '';
   }catch(err){
-    alert('Error: No se pudo agregar el producto. ' + err.message);
+    showError('No se pudo agregar el producto.');
   }
 }
 
@@ -276,21 +276,21 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
         } else {
           // Si el carrito está vacío en el backend, verificar el carrito local
           if(cart.length === 0){
-            alert('El carrito está vacío. Agrega productos primero.');
+            showWarning('El carrito está vacío. Agrega productos primero.');
             return;
           }
         }
       }catch(err){
         // Si hay error al obtener el carrito, verificar el carrito local
         if(cart.length === 0){
-          alert('El carrito está vacío. Agrega productos primero.');
+          showWarning('El carrito está vacío. Agrega productos primero.');
           return;
         }
       }
     } else {
       // Si no hay carrito seleccionado, verificar que el carrito local tenga productos
       if(cart.length === 0){
-        alert('El carrito está vacío. Agrega productos primero.');
+        showWarning('El carrito está vacío. Agrega productos primero.');
         return;
       }
       
@@ -404,13 +404,13 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
   }catch(err){
     // Si ya se creó la venta pero algo falló, intentar cancelar
     try{ if(currentVentaId) await window.api.ventasAPI.cancelar({venta_id: currentVentaId}); }catch{}
-    alert('Error al procesar la venta: ' + (err.message || err));
+    showError('Error al procesar la venta. Por favor, intenta nuevamente.');
   }
 });
 
 document.getElementById('btnCancel').addEventListener('click', async ()=>{
   if(!currentVentaId && cart.length === 0){
-    alert('No hay venta activa.');
+    showWarning('No hay venta activa.');
     return;
   }
   
@@ -428,9 +428,9 @@ document.getElementById('btnCancel').addEventListener('click', async ()=>{
     document.getElementById('searchResults').innerHTML = '';
     
     renderCart();
-    alert('✓ Venta cancelada');
+    showSuccess('Venta cancelada');
   }catch(err){
-    alert('Error al cancelar: ' + err.message);
+    showError('Error al cancelar la venta.');
   }
 });
 
@@ -447,13 +447,13 @@ document.getElementById('btnBuscarTelefono').addEventListener('click', async ()=
   const resultsDiv = document.getElementById('telefonoSearchResults');
   
   if(!telefono){
-    alert('Por favor ingresa un número de teléfono');
+    showWarning('Por favor ingresa un número de teléfono');
     return;
   }
   
   // Validar que sea solo números y tenga 10 dígitos
   if(!/^\d{10}$/.test(telefono)){
-    alert('El teléfono debe tener 10 dígitos');
+    showWarning('El teléfono debe tener 10 dígitos');
     return;
   }
   
@@ -510,7 +510,7 @@ document.getElementById('btnBuscarTelefono').addEventListener('click', async ()=
     resultsDiv.style.display = 'block';
     
   } catch(err){
-    alert('Error al buscar tickets: ' + err.message);
+    showError('Error al buscar tickets.');
     resultsDiv.style.display = 'none';
   }
 });
@@ -540,7 +540,7 @@ async function mostrarTicketPorId(ventaId){
     mostrarTicketDesdeDatos(response.data || response, ventaId);
     
   } catch(err){
-    alert('Error al cargar el ticket: ' + err.message);
+    showError('Error al cargar el ticket.');
   }
 }
 
@@ -698,7 +698,7 @@ async function seleccionarCarrito(ventaId){
     const response = await window.api.ventasAPI.obtenerCarrito(ventaId);
     
     if(!response.success || !response.venta){
-      alert('Error al cargar el carrito: ' + (response.message || 'Carrito no encontrado'));
+      showError('Error al cargar el carrito: ' + (response.message || 'Carrito no encontrado'));
       return;
     }
     
@@ -735,7 +735,7 @@ async function seleccionarCarrito(ventaId){
     }
     
   }catch(err){
-    alert('Error al cargar el carrito: ' + err.message);
+    showError('Error al cargar el carrito.');
   }
 }
 

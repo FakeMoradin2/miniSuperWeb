@@ -291,14 +291,14 @@ function ventaKeyForUser(user) {
 async function getOrCreateVentaId() {
     const user = getCurrentUser();
     if (!user || !user.id) {
-        alert('Debes iniciar sesión para usar el carrito.');
+        showWarning('Debes iniciar sesión para usar el carrito.');
         return null;
     }
 
     // Asegurar que el ID sea un número
     const userId = typeof user.id === 'number' ? user.id : parseInt(user.id, 10);
     if (isNaN(userId)) {
-        alert('Error: ID de usuario inválido. Por favor, inicia sesión nuevamente.');
+        showError('ID de usuario inválido. Por favor, inicia sesión nuevamente.');
         return null;
     }
 
@@ -343,11 +343,11 @@ async function getOrCreateVentaId() {
             return res.venta_id;
         } else {
             const mensaje = res?.message || res?.error || 'Error desconocido al crear carrito';
-            alert('Error al crear carrito: ' + mensaje);
+            showError('Error al crear carrito: ' + mensaje);
             return null;
         }
     } catch (err) {
-        alert('Error al conectar con el servidor: ' + (err.message || 'Error desconocido'));
+        showError('Error de conexión. Por favor, intenta nuevamente.');
         return null;
     }
 }
@@ -355,7 +355,7 @@ async function getOrCreateVentaId() {
 async function apiAgregarProducto(productoId, cantidad) {
     // Verificar que window.api esté disponible
     if (!window.api || !window.api.ventas) {
-        alert('Error: La API no está disponible. Por favor, recarga la página.');
+        showError('El servicio no está disponible. Por favor, recarga la página.');
         return false;
     }
 
@@ -376,10 +376,10 @@ async function apiAgregarProducto(productoId, cantidad) {
         if (res && res.success) {
             return true;
         }
-        alert(res && res.message ? res.message : 'No se pudo agregar el producto.');
+        showError(res && res.message ? res.message : 'No se pudo agregar el producto.');
         return false;
     } catch (err) {
-        alert('Error al conectar con el servidor para agregar producto: ' + (err.message || 'Error desconocido'));
+        showError('Error de conexión al agregar producto.');
         return false;
     }
 }
@@ -434,7 +434,7 @@ async function apiActualizarProducto(productoId, cantidad) {
 async function apiEliminarProducto(productoId) {
     // Verificar que window.api esté disponible
     if (!window.api || !window.api.ventas) {
-        alert('Error: La API no está disponible. Por favor, recarga la página.');
+        showError('El servicio no está disponible. Por favor, recarga la página.');
         return false;
     }
 
@@ -454,10 +454,10 @@ async function apiEliminarProducto(productoId) {
         if (res && res.success) {
             return true;
         }
-        alert(res && res.message ? res.message : 'No se pudo eliminar el producto.');
+        showError(res && res.message ? res.message : 'No se pudo eliminar el producto.');
         return false;
     } catch (err) {
-        alert('Error al conectar con el servidor para eliminar producto: ' + (err.message || 'Error desconocido'));
+        showError('Error de conexión al eliminar producto.');
         return false;
     }
 }
@@ -473,10 +473,10 @@ async function apiCancelarCarrito() {
             localStorage.removeItem(key);
             return true;
         }
-        alert(res && res.message ? res.message : 'No se pudo cancelar el carrito.');
+        showError(res && res.message ? res.message : 'No se pudo cancelar el carrito.');
         return false;
     } catch (err) {
-        alert('Error al conectar con el servidor para cancelar el carrito.');
+        showError('Error de conexión al cancelar el carrito.');
         return false;
     }
 }
@@ -546,7 +546,7 @@ async function actualizarCantidad(productoId, nuevaCantidad) {
     // Convertir productoId a número si es necesario
     const productoIdNum = typeof productoId === 'number' ? productoId : parseInt(productoId, 10);
     if (isNaN(productoIdNum)) {
-        alert('Error: ID de producto inválido');
+        showError('ID de producto inválido');
         return;
     }
 
@@ -572,7 +572,7 @@ async function eliminarDelCarrito(productoId) {
     // Convertir productoId a número si es necesario
     const productoIdNum = typeof productoId === 'number' ? productoId : parseInt(productoId, 10);
     if (isNaN(productoIdNum)) {
-        alert('Error: ID de producto inválido');
+        showError('ID de producto inválido');
         return;
     }
 
@@ -637,7 +637,7 @@ async function agregarAlCarrito(producto) {
     // Asegurar que el ID sea un número
     const productoId = typeof producto.id === 'number' ? producto.id : parseInt(producto.id, 10);
     if (isNaN(productoId)) {
-        alert('Error: ID de producto inválido');
+        showError('ID de producto inválido');
         return;
     }
 
@@ -851,7 +851,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (payBtn) {
         payBtn.addEventListener('click', async function() {
             if (carrito.contadorItems === 0) {
-                alert('Tu carrito está vacío');
+                showWarning('Tu carrito está vacío');
                 return;
             }
             
@@ -865,10 +865,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             e.preventDefault();
             const couponInput = document.querySelector('.coupon-input');
             if (couponInput.value.trim() === '') {
-                alert('Por favor ingresa un código de cupón');
+                showWarning('Por favor ingresa un código de cupón');
                 return;
             }
-            alert(`Cupón "${couponInput.value}" aplicado (simulado)`);
+            showSuccess(`Cupón "${couponInput.value}" aplicado (simulado)`);
             couponInput.value = '';
         });
     }

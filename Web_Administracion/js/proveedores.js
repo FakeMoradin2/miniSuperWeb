@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const correo = document.getElementById('correoProveedor').value;
 
         if (!nombre) {
-            alert('El nombre del proveedor es obligatorio');
+            showWarning('El nombre del proveedor es obligatorio');
             return;
         }
 
@@ -40,12 +40,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const result = await response.json();
-            alert('Proveedor agregado correctamente');
+            showSuccess('Proveedor agregado correctamente');
             limpiarFormularioProveedor();
             cargarProveedores();
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al agregar proveedor: ' + (error.message || 'Error desconocido'));
+            showError('Error al agregar proveedor.');
         }
     });
 
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al cargar datos del proveedor');
+            showError('Error al cargar datos del proveedor.');
         }
     };
 
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const activo = document.getElementById('editEstadoProveedor').value === 'true';
 
         if (!nombre) {
-            alert('El nombre del proveedor es obligatorio');
+            showWarning('El nombre del proveedor es obligatorio');
             return;
         }
 
@@ -168,12 +168,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const result = await response.json();
-            alert('Proveedor actualizado correctamente');
+            showSuccess('Proveedor actualizado correctamente');
             modal.style.display = 'none';
             cargarProveedores();
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al actualizar proveedor: ' + (error.message || 'Error desconocido'));
+            showError('Error al actualizar proveedor.');
         }
     });
 
@@ -202,11 +202,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 const result = await response.json();
-                alert(`Proveedor ${accion}do correctamente`);
+                showSuccess(`Proveedor ${accion}do correctamente`);
                 cargarProveedores();
             } catch (error) {
                 console.error('Error:', error);
-                alert(`Error al ${accion} proveedor: ` + (error.message || 'Error desconocido'));
+                showError(`Error al ${accion} proveedor.`);
             }
         }
     };

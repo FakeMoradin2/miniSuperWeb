@@ -279,7 +279,7 @@ function configurarSubidaImagen() {
             await abrirWidgetCloudinary();
         } catch (error) {
             console.error('Error abriendo widget de Cloudinary:', error);
-            alert('Error al subir imagen: ' + error.message);
+            showError('Error al subir imagen.');
         }
     });
     
@@ -291,10 +291,10 @@ function configurarSubidaImagen() {
                 cloudinaryUrl = url;
                 mostrarPrevisualizacion(url);
             } else {
-                alert('Por favor ingresa una URL válida que comience con http:// o https://');
+                showWarning('Por favor ingresa una URL válida que comience con http:// o https://');
             }
         } else {
-            alert('Por favor ingresa una URL de imagen');
+            showWarning('Por favor ingresa una URL de imagen');
         }
     });
 }
@@ -370,11 +370,11 @@ async function eliminarProducto(id) {
     
     try {
         await window.api.productos.eliminar({ producto_id: id });
-        alert('✓ Producto eliminado exitosamente');
+        showSuccess('Producto eliminado exitosamente');
         await loadProductos();
     } catch (err) {
         console.error('Error eliminando producto:', err);
-        alert('Error al eliminar: ' + err.message);
+        showError('Error al eliminar el producto.');
     }
 }
 
@@ -489,7 +489,7 @@ document.getElementById('btnSaveProd').addEventListener('click', async () => {
     const categoria = document.getElementById('prodCategoria').value;
     
     if (!nombre || !precio || !stock || !categoria) {
-        alert('Por favor completa todos los campos requeridos (*)');
+        showWarning('Por favor completa todos los campos requeridos (*)');
         return;
     }
     
@@ -510,16 +510,16 @@ document.getElementById('btnSaveProd').addEventListener('click', async () => {
         if (id) {
             body.producto_id = id;
             await window.api.productos.editar(body);
-            alert('✓ Producto actualizado');
+            showSuccess('Producto actualizado');
         } else {
             await window.api.productos.agregar(body);
-            alert('✓ Producto creado');
+            showSuccess('Producto creado');
         }
         document.getElementById('btnReset').click();
         await loadProductos();
     } catch (err) {
         console.error('Error guardando producto:', err);
-        alert('Error: ' + err.message);
+        showError('Error al guardar el producto.');
     }
 });
 

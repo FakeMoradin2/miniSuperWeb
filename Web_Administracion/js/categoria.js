@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const nombre = nombreInput.value;
 
         if (!nombre) {
-            alert('El nombre de la categoría es obligatorio');
+            showWarning('El nombre de la categoría es obligatorio');
             return;
         }
 
@@ -77,12 +77,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const result = await response.json();
-            alert('Categoría agregada correctamente');
+            showSuccess('Categoría agregada correctamente');
             nombreInput.value = '';
             cargarCategorias();
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al agregar categoría: ' + (error.message || 'Error desconocido'));
+            showError('Error al agregar categoría.');
         }
     });
 
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!editNombreInput || !editEstadoSelect || !modal) {
             console.error('❌ No se encontraron todos los elementos del modal');
-            alert('Error: No se puede abrir el editor. Verifica que el modal esté correctamente definido en el HTML.');
+            showError('Error: No se puede abrir el editor.');
             return;
         }
         
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 document.querySelector('#editCategoriaModal select');
 
         if (!editNombreInput || !editEstadoSelect) {
-            alert('Error: No se pueden obtener los datos del formulario');
+            showError('Error: No se pueden obtener los datos del formulario.');
             return;
         }
         
@@ -235,12 +235,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const activo = editEstadoSelect.value === 'true';
 
         if (!nombre) {
-            alert('El nombre de la categoría es obligatorio');
+            showWarning('El nombre de la categoría es obligatorio');
             return;
         }
 
         if (!categoriaEditId) {
-            alert('Error: No se ha seleccionado una categoría para editar');
+            showWarning('Error: No se ha seleccionado una categoría para editar');
             return;
         }
 
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const result = await response.json();
             console.log('✅ Respuesta de actualización:', result);
-            alert('Categoría actualizada correctamente');
+            showSuccess('Categoría actualizada correctamente');
             
             const modal = document.getElementById('editCategoriaModal') || document.querySelector('.modal');
             if (modal) {
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cargarCategorias();
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al actualizar categoría: ' + (error.message || 'Error desconocido'));
+            showError('Error al actualizar categoría.');
         }
     }
 
@@ -304,11 +304,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 const result = await response.json();
-                alert(`Categoría ${accion}da correctamente`);
+                showSuccess(`Categoría ${accion}da correctamente`);
                 cargarCategorias();
             } catch (error) {
                 console.error('Error:', error);
-                alert(`Error al ${accion} categoría: ` + (error.message || 'Error desconocido'));
+                showError(`Error al ${accion} categoría.`);
             }
         }
     }

@@ -113,7 +113,7 @@ class AuthManager {
     }
 
     redirectToUnauthorized() {
-        alert('You do not have permission to access this page.');
+        showError('No tienes permisos para acceder a esta página.');
         this.redirectToHome();
     }
 

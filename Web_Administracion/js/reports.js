@@ -171,7 +171,7 @@ async function cargarReporteRango(inicio, fin){
 document.getElementById('btnVerReporte').addEventListener('click', async ()=>{
   const inicio = document.getElementById('fechaInicio').value;
   const fin = document.getElementById('fechaFin').value;
-  if(!inicio || !fin){ alert('Selecciona fecha inicio y fin'); return; }
+  if(!inicio || !fin){ showWarning('Selecciona fecha inicio y fin'); return; }
   await cargarReporteRango(inicio, fin);
 });
 

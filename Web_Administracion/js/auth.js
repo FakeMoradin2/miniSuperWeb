@@ -149,7 +149,7 @@ class AuthManager {
 
     redirectToUnauthorized() {
         console.warn('⚠️ Unauthorized access attempt by user:', this.currentUser);
-        alert('No tienes permisos para acceder a esta página.');
+        showError('No tienes permisos para acceder a esta página.');
         this.redirectToHome();
     }
 

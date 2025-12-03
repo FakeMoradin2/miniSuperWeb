@@ -841,7 +841,7 @@ async function getOrCreateVentaId() {
                     }
                 }, 1000);
             } else {
-                alert('Error al crear carrito: ' + mensaje);
+                showError('Error al crear carrito: ' + mensaje);
             }
             return null;
         }

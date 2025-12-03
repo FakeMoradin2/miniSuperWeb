@@ -15,22 +15,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Validaciones
         if (!nombre) {
-            alert('El nombre de usuario es obligatorio');
+            showWarning('El nombre de usuario es obligatorio');
             return;
         }
 
         if (!pass) {
-            alert('La contraseña es obligatoria');
+            showWarning('La contraseña es obligatoria');
             return;
         }
 
         if (pass.length < 8) {
-            alert('La contraseña debe tener al menos 8 caracteres');
+            showWarning('La contraseña debe tener al menos 8 caracteres');
             return;
         }
 
         if (tel && tel.length !== 10) {
-            alert('El teléfono debe tener 10 dígitos');
+            showWarning('El teléfono debe tener 10 dígitos');
             return;
         }
 
@@ -46,15 +46,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await window.api.auth.register(clienteData);
             
             if (response.success) {
-                alert('Cliente registrado correctamente');
+                showSuccess('Cliente registrado correctamente');
                 limpiarFormularioCliente();
                 loadClientes();
             } else {
-                alert('Error al registrar cliente: ' + (response.message || 'Error desconocido'));
+                showError('Error al registrar cliente.');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al registrar cliente: ' + (error.message || 'Error desconocido'));
+            showError('Error al registrar cliente.');
         }
     });
 

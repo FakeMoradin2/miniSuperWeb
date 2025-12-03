@@ -289,12 +289,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function mostrarError(mensaje) {
         // Puedes implementar un sistema de notificaciones más elegante
-        alert('Error: ' + mensaje);
+        showError(mensaje);
     }
 
     function mostrarExito(mensaje) {
         // Puedes implementar un sistema de notificaciones más elegante
-        alert('Éxito: ' + mensaje);
+        showSuccess(mensaje);
     }
 
     // Hacer funciones globales para los eventos onclick
