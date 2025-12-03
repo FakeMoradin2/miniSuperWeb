@@ -158,11 +158,32 @@ class ListaCarrito {
             total: this.total,
             contadorItems: this.contadorItems
         };
+        // Persistir por usuario si está autenticado
+        const user = getCurrentUser();
+        if (user && user.id) {
+            const userId = typeof user.id === 'number' ? user.id : parseInt(user.id, 10);
+            if (!isNaN(userId)) {
+                localStorage.setItem(`carrito_user_${userId}`, JSON.stringify(datosCarrito));
+            }
+        }
+        // También mantener la clave general para compatibilidad
         localStorage.setItem('carrito', JSON.stringify(datosCarrito));
     }
 
     cargarDesdeLocalStorage() {
-        const datosGuardados = localStorage.getItem('carrito');
+        // Intentar cargar primero el carrito específico del usuario
+        let datosGuardados = null;
+        const user = getCurrentUser();
+        if (user && user.id) {
+            const userId = typeof user.id === 'number' ? user.id : parseInt(user.id, 10);
+            if (!isNaN(userId)) {
+                datosGuardados = localStorage.getItem(`carrito_user_${userId}`);
+            }
+        }
+        // Fallback a la clave general
+        if (!datosGuardados) {
+            datosGuardados = localStorage.getItem('carrito');
+        }
         if (datosGuardados) {
             const datos = JSON.parse(datosGuardados);
             this.vaciar();
