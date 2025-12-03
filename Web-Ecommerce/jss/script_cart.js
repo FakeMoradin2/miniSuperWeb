@@ -550,6 +550,27 @@ function vaciarCarrito() {
     }
 }
 
+// Función para limpiar el carrito después de procesar la compra
+async function limpiarCarritoDespuesCompra() {
+    try {
+        // Cancelar el carrito en el backend
+        await apiCancelarCarrito();
+        
+        // Vaciar el carrito local
+        carrito.vaciar();
+        
+        // Actualizar la vista
+        renderizarCarrito();
+        
+        console.log('✅ Carrito limpiado después de la compra');
+    } catch (error) {
+        console.error('❌ Error al limpiar el carrito:', error);
+        // Aún así, limpiar el carrito local para que la UI se actualice
+        carrito.vaciar();
+        renderizarCarrito();
+    }
+}
+
 // Add to Cart Function
 async function agregarAlCarrito(producto) {
     // Asegurar que el ID sea un número
@@ -617,6 +638,57 @@ async function sincronizarCarritoDesdeBackend() {
     }
 }
 
+// Variable global para el timeout del modal de checkout
+let checkoutModalTimeout = null;
+
+// Funciones para el modal de checkout
+function mostrarCheckoutModal(total) {
+    // Cancelar timeout anterior si existe
+    if (checkoutModalTimeout) {
+        clearTimeout(checkoutModalTimeout);
+        checkoutModalTimeout = null;
+    }
+    
+    document.body.classList.add('show-checkout-modal');
+    const modal = document.getElementById('checkoutModal');
+    const totalElement = document.getElementById('checkoutTotalAmount');
+    
+    if (modal) {
+        if (totalElement) {
+            totalElement.textContent = `$${total}`;
+        }
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+        
+        // Cerrar automáticamente después de 6 segundos
+        checkoutModalTimeout = setTimeout(async () => {
+            // Limpiar el carrito cuando se cierre automáticamente
+            await ocultarCheckoutModal(true); // true = limpiar carrito
+            checkoutModalTimeout = null;
+        }, 6000); // 6 segundos
+    }
+}
+
+async function ocultarCheckoutModal(limpiarCarrito = true) {
+    // Cancelar el timeout si el usuario cierra manualmente
+    if (checkoutModalTimeout) {
+        clearTimeout(checkoutModalTimeout);
+        checkoutModalTimeout = null;
+    }
+    
+    document.body.classList.remove('show-checkout-modal');
+    const modal = document.getElementById('checkoutModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+    
+    // Limpiar el carrito si se solicita
+    if (limpiarCarrito) {
+        await limpiarCarritoDespuesCompra();
+    }
+}
+
 // Initialization
 document.addEventListener('DOMContentLoaded', async function() {
     // Cargar carrito desde localStorage primero
@@ -637,12 +709,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     if (payBtn) {
-        payBtn.addEventListener('click', function() {
+        payBtn.addEventListener('click', async function() {
             if (carrito.contadorItems === 0) {
                 alert('Tu carrito está vacío');
                 return;
             }
-            alert(`Procesando pago por $${carrito.total.toFixed(2)}`);
+            
+            // Mostrar modal bonito de pasar a caja
+            mostrarCheckoutModal(carrito.total.toFixed(2));
+        });
+    }
+
+    // Event listener para cerrar el modal
+    const closeCheckoutBtn = document.getElementById('closeCheckoutModal');
+    if (closeCheckoutBtn) {
+        closeCheckoutBtn.addEventListener('click', async function() {
+            await ocultarCheckoutModal(true); // true = limpiar carrito
+        });
+    }
+
+    // Cerrar modal al hacer clic fuera de él
+    const checkoutModal = document.getElementById('checkoutModal');
+    if (checkoutModal) {
+        checkoutModal.addEventListener('click', async function(e) {
+            if (e.target === checkoutModal) {
+                await ocultarCheckoutModal(true); // true = limpiar carrito
+            }
         });
     }
 

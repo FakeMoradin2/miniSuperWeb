@@ -111,6 +111,22 @@
     </div>
   </div>
 
+  <!-- Modal de Pasar a Caja -->
+  <div id="checkoutModal" class="checkout-modal" aria-hidden="true">
+    <div class="checkout-modal-content" role="dialog" aria-modal="true">
+      <div class="checkout-icon">💰</div>
+      <h2 class="checkout-title">¡Listo para pagar!</h2>
+      <p class="checkout-message">Por favor, diríjase a caja para completar su compra y realizar el pago de sus productos.</p>
+      <div class="checkout-total-section">
+        <span class="checkout-total-label">Total de su compra:</span>
+        <span class="checkout-total-amount" id="checkoutTotalAmount">$0.00</span>
+      </div>
+      <p class="checkout-thanks">Gracias por su preferencia</p>
+      <p class="checkout-auto-close">Este mensaje se cerrará automáticamente</p>
+      <button class="checkout-btn" id="closeCheckoutModal">Entendido</button>
+    </div>
+  </div>
+
   <script src="../jss/script_cart.js"></script>
   
   <script>
@@ -365,6 +381,158 @@
     body.show-auth-modal { overflow:hidden; }
     .disabled-cart-btn { opacity:.6; cursor:not-allowed; }
     @media (max-width:480px){ .auth-modal-content { padding:1.8rem 1.4rem 2rem; } }
+
+    /* ---------- ESTILOS MODAL PASAR A CAJA ---------- */
+    .checkout-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2500;
+      padding: 2rem 1rem;
+    }
+    .checkout-modal.show {
+      display: flex;
+    }
+    .checkout-modal-content {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      width: 100%;
+      max-width: 480px;
+      border-radius: 24px;
+      padding: 3rem 2.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+      position: relative;
+      animation: checkoutModalFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    .checkout-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: bounceIn 0.6s ease-out;
+      filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.2));
+    }
+    .checkout-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .checkout-message {
+      font-size: 1.05rem;
+      color: #475569;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+    .checkout-total-section {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      box-shadow: 0 8px 16px rgba(59, 130, 246, 0.25);
+    }
+    .checkout-total-label {
+      display: block;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .checkout-total-amount {
+      display: block;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .checkout-thanks {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin: 1rem 0 0.5rem;
+      font-style: italic;
+    }
+    .checkout-auto-close {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin: 0 0 1.5rem;
+      font-style: italic;
+      opacity: 0.8;
+    }
+    .checkout-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 1rem 2rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .checkout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+    .checkout-btn:active {
+      transform: translateY(0);
+    }
+    @keyframes checkoutModalFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    @keyframes bounceIn {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    body.show-checkout-modal .navbar,
+    body.show-checkout-modal main,
+    body.show-checkout-modal footer {
+      filter: blur(4px);
+      pointer-events: none;
+      user-select: none;
+    }
+    body.show-checkout-modal {
+      overflow: hidden;
+    }
+    @media (max-width: 480px) {
+      .checkout-modal-content {
+        padding: 2rem 1.5rem;
+      }
+      .checkout-icon {
+        font-size: 3rem;
+      }
+      .checkout-title {
+        font-size: 1.5rem;
+      }
+      .checkout-total-amount {
+        font-size: 2rem;
+      }
+    }
   </style>
 </body>
 </html>
