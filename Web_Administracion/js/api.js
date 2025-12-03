@@ -199,6 +199,11 @@ const ventasAPI = {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(body)
   }),
+  actualizarEfectivo: (body) => fetchJSON(`${API_BASE}/api/ventas/actualizarEfectivo.php`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  }),
   confirmar: (body) => fetchJSON(`${API_BASE}/api/ventas/confirmar.php`, {
     method: 'PUT',
     headers: {'Content-Type':'application/json'},

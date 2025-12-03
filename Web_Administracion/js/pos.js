@@ -252,6 +252,9 @@ async function agregarProductoAlCarrito(prod){
 
 document.getElementById('btnConfirm').addEventListener('click', async ()=>{
   const clienteNombre = document.getElementById('clienteInput').value.trim() || 'Cliente';
+  const efectivoInput = document.getElementById('efectivoRecibidoInput');
+  const efectivoStr = efectivoInput ? efectivoInput.value.trim() : '';
+  const cambioLabel = document.getElementById('cambioLabel');
 
   try{
     // Usar ID del cliente_general_pos (ID: 18)
@@ -317,6 +320,34 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
       }
     }
     
+    // Calcular total de la venta (para validar efectivo)
+    const totalCalculado = totalVenta > 0 ? totalVenta : cart.reduce((s,i)=> s + i.precio*i.cantidad, 0);
+
+    // Validar efectivo recibido (obligatorio)
+    if (!efectivoStr) {
+      showWarning('Ingresa el efectivo recibido para continuar.');
+      if (efectivoInput) efectivoInput.focus();
+      return;
+    }
+
+    let efectivoRecibido = parseFloat(efectivoStr);
+    if (isNaN(efectivoRecibido) || efectivoRecibido < 0) {
+      showWarning('El efectivo recibido debe ser un número mayor o igual a 0.');
+      if (efectivoInput) efectivoInput.focus();
+      return;
+    }
+    if (totalCalculado > 0 && efectivoRecibido < totalCalculado) {
+      showWarning('El efectivo recibido es menor que el total de la venta.');
+      if (efectivoInput) efectivoInput.focus();
+      return;
+    }
+
+    // Actualizar visualmente el cambio
+    if (cambioLabel) {
+      const cambioCalc = efectivoRecibido - totalCalculado;
+      cambioLabel.textContent = `$${cambioCalc.toFixed(2)}`;
+    }
+    
     // Paso 3: Confirmar la venta con nombre del cliente
     const confirmResp = await window.api.ventasAPI.confirmar({
       venta_id: ventaIdToConfirm,
@@ -325,6 +356,17 @@ document.getElementById('btnConfirm').addEventListener('click', async ()=>{
     
     if(!confirmResp.success){
       throw new Error(confirmResp.message || 'Error al confirmar la venta');
+    }
+
+    // Actualizar efectivo en la venta
+    try {
+      await window.api.ventasAPI.actualizarEfectivo({
+        venta_id: ventaIdToConfirm,
+        efectivo_recibido: efectivoRecibido
+      });
+    } catch (errEfectivo) {
+      // No bloquear la venta por error en este paso, solo notificar
+      showError('La venta se confirmó, pero hubo un error al registrar el efectivo.');
     }
 
     // Guardar venta en localStorage para reportes

@@ -144,8 +144,9 @@ async function cargarReporteRango(inicio, fin){
           }
         }
         const cliente = venta?.nombre_cliente ?? venta?.cliente ?? venta?.comprador ?? 'Cliente General';
-        const metodoPago = venta?.metodo_pago ?? venta?.metodoPago ?? venta?.forma_pago ?? 'N/A';
         const total = Number(venta?.total ?? venta?.monto_total ?? venta?.precio_total ?? 0);
+        const efectivoRecibido = venta?.efectivo_recibido != null ? Number(venta.efectivo_recibido) : null;
+        const cambio = efectivoRecibido != null ? (efectivoRecibido - total) : null;
         const estado = venta?.estado ?? venta?.estado_venta ?? 'pendiente';
         
         // Fila simple sin cards/modales de productos
@@ -153,7 +154,8 @@ async function cargarReporteRango(inicio, fin){
           <td>${folio}</td>
           <td>${fecha}</td>
           <td>${cliente}</td>
-          <td>${metodoPago}</td>
+          <td>${efectivoRecibido != null ? `$${efectivoRecibido.toFixed(2)}` : 'N/A'}</td>
+          <td>${cambio != null ? `$${cambio.toFixed(2)}` : 'N/A'}</td>
           <td>$${total.toFixed(2)}</td>
           <td><span class="badge ${estado === 'confirmada' || estado === 'completada' ? 'success' : 'warning'}">${estado}</span></td>
         `;
