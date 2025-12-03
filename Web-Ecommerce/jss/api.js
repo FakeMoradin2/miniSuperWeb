@@ -28,29 +28,29 @@ async function fetchJSON(url, opts = {}) {
 
 /* Autenticación */
 const auth = {
-    login: (body) => fetchJSON(`${API_BASE}/api/auth/login.php`, {
+    login: (body) => fetchJSON(`${API_BASE}/auth/login.php`, {
         method: 'POST',
         body: JSON.stringify(body)
     }),
     
-    register: (body) => fetchJSON(`${API_BASE}/api/auth/register.php`, {
+    register: (body) => fetchJSON(`${API_BASE}/auth/register.php`, {
         method: 'POST',
         body: JSON.stringify(body)
     }),
     
     // Nueva función para verificar el token/estado de autenticación
-    verify: () => fetchJSON(`${API_BASE}/api/auth/verify.php`, {
+    verify: () => fetchJSON(`${API_BASE}/auth/verify.php`, {
         method: 'POST'
     }),
     
-    logout: () => fetchJSON(`${API_BASE}/api/auth/logout.php`, {
+    logout: () => fetchJSON(`${API_BASE}/auth/logout.php`, {
         method: 'POST'
     })
 };
 
 /* Categorías */
 const categorias = {
-    listar: () => fetchJSON(`${API_BASE}/api/categoria/listar.php`).then(res => {
+    listar: () => fetchJSON(`${API_BASE}/categoria/listar.php`).then(res => {
         // Manejar diferentes formatos de respuesta
         if (res.data && Array.isArray(res.data)) return res.data;
         if (Array.isArray(res)) return res;
@@ -58,17 +58,17 @@ const categorias = {
         return [];
     }),
     
-    agregar: (body) => fetchJSON(`${API_BASE}/api/categoria/agregar.php`, {
+    agregar: (body) => fetchJSON(`${API_BASE}/categoria/agregar.php`, {
         method: 'POST',
         body: JSON.stringify(body)
     }),
     
-    editar: (body) => fetchJSON(`${API_BASE}/api/categoria/editar.php`, {
+    editar: (body) => fetchJSON(`${API_BASE}/categoria/editar.php`, {
         method: 'PUT',
         body: JSON.stringify(body)
     }),
     
-    eliminar: (id) => fetchJSON(`${API_BASE}/api/categoria/eliminar.php`, {
+    eliminar: (id) => fetchJSON(`${API_BASE}/categoria/eliminar.php`, {
         method: 'DELETE',
         body: JSON.stringify({ Id_categoria: id })
     })
@@ -76,23 +76,23 @@ const categorias = {
 
 /* Proveedores */
 const proveedores = {
-    listar: () => fetchJSON(`${API_BASE}/api/proveedores/listar.php`).then(res => {
+    listar: () => fetchJSON(`${API_BASE}/proveedores/listar.php`).then(res => {
         if (res.data && Array.isArray(res.data)) return res.data;
         if (Array.isArray(res)) return res;
         return [];
     }),
     
-    agregar: (body) => fetchJSON(`${API_BASE}/api/proveedores/agregar.php`, {
+    agregar: (body) => fetchJSON(`${API_BASE}/proveedores/agregar.php`, {
         method: 'POST',
         body: JSON.stringify(body)
     }),
     
-    editar: (body) => fetchJSON(`${API_BASE}/api/proveedores/editar.php`, {
+    editar: (body) => fetchJSON(`${API_BASE}/proveedores/editar.php`, {
         method: 'PUT',
         body: JSON.stringify(body)
     }),
     
-    eliminar: (id) => fetchJSON(`${API_BASE}/api/proveedores/eliminar.php`, {
+    eliminar: (id) => fetchJSON(`${API_BASE}/proveedores/eliminar.php`, {
         method: 'DELETE',
         body: JSON.stringify({ Id_proveedor: id })
     })
@@ -106,7 +106,7 @@ const productos = {
         if (termino) params.append('busca', termino);
         
         const queryString = params.toString();
-        const url = `${API_BASE}/api/productos/listar.php${queryString ? '?' + queryString : ''}`;
+        const url = `${API_BASE}/productos/listar.php${queryString ? '?' + queryString : ''}`;
         
         return fetchJSON(url).then(res => {
             // Manejar diferentes formatos de respuesta
@@ -119,68 +119,68 @@ const productos = {
     
     buscar: (termino = '') => {
         const queryString = termino ? `?busca=${encodeURIComponent(termino)}` : '';
-        return fetchJSON(`${API_BASE}/api/productos/listar.php${queryString}`).then(res => {
+        return fetchJSON(`${API_BASE}/productos/listar.php${queryString}`).then(res => {
             if (res.data && Array.isArray(res.data)) return res.data;
             if (Array.isArray(res)) return res;
             return [];
         });
     },
     
-    agregar: (body) => fetchJSON(`${API_BASE}/api/productos/agregar.php`, {
+    agregar: (body) => fetchJSON(`${API_BASE}/productos/agregar.php`, {
         method: 'POST',
         body: JSON.stringify(body)
     }),
     
-    editar: (body) => fetchJSON(`${API_BASE}/api/productos/editar.php`, {
+    editar: (body) => fetchJSON(`${API_BASE}/productos/editar.php`, {
         method: 'PUT',
         body: JSON.stringify(body)
     }),
     
-    eliminar: (id) => fetchJSON(`${API_BASE}/api/productos/eliminar.php`, {
+    eliminar: (id) => fetchJSON(`${API_BASE}/productos/eliminar.php`, {
         method: 'DELETE',
         body: JSON.stringify({ Id_producto: id })
     }),
     
-    obtenerPorId: (id) => fetchJSON(`${API_BASE}/api/productos/obtener.php?id=${id}`)
+    obtenerPorId: (id) => fetchJSON(`${API_BASE}/productos/obtener.php?id=${id}`)
 };
 
 /* Ventas / Carrito */
 const ventas = {
-    crear: (body) => fetchJSON(`${API_BASE}/api/ventas/crear.php`, {
+    crear: (body) => fetchJSON(`${API_BASE}/ventas/crear.php`, {
         method: 'POST',
         body: JSON.stringify(body)
     }),
     
-    listar: (params = '') => fetchJSON(`${API_BASE}/api/ventas/listar.php${params}`),
+    listar: (params = '') => fetchJSON(`${API_BASE}/ventas/listar.php${params}`),
     
-    obtenerPorId: (id) => fetchJSON(`${API_BASE}/api/ventas/obtener.php?id=${id}`),
+    obtenerPorId: (id) => fetchJSON(`${API_BASE}/ventas/obtener.php?id=${id}`),
     
-    agregarProducto: (body) => fetchJSON(`${API_BASE}/api/ventas/agregarProducto.php`, {
+    agregarProducto: (body) => fetchJSON(`${API_BASE}/ventas/agregarProducto.php`, {
         method: 'POST',
         body: JSON.stringify(body)
     }),
     
-    actualizarProducto: (body) => fetchJSON(`${API_BASE}/api/ventas/actualizarProducto.php`, {
+    actualizarProducto: (body) => fetchJSON(`${API_BASE}/ventas/actualizarProducto.php`, {
         method: 'PUT',
         body: JSON.stringify(body)
     }),
     
-    eliminarProducto: (body) => fetchJSON(`${API_BASE}/api/ventas/eliminarProducto.php`, {
+    eliminarProducto: (body) => fetchJSON(`${API_BASE}/ventas/eliminarProducto.php`, {
         method: 'DELETE',
         body: JSON.stringify(body)
     }),
     
-    cancelar: (body) => fetchJSON(`${API_BASE}/api/ventas/cancelar.php`, {
+    cancelar: (body) => fetchJSON(`${API_BASE}/ventas/cancelar.php`, {
         method: 'PUT',
         body: JSON.stringify(body)
     }),
     
-    confirmar: (body) => fetchJSON(`${API_BASE}/api/ventas/confirmar.php`, {
+    confirmar: (body) => fetchJSON(`${API_BASE}/ventas/confirmar.php`, {
         method: 'PUT',
         body: JSON.stringify(body)
     }),
     
-    obtenerCarrito: (venta_id) => fetchJSON(`${API_BASE}/api/ventas/obtenerCarrito.php?venta_id=${venta_id}`, {
+    obtenerCarrito: (venta_id) => fetchJSON(`${API_BASE}/ventas/obtenerCarrito.php?venta_id=${venta_id}`, {
         method: 'GET',
         headers: {'Accept':'application/json'}
     })
@@ -188,53 +188,53 @@ const ventas = {
 
 /* Reportes */
 const reportes = {
-    historial: (params = '') => fetchJSON(`${API_BASE}/api/reportes/historial.php${params}`),
+    historial: (params = '') => fetchJSON(`${API_BASE}/reportes/historial.php${params}`),
     
-    reporteDia: (params = '') => fetchJSON(`${API_BASE}/api/reportes/reporteDia.php${params}`),
+    reporteDia: (params = '') => fetchJSON(`${API_BASE}/reportes/reporteDia.php${params}`),
     
-    productosTop: (params = '') => fetchJSON(`${API_BASE}/api/reportes/productosTop.php${params}`)
+    productosTop: (params = '') => fetchJSON(`${API_BASE}/reportes/productosTop.php${params}`)
 };
 
 /* Clientes */
 const clientes = {
-    listar: () => fetchJSON(`${API_BASE}/api/clientes/listar.php`).then(res => {
+    listar: () => fetchJSON(`${API_BASE}/clientes/listar.php`).then(res => {
         if (res.data && Array.isArray(res.data)) return res.data;
         if (Array.isArray(res)) return res;
         return [];
     }),
     
-    agregar: (body) => fetchJSON(`${API_BASE}/api/clientes/agregar.php`, {
+    agregar: (body) => fetchJSON(`${API_BASE}/clientes/agregar.php`, {
         method: 'POST',
         body: JSON.stringify(body)
     }),
     
-    editar: (body) => fetchJSON(`${API_BASE}/api/clientes/editar.php`, {
+    editar: (body) => fetchJSON(`${API_BASE}/clientes/editar.php`, {
         method: 'PUT',
         body: JSON.stringify(body)
     }),
     
-    eliminar: (id) => fetchJSON(`${API_BASE}/api/clientes/eliminar.php`, {
+    eliminar: (id) => fetchJSON(`${API_BASE}/clientes/eliminar.php`, {
         method: 'DELETE',
         body: JSON.stringify({ Id_cliente: id })
     }),
     
-    obtenerPorId: (id) => fetchJSON(`${API_BASE}/api/clientes/obtener.php?id=${id}`)
+    obtenerPorId: (id) => fetchJSON(`${API_BASE}/clientes/obtener.php?id=${id}`)
 };
 
 /* Stock */
 const stock = {
-    actualizar: (body) => fetchJSON(`${API_BASE}/api/stock/actualizar.php`, {
+    actualizar: (body) => fetchJSON(`${API_BASE}/stock/actualizar.php`, {
         method: 'PUT',
         body: JSON.stringify(body)
     }),
     
-    obtenerBajoStock: () => fetchJSON(`${API_BASE}/api/stock/bajoStock.php`).then(res => {
+    obtenerBajoStock: () => fetchJSON(`${API_BASE}/stock/bajoStock.php`).then(res => {
         if (res.data && Array.isArray(res.data)) return res.data;
         if (Array.isArray(res)) return res;
         return [];
     }),
     
-    historial: (params = '') => fetchJSON(`${API_BASE}/api/stock/historial.php${params}`)
+    historial: (params = '') => fetchJSON(`${API_BASE}/stock/historial.php${params}`)
 };
 
 /* Dashboard */
